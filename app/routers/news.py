@@ -692,8 +692,9 @@ async def _save_fetched_news_to_db(session: AsyncSession, items: List[dict]) -> 
         if published:
             try:
                 pub_dt = datetime.fromisoformat(published.replace("Z", "+00:00"))
-                if pub_dt.tzinfo is None:
-                    pub_dt = pub_dt.replace(tzinfo=timezone.utc)
+                # Postgres TIMESTAMP WITHOUT TIME ZONE + asyncpg требуют naive datetime
+                if pub_dt.tzinfo is not None:
+                    pub_dt = pub_dt.astimezone(timezone.utc).replace(tzinfo=None)
             except (ValueError, TypeError):
                 pass
         session.add(
