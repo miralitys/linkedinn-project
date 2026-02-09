@@ -69,11 +69,14 @@
   <div class="news-view-backdrop" id="view-reddit-backdrop"></div>
   <div class="news-view-panel" id="view-reddit-drawer-panel">
     <div class="news-view-header">
-      <div class="news-view-title-row">
-        <h2 id="view-reddit-modal-title" class="news-view-title"></h2>
-        <a id="view-reddit-link-header" href="#" target="_blank" rel="noopener" class="news-view-link-icon btn-icon" title="Открыть в Reddit" aria-label="Открыть в Reddit" style="display: none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+      <div class="news-view-header-top">
+        <span class="news-view-header-label" aria-hidden="true">Reddit</span>
+        <div class="news-view-header-actions">
+          <a id="view-reddit-link-header" href="#" target="_blank" rel="noopener" class="news-view-open-link link-tertiary" title="Открыть оригинал" aria-label="Открыть оригинал" style="display: none;">Открыть оригинал <span aria-hidden="true">↗</span></a>
+          <button type="button" class="news-view-close" id="view-reddit-drawer-close" aria-label="Закрыть">×</button>
+        </div>
       </div>
-      <button type="button" class="news-view-close" id="view-reddit-drawer-close" aria-label="Закрыть">×</button>
+      <h2 id="view-reddit-modal-title" class="news-view-title"></h2>
     </div>
     <div class="news-view-meta" id="view-reddit-meta-row">
       <span id="view-reddit-score-wrap" style="display: none; margin-left: var(--space-3);">
@@ -88,8 +91,9 @@
       </span>
     </div>
     <div class="news-view-source" id="view-reddit-source-row" style="display: none;"></div>
-    <div id="view-reddit-content" class="news-view-body"></div>
-    <div class="view-post-rewrite-block">
+    <div class="news-view-scroll-wrap">
+      <div id="view-reddit-content" class="news-view-body"></div>
+      <div class="view-post-rewrite-block">
       <div class="view-post-rewrite-header">
         <h3 class="view-post-rewrite-title">Переписать этот пост</h3>
         <p class="view-post-rewrite-desc">Выберите автора и цель — AI переформулирует пост Reddit в пост для LinkedIn.</p>
@@ -122,6 +126,7 @@
         </div>
       </div>
     </div>
+    </div>
   </div>
 </div>
 
@@ -147,19 +152,29 @@
   .news-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--primary) 0%, rgba(99,102,241,0.3) 100%); opacity: 0; transition: opacity var(--motion-fast); }
   .news-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 6px rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.35); }
   .news-card:hover::before { opacity: 1; }
-  .news-card-title { font-size: 0.9375rem; font-weight: 600; margin: 0 0 var(--space-1); line-height: 1.4; color: var(--text); }
+  .news-card-title { font-size: 0.9375rem; font-weight: 600; margin: 0 0 var(--space-2); line-height: 1.4; color: var(--text); }
   .news-card-title a { color: inherit; text-decoration: none; }
   .news-card-title a:hover { color: var(--primary); }
-  .news-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-1); }
-  .news-card-meta-wrap { min-width: 0; }
-  .news-card-meta { display: block; font-size: var(--text-14); color: var(--text-muted); margin-bottom: 0; }
-  .news-card-source-wrap { font-size: var(--text-12); color: var(--text-muted); margin-top: var(--space-1); }
+  .news-card-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+  .news-card-meta { font-size: var(--text-12); }
+  .news-card-meta-author { font-weight: 600; color: var(--text); }
+  .news-card-meta-date { font-weight: 400; color: var(--text-muted); }
+  .news-card-source-wrap { font-size: var(--text-12); color: var(--text-muted); }
   .news-card-source { font-size: inherit; color: inherit; }
   .news-card-source a { color: var(--primary); font-weight: 500; }
   .news-card-source a:hover { text-decoration: underline; }
-  .news-card-summary { font-size: var(--text-12); line-height: 1.55; color: var(--text); margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .news-card-summary { font-size: var(--text-12); line-height: 1.55; color: var(--text); margin: 0 0 var(--space-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .news-card-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
+  .news-card-read-more { font-size: var(--text-14); color: var(--primary); background: none; border: none; cursor: pointer; padding: 0; font-weight: 500; }
+  .news-card-read-more:hover { text-decoration: underline; }
+  .news-card-read-more:focus-visible { outline: none; border-radius: var(--radius-sm); box-shadow: var(--focus-ring); }
+  .news-card-actions { display: flex; align-items: center; gap: var(--space-2); }
+  .news-card-stats { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border); font-size: var(--text-12); color: var(--text-muted); }
   .news-card-link-icon { flex-shrink: 0; color: var(--text-muted); }
   .news-card-link-icon:hover { color: var(--primary); }
+  .news-card-link-corner { flex-shrink: 0; min-width: 28px; min-height: 28px; padding: 0; border: none; background: transparent; color: var(--text-muted); border-radius: 0; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; transition: color var(--motion-fast); font-size: 1.1rem; line-height: 1; }
+  .news-card-link-corner:hover { background: transparent; color: var(--primary); text-decoration: none; }
+  .news-card-link-corner:focus-visible { outline: none; box-shadow: var(--focus-ring); }
   .news-empty-state, .news-error-state { text-align: center; padding: var(--space-10); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
   .news-empty-title, .news-error-text { margin: 0 0 var(--space-2); font-weight: 600; font-size: var(--text-16); color: var(--text); }
   .news-empty-desc, .news-error-detail { margin: 0 0 var(--space-4); color: var(--text-muted); font-size: var(--text-14); line-height: 1.5; }
@@ -169,41 +184,48 @@
   .news-view-drawer.is-open .news-view-backdrop { opacity: 1; }
   .news-view-panel { position: absolute; top: 0; right: 0; width: 65vw; max-width: 1200px; height: 100%; background: var(--surface); transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: -12px 0 48px rgba(0,0,0,0.12), -4px 0 16px rgba(0,0,0,0.06); overflow: hidden; }
   .news-view-drawer.is-open .news-view-panel { transform: translateX(0); }
-  .news-view-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); padding: var(--space-5) var(--space-6); border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--surface); }
-  .news-view-title-row { display: flex; align-items: flex-start; gap: var(--space-3); flex: 1; min-width: 0; }
-  .news-view-title { margin: 0; font-size: var(--text-20); font-weight: 700; color: var(--text); line-height: 1.35; flex: 1; min-width: 0; letter-spacing: -0.02em; }
+  .news-view-header { padding: var(--space-4) var(--space-6) var(--space-5); border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--surface); }
+  .news-view-header-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
+  .news-view-header-label { font-size: var(--text-12); font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .news-view-header-actions { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+  .news-view-title { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--text); line-height: 1.35; letter-spacing: -0.02em; }
   .news-view-link-icon { flex-shrink: 0; color: var(--text-muted); }
   .news-view-link-icon:hover { color: var(--primary); }
-  .news-view-close { min-width: 44px; min-height: 44px; padding: 0; border: none; background: var(--bg); color: var(--text-muted); font-size: 1.5rem; line-height: 1; border-radius: var(--radius-sm); cursor: pointer; flex-shrink: 0; transition: background var(--motion-fast), color var(--motion-fast); }
-  .news-view-close:hover { background: var(--primary-soft); color: var(--primary); }
+  .news-view-open-link { font-size: var(--text-14); font-weight: 500; white-space: nowrap; }
+  .news-view-open-link.link-tertiary { color: var(--primary); background: none; border: none; padding: 0; text-decoration: none; cursor: pointer; }
+  .news-view-open-link.link-tertiary:hover { text-decoration: underline; }
+  .news-view-open-link.link-tertiary:focus-visible { outline: none; border-radius: var(--radius-sm); box-shadow: var(--focus-ring); }
+  .news-view-close { min-width: 32px; min-height: 32px; padding: 0; border: none; background: transparent; color: var(--text-muted); font-size: 1.25rem; line-height: 1; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: color var(--motion-fast), background var(--motion-fast); }
+  .news-view-close:hover { background: var(--bg); color: var(--text); }
+  .news-view-close:focus-visible { outline: none; box-shadow: var(--focus-ring); }
   .news-view-meta { padding: var(--space-2) var(--space-6); font-size: var(--text-14); color: var(--text-muted); border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .news-view-source { padding: var(--space-2) var(--space-6); font-size: var(--text-14); color: var(--text-muted); border-bottom: 1px solid var(--border); flex-shrink: 0; }
   .news-view-source a { color: var(--primary); font-weight: 500; }
   .news-view-source a:hover { text-decoration: underline; }
-  .news-view-body { padding: var(--space-6); overflow-y: auto; flex: 1; min-height: 0; font-size: var(--text-16); line-height: 1.7; color: var(--text); }
+  .news-view-scroll-wrap { flex: 1; min-height: 0; overflow-y: auto; }
+  .news-view-body { padding: var(--space-6); font-size: var(--text-16); line-height: 1.7; color: var(--text); }
   .news-view-body p { margin: 0 0 var(--space-4); }
   .news-view-body p:last-child { margin-bottom: 0; }
   .reddit-saved-row { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); flex-wrap: wrap; }
   .reddit-saved-list { display: flex; flex-wrap: wrap; gap: var(--space-2); }
   .reddit-saved-chip { font-size: var(--text-12); padding: 4px 10px; border-radius: var(--radius-sm); background: var(--bg); border: 1px solid var(--border); color: var(--text); cursor: pointer; font-weight: 500; }
   .reddit-saved-chip:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
-  .reddit-card-action { margin-top: var(--space-2); padding-top: var(--space-2); border-top: 1px solid var(--border); }
-  .view-post-rewrite-block { flex-shrink: 0; margin: var(--space-4) var(--space-6) var(--space-6); padding: var(--space-5); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
-  .view-post-rewrite-header { margin-bottom: var(--space-4); padding-bottom: var(--space-4); border-bottom: 1px solid var(--border); }
-  .view-post-rewrite-title { margin: 0 0 var(--space-1); font-size: var(--text-16); font-weight: 600; color: var(--text); }
-  .view-post-rewrite-desc { margin: 0; font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; }
-  .view-post-rewrite-form { display: flex; flex-direction: column; gap: var(--space-4); }
-  .view-post-rewrite-fields { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); }
-  .view-post-rewrite-field { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: var(--space-1); }
+  .view-post-rewrite-block { flex-shrink: 0; margin: var(--space-3) var(--space-4) var(--space-4); padding: var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .view-post-rewrite-header { margin-bottom: var(--space-2); padding-bottom: var(--space-2); border-bottom: 1px solid var(--border); }
+  .view-post-rewrite-title { margin: 0 0 var(--space-1); font-size: var(--text-14); font-weight: 600; color: var(--text); }
+  .view-post-rewrite-desc { margin: 0; font-size: var(--text-12); color: var(--text-muted); line-height: 1.45; }
+  .view-post-rewrite-form { display: flex; flex-direction: column; gap: var(--space-2); }
+  .view-post-rewrite-fields { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2); }
+  .view-post-rewrite-field { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 2px; }
   .view-post-rewrite-field label { font-size: var(--text-12); font-weight: 500; color: var(--text-muted); margin: 0; }
-  .view-post-rewrite-field select { height: 2.5rem; padding: 0 var(--space-3); font-size: var(--text-14); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); box-sizing: border-box; transition: border-color var(--motion-fast), box-shadow var(--motion-fast); }
+  .view-post-rewrite-field select { height: 2.25rem; padding: 0 var(--space-2); font-size: var(--text-14); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); box-sizing: border-box; transition: border-color var(--motion-fast), box-shadow var(--motion-fast); }
   .view-post-rewrite-field select:hover { border-color: var(--text-muted); }
   .view-post-rewrite-field select:focus { outline: none; border-color: var(--primary); box-shadow: var(--focus-ring); }
-  .view-post-rewrite-btn { height: 2.5rem; padding: 0 var(--space-5); font-weight: 600; }
-  .view-post-rewrite-output { display: flex; flex-direction: column; gap: var(--space-2); }
+  .view-post-rewrite-btn { height: 2.25rem; padding: 0 var(--space-4); font-weight: 600; }
+  .view-post-rewrite-output { display: flex; flex-direction: column; gap: var(--space-1); }
   .view-post-rewrite-output-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
   .view-post-rewrite-result-label { font-size: var(--text-12); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-  .view-post-rewrite-block textarea { width: 100%; min-height: 5rem; padding: var(--space-4); font-family: inherit; font-size: var(--text-14); line-height: 1.6; color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); resize: vertical; box-sizing: border-box; display: block; transition: border-color var(--motion-fast), box-shadow var(--motion-fast); }
+  .view-post-rewrite-block textarea { width: 100%; min-height: 3.5rem; padding: var(--space-2) var(--space-3); font-family: inherit; font-size: var(--text-14); line-height: 1.55; color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); resize: vertical; box-sizing: border-box; display: block; transition: border-color var(--motion-fast), box-shadow var(--motion-fast); }
   .view-post-rewrite-block textarea:hover { border-color: var(--text-muted); }
   .view-post-rewrite-block textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2); }
   .view-post-rewrite-block textarea::placeholder { color: var(--text-muted); }
@@ -380,7 +402,7 @@
       redditEmpty.style.display = 'none';
       redditList.innerHTML = filteredList.map((p, idx) => {
         const authorName = (p.author ? 'u/' + p.author : 'Reddit') + (p.subreddit ? ' · r/' + p.subreddit : '');
-        const authorDate = escapeHtml(authorName) + ' · ' + formatDate(p.posted_at);
+        const dateStr = formatDate(p.posted_at);
         const sourceText = (p.title || p.content || '').trim() || 'Без заголовка';
         const relevanceScore = p.relevance_score !== undefined && p.relevance_score !== null ? p.relevance_score : null;
         const scoreColorClass = relevanceScore !== null ? getScoreColorClass(relevanceScore) : '';
@@ -394,19 +416,24 @@
         const desc = sentences.length ? sentences.slice(0, 3).join(' ') + (sentences.length > 3 ? '…' : '') : '';
         const sourceName = p.subreddit ? 'r/' + p.subreddit : 'Reddit';
         const sourceHtml = '<span class="news-card-source">Источник: <a href="' + (p.post_url ? escapeHtml(p.post_url) : '#') + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">' + escapeHtml(sourceName) + '</a></span>';
-        const linkIcon = p.post_url ? '<a href="' + escapeHtml(p.post_url) + '" target="_blank" rel="noopener" class="news-card-link-icon btn-icon" title="Открыть в Reddit" aria-label="Открыть в Reddit" onclick="event.stopPropagation()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>' : '';
+        const linkIcon = p.post_url ? '<a href="' + escapeHtml(p.post_url) + '" target="_blank" rel="noopener" class="news-card-link-corner" title="Открыть в Reddit" aria-label="Открыть в Reddit" onclick="event.stopPropagation()"><span aria-hidden="true">↗</span></a>' : '';
         return '<article class="news-card" data-id="' + p.id + '" role="button" tabindex="0">' +
           '<div class="news-card-top">' +
             '<div style="display: flex; align-items: center; gap: var(--space-2); flex: 1; min-width: 0;">' +
-              '<span class="news-card-meta">' + authorDate + '</span>' +
+              '<span class="news-card-meta"><span class="news-card-meta-author">' + escapeHtml(authorName) + '</span><span class="news-card-meta-date"> · ' + escapeHtml(dateStr) + '</span></span>' +
               scoreHtml +
             '</div>' +
             linkIcon +
           '</div>' +
           '<h2 class="news-card-title">' + title + '</h2>' +
           (desc ? '<p class="news-card-summary">' + escapeHtml(desc) + '</p>' : '') +
-          '<div class="news-card-source-wrap">' + sourceHtml + '</div>' +
-          '<div class="reddit-card-action"><button type="button" class="btn primary btn-sm btn-generate-post" data-id="' + p.id + '" onclick="event.stopPropagation()">Переписать в пост</button></div>' +
+          '<div class="news-card-footer">' +
+            '<button type="button" class="news-card-read-more btn-reddit-read-full" data-id="' + p.id + '" onclick="event.stopPropagation()">Читать полностью</button>' +
+            '<div class="news-card-actions">' +
+              '<button type="button" class="btn primary btn-sm btn-generate-post" data-id="' + p.id + '" onclick="event.stopPropagation()">Переписать в пост</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="news-card-stats">' + sourceHtml + '</div>' +
         '</article>';
       }).join('');
       redditLoading.style.display = 'none';
@@ -415,15 +442,18 @@
       redditList.querySelectorAll('.news-card').forEach(card => {
         const id = parseInt(card.dataset.id, 10);
         card.addEventListener('click', (e) => {
-          if (e.target.closest('.btn-generate-post') || e.target.closest('a')) return;
+          if (e.target.closest('.btn-generate-post') || e.target.closest('a') || e.target.closest('.news-card-read-more') || e.target.closest('.news-card-footer')) return;
           openViewRedditModal(id);
         });
         card.addEventListener('keydown', (e) => {
           if (e.key !== 'Enter' && e.key !== ' ') return;
-          if (e.target.closest('.btn-generate-post') || e.target.closest('a')) return;
+          if (e.target.closest('.btn-generate-post') || e.target.closest('a') || e.target.closest('.news-card-read-more') || e.target.closest('.news-card-footer')) return;
           e.preventDefault();
           openViewRedditModal(id);
         });
+      });
+      redditList.querySelectorAll('.btn-reddit-read-full').forEach(btn => {
+        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openViewRedditModal(parseInt(btn.dataset.id, 10)); });
       });
       redditList.querySelectorAll('.btn-generate-post').forEach(btn => {
         btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openViewRedditModal(parseInt(btn.dataset.id, 10), { focusGenerate: true }); });
@@ -524,7 +554,7 @@
       contentEl.style.whiteSpace = 'pre-wrap';
       const linkHeader = document.getElementById('view-reddit-link-header');
       linkHeader.href = currentViewUrl;
-      linkHeader.style.display = currentViewUrl !== '#' ? 'inline-flex' : 'none';
+      linkHeader.style.display = currentViewUrl !== '#' ? 'inline' : 'none';
       const textarea = document.getElementById('view-reddit-write-textarea');
       if (textarea) textarea.value = (p.reply_variants && p.reply_variants.post) ? (p.reply_variants.post || '') : '';
       updateRedditCharCount();
