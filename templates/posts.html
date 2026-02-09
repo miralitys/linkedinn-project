@@ -1,0 +1,1056 @@
+{% extends "base.html" %}
+{% block title %}Комментарии — MyVOICE's{% endblock %}
+{% block content %}
+<header class="posts-page-header">
+  <div class="posts-header-top">
+    <h1 class="posts-page-title">Комментарии</h1>
+    <div class="posts-header-actions">
+      <button type="button" id="btn-parse-by-url" class="btn primary posts-parse-btn" aria-label="Распознать пост по ссылке">Распознать по ссылке</button>
+      <button type="button" id="btn-refresh-posts" class="btn secondary btn-icon-text posts-refresh-btn" aria-label="Обновить ленту" title="Обновить"><span aria-hidden="true">↻</span> Обновить</button>
+    </div>
+  </div>
+  <p class="posts-page-lead">Лента постов контактов. Добавьте пост по ссылке LinkedIn — откройте его и напишите комментарий от выбранного автора.</p>
+  <div class="posts-toolbar-row">
+    <div class="posts-toolbar-inline-field">
+      <label class="posts-toolbar-label-inline" for="posts-period">Период</label>
+      <select id="posts-period" class="posts-toolbar-select" aria-label="Период">
+        <option value="">Все время</option>
+        <option value="week">Неделя</option>
+        <option value="month">Месяц</option>
+      </select>
+    </div>
+    <div class="posts-toolbar-inline-field">
+      <label class="posts-toolbar-label-inline" for="posts-sort">Сортировка</label>
+      <select id="posts-sort" class="posts-toolbar-select" aria-label="Сортировка">
+        <option value="desc">Сначала новые</option>
+        <option value="asc">Сначала старые</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<div id="posts-feed" class="posts-feed">
+  <div id="posts-loading" class="posts-loading-skeleton" style="display: none;" aria-live="polite">
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+    <div class="skeleton-card"></div>
+  </div>
+  <div id="posts-list"></div>
+  <div id="posts-empty" class="empty-state-card" style="display: none;">
+    <p class="empty-state-title">Нет постов</p>
+    <p class="empty-state-desc">Добавьте контакты в разделе Контакты, затем добавьте посты кнопкой «Распознать по ссылке» выше.</p>
+    <button type="button" id="posts-empty-cta" class="btn primary">Распознать по ссылке</button>
+  </div>
+  <div id="posts-error" class="error-state-card" style="display: none;">
+    <p class="error-state-text">Не удалось загрузить посты.</p>
+    <button type="button" id="posts-error-retry" class="btn secondary">Повторить</button>
+  </div>
+</div>
+
+<!-- Модалка «Распознать по ссылке»: URL + контакт → создание поста -->
+<div id="parse-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="parse-modal-title" aria-describedby="parse-modal-desc" hidden>
+  <div class="modal-content card">
+    <h2 id="parse-modal-title">Распознать пост по ссылке</h2>
+    <p id="parse-modal-desc" class="form-hint" style="margin: 0 0 var(--space-4);">Вставьте ссылку на пост LinkedIn и выберите контакт — пост будет добавлен в ленту.</p>
+    <details class="parse-details">
+      <summary>Подробнее</summary>
+      <p class="form-hint" style="margin: var(--space-2) 0 0 0;">Используется браузерная автоматизация (Playwright) и распознавание через GPT. Требуются установленные Playwright и Chromium.</p>
+    </details>
+    <label for="parse-url">Ссылка на пост LinkedIn</label>
+    <input type="url" id="parse-url" placeholder="https://www.linkedin.com/feed/update/..." aria-describedby="parse-url-error" aria-invalid="false">
+    <p id="parse-url-error" class="input-error-text" role="alert" style="display: none; margin: calc(-1 * var(--space-2)) 0 var(--space-2);"></p>
+    <label for="parse-person-search">Контакт</label>
+    <div class="parse-contact-combobox">
+      <input type="text" id="parse-person-search" placeholder="Введите имя для поиска..." autocomplete="off" aria-autocomplete="list" aria-expanded="false" aria-controls="parse-person-dropdown">
+      <input type="hidden" id="parse-person-id" name="parse-person-id">
+      <div id="parse-person-dropdown" class="parse-person-dropdown" role="listbox" hidden></div>
+    </div>
+    <p id="parse-status" class="form-hint" style="min-height: 1.25rem;" role="status" aria-live="polite"></p>
+    <div id="parse-result-preview" class="parse-result-preview" style="display: none; margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border);">
+      <p class="form-hint" style="margin: 0 0 var(--space-2);"><strong>Распознанный текст:</strong></p>
+      <div id="parse-result-text" class="parse-result-text" style="white-space: pre-wrap; font-size: var(--text-14); margin-bottom: var(--space-4); max-height: 200px; overflow-y: auto; padding: var(--space-3); background: var(--bg); border-radius: var(--radius-sm);"></div>
+      <p class="form-hint" style="margin: 0 0 var(--space-2);"><strong>Скриншот, который был распознан:</strong></p>
+      <img id="parse-result-screenshot" src="" alt="Скриншот поста" style="max-width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+    </div>
+    <div class="modal-actions">
+      <button type="button" id="parse-modal-cancel" class="btn secondary">Отмена</button>
+      <button type="button" id="parse-submit" class="btn primary" disabled>Распознать и сохранить пост</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка добавления/редактирования поста -->
+<div id="post-modal" class="modal" style="display: none;">
+  <div class="modal-content card">
+    <h2 id="post-modal-title">Добавить пост</h2>
+    <form id="post-form">
+      <input type="hidden" name="id" id="post-id">
+      <label>Контакт</label>
+      <select name="person_id" id="post-person-id" required>
+        <option value="">— Выберите контакт —</option>
+      </select>
+      <label id="label-post-url">Ссылка на пост</label>
+      <input name="post_url" id="post-url" type="url" placeholder="https://www.linkedin.com/feed/update/...">
+      <label>Заголовок</label>
+      <input name="title" id="post-title" required placeholder="Заголовок поста">
+      <label>Текст / превью</label>
+      <textarea name="content" id="post-content" rows="4" placeholder="Текст или краткое описание"></textarea>
+      <div id="post-form-extra">
+        <label>Дата поста</label>
+        <input name="posted_at" id="post-posted-at" type="datetime-local" required>
+        <div class="grid2">
+          <div><label>Лайки</label><input name="likes_count" id="post-likes" type="number" min="0" placeholder="0"></div>
+          <div><label>Комментарии</label><input name="comments_count" id="post-comments" type="number" min="0" placeholder="0"></div>
+        </div>
+        <label>Просмотры</label>
+        <input name="views_count" id="post-views" type="number" min="0" placeholder="0">
+        <label>Теги (через запятую)</label>
+        <input name="tags" id="post-tags" placeholder="AI, логистика, ...">
+      </div>
+    </form>
+    <div class="modal-actions">
+      <button type="button" id="post-modal-cancel" class="secondary">Отмена</button>
+      <button type="button" id="post-modal-save">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка подтверждения удаления -->
+<div id="confirm-delete-modal" class="modal confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-delete-title" hidden>
+  <div class="modal-content card confirm-delete-content">
+    <h2 id="confirm-delete-title" class="confirm-delete-title">Удалить этот пост?</h2>
+    <p class="confirm-delete-desc">Пост будет удалён безвозвратно.</p>
+    <div class="modal-actions confirm-delete-actions">
+      <button type="button" id="confirm-delete-cancel" class="btn secondary">Отмена</button>
+      <button type="button" id="confirm-delete-ok" class="btn btn-danger">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer просмотра поста (справа) -->
+<div id="view-post-modal" class="view-post-drawer-backdrop" role="dialog" aria-modal="true" aria-labelledby="view-post-modal-title" hidden>
+  <div class="view-post-drawer-panel card" id="view-post-drawer-panel">
+    <div class="view-post-header">
+      <span id="view-post-author" class="view-post-meta"></span>
+      <span id="view-post-date" class="view-post-meta"></span>
+      <a id="view-post-link-header" href="#" target="_blank" rel="noopener" class="btn secondary btn-sm" style="display: none;" aria-label="Открыть в LinkedIn">Открыть в LinkedIn</a>
+      <button type="button" class="view-post-close" id="view-post-drawer-close" aria-label="Закрыть">×</button>
+    </div>
+    <h1 id="view-post-modal-title" class="view-post-drawer-title"></h1>
+    <div id="view-post-meta-row" class="view-post-meta-row"></div>
+    <div id="view-post-content" class="view-post-body"></div>
+    <div class="view-post-footer">
+      <a id="view-post-link" href="#" target="_blank" rel="noopener" class="link-tertiary" style="display: none;">Открыть оригинал ↗</a>
+    </div>
+    <div class="view-post-generate-block">
+      <span class="drawer-footer-label">Сгенерировать комментарий</span>
+      <div class="drawer-footer-row">
+        <div class="drawer-field">
+          <label class="form-label" for="view-post-author-select">От лица автора</label>
+          <select id="view-post-author-select" class="form-field-full" aria-label="Автор"><option value="">— Загрузка… —</option></select>
+        </div>
+        <div class="drawer-field">
+          <label class="form-label" for="view-post-goal">Цель</label>
+          <select id="view-post-goal" aria-label="Цель"><option value="network">Network</option><option value="native_ads">Нативная реклама</option><option value="full_ads">Сто процентов рекламы</option></select>
+        </div>
+      </div>
+      <button type="button" id="view-post-generate-reply" class="btn primary">Сгенерировать комментарий</button>
+    </div>
+    <div id="view-post-reply-result" class="view-post-reply-variants" style="display: none;">
+      <div class="segmented-control-wrap view-post-segmented" role="tablist" aria-label="Длина варианта" style="display: none;">
+        <button type="button" class="segmented-tab" data-variant="short" role="tab" aria-selected="true">Короткий</button>
+        <button type="button" class="segmented-tab" data-variant="medium" role="tab" aria-selected="false">Средний</button>
+        <button type="button" class="segmented-tab" data-variant="long" role="tab" aria-selected="false">Длинный</button>
+      </div>
+      <div id="view-post-reply-single" class="view-post-reply-single"></div>
+      <div id="view-post-reply-all" class="view-post-reply-all" style="display: none;"></div>
+      <button type="button" id="view-post-show-all-variants" class="btn btn-ghost btn-sm" style="display: none;">Показать все варианты</button>
+    </div>
+    <div class="view-post-comment-written-wrap">
+      <label class="view-post-checkbox-label" for="view-post-comment-written">
+        <input type="checkbox" id="view-post-comment-written" class="view-post-checkbox" aria-describedby="view-post-comment-written-desc">
+        <span class="view-post-checkbox-text">Комментарий отправлен</span>
+      </label>
+      <span id="view-post-comment-written-desc" class="view-post-marked-meta" style="display: none;">Отмечено</span>
+      <button type="button" id="view-post-comment-undo" class="link-tertiary btn-sm" style="display: none;">Отменить</button>
+    </div>
+    <div class="view-post-drawer-actions">
+      <button type="button" id="view-post-delete-btn" class="btn secondary">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* ——— Комментарии: шапка ——— */
+  .posts-page-header { margin-bottom: var(--space-6); }
+  .posts-header-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-2); }
+  .posts-page-title { font-size: 1.75rem; font-weight: 700; margin: 0; color: var(--text); letter-spacing: -0.02em; }
+  .posts-header-actions { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+  .posts-page-lead { margin: 0 0 var(--space-4); font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; max-width: 42rem; }
+  .posts-toolbar-row { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+  .posts-toolbar-inline-field { display: flex; align-items: center; gap: var(--space-2); }
+  .posts-toolbar-label-inline { font-size: var(--text-12); font-weight: 500; color: var(--text-muted); margin: 0; white-space: nowrap; }
+  .posts-toolbar-select { min-width: 120px; height: 2.25rem; padding: 0 var(--space-3); font-size: var(--text-14); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); box-sizing: border-box; }
+  .posts-toolbar-select:focus { outline: none; border-color: var(--primary); box-shadow: var(--focus-ring); }
+  .btn-icon-text { display: inline-flex; align-items: center; gap: var(--space-2); }
+  .posts-parse-btn { height: 2.25rem; padding: 0 var(--space-4); }
+  .posts-refresh-btn { height: 2.25rem; padding: 0 var(--space-4); }
+
+  .posts-feed { margin-top: 0; }
+  .posts-loading-skeleton { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4) 0; }
+  .skeleton-card { height: 160px; border-radius: var(--radius-lg); background: linear-gradient(90deg, var(--border) 25%, var(--surface) 50%, var(--border) 75%); background-size: 200% 100%; animation: skeleton-shine 1.2s ease-in-out infinite; }
+  @keyframes skeleton-shine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* ——— Карточка поста (как news-card) ——— */
+  .post-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6); margin-bottom: var(--space-4); transition: box-shadow var(--motion-normal), border-color var(--motion-fast); box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; overflow: hidden; }
+  .post-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--primary) 0%, rgba(99,102,241,0.3) 100%); opacity: 0; transition: opacity var(--motion-fast); }
+  .post-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 6px rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.35); }
+  .post-card:hover::before { opacity: 1; }
+  .post-card:focus-within { border-color: var(--primary); box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.15); }
+  .post-card-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+  .post-card-meta { font-size: var(--text-14); color: var(--text-muted); }
+  .post-card-badges { display: flex; gap: var(--space-1); flex-wrap: wrap; }
+  .post-card-badges .post-badge { font-size: var(--text-12); padding: 2px 8px; border-radius: var(--radius-sm); background: var(--bg); color: var(--text-muted); }
+  .post-card-badges .post-badge.archived { background: var(--bg); color: var(--text-muted); }
+  .post-card-badges .post-badge.comment-written { background: var(--success-soft); color: var(--success); }
+  .post-card-title { font-size: 1.0625rem; font-weight: 600; margin: 0 0 var(--space-3); color: var(--text); line-height: 1.4; }
+  .post-card-title:hover { color: var(--primary); }
+  .post-card-snippet { font-size: 0.9375rem; line-height: 1.6; color: var(--text); margin: 0 0 var(--space-3); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .post-card-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
+  .post-card-read-more { font-size: var(--text-14); color: var(--primary); background: none; border: none; cursor: pointer; padding: 0; font-weight: 500; }
+  .post-card-read-more:hover { text-decoration: underline; }
+  .post-card-read-more:focus-visible { outline: none; border-radius: var(--radius-sm); box-shadow: var(--focus-ring); }
+  .post-card-actions { display: flex; align-items: center; gap: var(--space-2); }
+  .post-card-actions .btn-icon { min-width: 44px; min-height: 44px; padding: 0; border: none; background: var(--bg); color: var(--text-muted); border-radius: var(--radius-sm); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .post-card-actions .btn-icon:hover { background: var(--primary-soft); color: var(--primary); }
+  .post-card-actions .btn-icon:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .post-card-stats { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border); font-size: var(--text-12); color: var(--text-muted); }
+  .post-card-stats-meta { margin-right: var(--space-3); }
+  .post-card-tags { color: var(--text-muted); }
+
+  .empty-state-card, .error-state-card { text-align: center; padding: var(--space-10); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .empty-state-title, .error-state-text { margin: 0 0 var(--space-2); font-weight: 600; font-size: var(--text-16); color: var(--text); }
+  .empty-state-desc { margin: 0 0 var(--space-4); color: var(--text-muted); font-size: var(--text-14); line-height: 1.5; }
+  .view-post-drawer-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); z-index: 100; display: flex; justify-content: flex-end; padding: 0; }
+  .view-post-drawer-backdrop[hidden] { display: none !important; }
+  .view-post-drawer-panel { position: relative; width: 100%; max-width: 520px; height: 100%; margin: 0; border-radius: 0; border-left: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; padding: var(--space-5); background: var(--surface); }
+  .view-post-header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+  .view-post-meta { font-size: var(--text-14); color: var(--text-muted); }
+  .view-post-close { position: absolute; top: var(--space-3); right: var(--space-3); min-width: 44px; min-height: 44px; border: none; background: var(--bg); color: var(--text-muted); cursor: pointer; border-radius: var(--radius-sm); font-size: 1.5rem; line-height: 1; display: flex; align-items: center; justify-content: center; }
+  .view-post-close:hover { background: var(--border); color: var(--text); }
+  .view-post-close:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .view-post-drawer-title { margin: 0 0 var(--space-2); font-size: var(--text-20); font-weight: 700; color: var(--text); line-height: 1.3; }
+  .view-post-meta-row { font-size: var(--text-14); color: var(--text-muted); margin-bottom: var(--space-3); }
+  .view-post-body { font-size: var(--text-16); line-height: 1.6; white-space: pre-wrap; margin-bottom: var(--space-4); color: var(--text); flex: 1; }
+  .view-post-footer { margin-bottom: var(--space-4); }
+  .drawer-footer-label { display: block; font-size: var(--text-14); font-weight: 600; margin-bottom: var(--space-2); color: var(--text); }
+  .drawer-footer-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-end; margin-bottom: var(--space-3); }
+  .drawer-field { flex: 1; min-width: 120px; }
+  .drawer-field select { margin-bottom: 0; }
+  .view-post-generate-block .form-label { margin-bottom: var(--space-1); font-size: var(--text-12); }
+  .view-post-reply-variants { margin-top: var(--space-4); }
+  .view-post-reply-variant { background: var(--bg); padding: var(--space-4); border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: var(--space-3); }
+  .view-post-reply-variant-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-2); }
+  .view-post-reply-variant-title { font-weight: 600; font-size: var(--text-14); color: var(--text); }
+  .view-post-reply-variant-actions { display: flex; align-items: center; gap: var(--space-2); }
+  .view-post-reply-variant-text { font-size: var(--text-14); line-height: 1.55; color: var(--text); white-space: pre-wrap; margin: 0; }
+  .view-post-comment-written-wrap { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+  .view-post-checkbox-label { display: inline-flex; align-items: center; gap: var(--space-3); cursor: pointer; font-size: var(--text-14); margin: 0; }
+  .view-post-checkbox { width: 1.125rem; height: 1.125rem; margin: 0; flex-shrink: 0; accent-color: var(--primary); }
+  .view-post-checkbox-text { white-space: nowrap; }
+  .view-post-checkbox-label:focus-within .view-post-checkbox-text { outline: none; }
+  .view-post-checkbox:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 2px; }
+  .view-post-marked-meta { font-size: var(--text-12); color: var(--success); }
+  .view-post-drawer-actions { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border); }
+  .segmented-control-wrap.view-post-segmented { margin-bottom: var(--space-3); }
+  .segmented-tab { padding: var(--space-2) var(--space-3); font-size: var(--text-14); font-weight: 500; border: none; background: transparent; color: var(--text-muted); border-radius: var(--radius-sm); cursor: pointer; }
+  .segmented-tab:hover, .segmented-tab.active { background: var(--surface); color: var(--text); }
+  .link-tertiary { font-size: var(--text-14); color: var(--primary); background: none; border: none; cursor: pointer; padding: 0; text-decoration: none; font-weight: 500; }
+  .link-tertiary:hover { text-decoration: underline; }
+  .link-tertiary:focus-visible { outline: none; border-radius: var(--radius-sm); box-shadow: var(--focus-ring); }
+  .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
+  .modal-content { max-width: 480px; width: 100%; max-height: 90vh; overflow-y: auto; border-radius: var(--radius); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+  .modal-actions { margin-top: 1.25rem; display: flex; gap: 0.5rem; justify-content: flex-end; }
+  .parse-contact-combobox { position: relative; }
+  .parse-contact-combobox #parse-person-search { width: 100%; margin-bottom: 0; }
+  .parse-person-dropdown { position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px; max-height: 220px; overflow-y: auto; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-card); z-index: 10; }
+  .parse-person-dropdown[hidden] { display: none !important; }
+  .parse-person-dropdown .parse-person-item { padding: 0.55rem 0.85rem; cursor: pointer; font-size: 0.9375rem; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  .parse-person-dropdown .parse-person-item:last-child { border-bottom: none; }
+  .parse-person-dropdown .parse-person-item:hover { background: var(--accent-soft); }
+  .parse-details { margin-bottom: var(--space-4); font-size: var(--text-14); }
+  .parse-details summary { cursor: pointer; color: var(--text-muted); }
+  .input-error-text { font-size: var(--text-12); color: var(--danger); }
+  .drawer-state-loading { margin: 0; font-size: var(--text-14); color: var(--text-muted); }
+  .confirm-modal { z-index: 110; }
+  .confirm-delete-content { max-width: 380px; padding: var(--space-6); background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--elevation-modal); }
+  .confirm-delete-title { margin: 0 0 var(--space-2); font-size: var(--text-20); font-weight: 600; color: var(--text); }
+  .confirm-delete-desc { margin: 0 0 var(--space-5); font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; }
+  .confirm-delete-actions { margin-top: 0; display: flex; gap: var(--space-3); justify-content: flex-end; }
+  .btn.btn-danger { background: var(--danger); color: white; border: none; }
+  .btn.btn-danger:hover { background: #b91c1c; color: white; }
+  .btn.btn-danger:focus-visible { box-shadow: 0 0 0 3px var(--danger-soft); }
+</style>
+<script>
+  const postsList = document.getElementById('posts-list');
+  const postsLoading = document.getElementById('posts-loading');
+  const postsEmpty = document.getElementById('posts-empty');
+  const periodSelect = document.getElementById('posts-period');
+  const sortSelect = document.getElementById('posts-sort');
+  const modal = document.getElementById('post-modal');
+  const postForm = document.getElementById('post-form');
+  const postPersonSelect = document.getElementById('post-person-id');
+  const postPostedAt = document.getElementById('post-posted-at');
+
+  function escapeHtml(s) {
+    if (s == null || s === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(s);
+    return div.innerHTML;
+  }
+
+  const DISPLAY_TZ = {{ display_timezone|tojson }};
+  function formatDate(d) {
+    if (!d) return '—';
+    const s = typeof d === 'string' ? d : (d.toISOString && d.toISOString());
+    const dt = new Date(s && !/Z|[+-]\d{2}:?\d{2}$/.test(s) ? s.replace(/\.\d{3}$/, '') + 'Z' : s);
+    if (isNaN(dt.getTime())) return '—';
+    const opts = { timeZone: DISPLAY_TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+    const parts = new Intl.DateTimeFormat('en-CA', opts).formatToParts(dt);
+    const y = parts.find(p => p.type === 'year').value;
+    const m = parts.find(p => p.type === 'month').value;
+    const day = parts.find(p => p.type === 'day').value;
+    const h = parts.find(p => p.type === 'hour').value;
+    const min = parts.find(p => p.type === 'minute').value;
+    const s2 = parts.find(p => p.type === 'second').value;
+    return y + '-' + m + '-' + day + ' ' + h + ':' + min + ':' + s2;
+  }
+
+  function toDatetimeLocal(iso) {
+    if (!iso) return '';
+    const s = typeof iso === 'string' ? iso : (iso.toISOString && iso.toISOString());
+    const d = new Date(s && !/Z|[+-]\d{2}:?\d{2}$/.test(s) ? s.replace(/\.\d{3}$/, '') + 'Z' : s);
+    if (isNaN(d.getTime())) return '';
+    const opts = { timeZone: DISPLAY_TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false };
+    const parts = new Intl.DateTimeFormat('en-CA', opts).formatToParts(d);
+    const y = parts.find(p => p.type === 'year').value;
+    const m = parts.find(p => p.type === 'month').value;
+    const day = parts.find(p => p.type === 'day').value;
+    const h = parts.find(p => p.type === 'hour').value;
+    const min = parts.find(p => p.type === 'minute').value;
+    return y + '-' + m + '-' + day + 'T' + h + ':' + min;
+  }
+
+  function nowInDisplayTz() {
+    const d = new Date();
+    const opts = { timeZone: DISPLAY_TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+    const parts = new Intl.DateTimeFormat('en-CA', opts).formatToParts(d);
+    const y = parts.find(p => p.type === 'year').value;
+    const m = parts.find(p => p.type === 'month').value;
+    const day = parts.find(p => p.type === 'day').value;
+    const h = parts.find(p => p.type === 'hour').value;
+    const min = parts.find(p => p.type === 'minute').value;
+    const s = parts.find(p => p.type === 'second').value;
+    return y + '-' + m + '-' + day + 'T' + h + ':' + min + ':' + s;
+  }
+
+  function loadPosts(doSyncIfEmpty) {
+    postsLoading.style.display = 'block';
+    postsEmpty.style.display = 'none';
+    document.getElementById('posts-error').style.display = 'none';
+    const period = periodSelect.value || undefined;
+    const sort = sortSelect.value || 'desc';
+    const params = new URLSearchParams();
+    if (period) params.set('period', period);
+    params.set('sort', sort);
+    params.set('archived', 'false');
+    fetch('/posts?' + params).then(r => r.json()).then(posts => {
+      if (doSyncIfEmpty && (!posts || !posts.length)) {
+        Promise.all([
+          fetch('/posts/sync?source=rss', { method: 'POST' }).then(r => r.json()),
+          fetch('/posts/sync?source=demo', { method: 'POST' }).then(r => r.json())
+        ]).then(() => loadPosts(false)).catch(() => { postsLoading.style.display = 'none'; postsEmpty.style.display = 'block'; });
+        return;
+      }
+      postsLoading.style.display = 'none';
+      const list = posts || [];
+      if (!list.length) {
+        postsList.innerHTML = '';
+        postsEmpty.style.display = 'block';
+        return;
+      }
+      postsEmpty.style.display = 'none';
+      postsList.innerHTML = list.map(p => {
+        const authorDate = escapeHtml(p.person_name || 'Контакт #' + p.person_id) + ' · ' + formatDate(p.posted_at);
+        const badges = [];
+        if (p.archived) badges.push('<span class="post-badge archived">Архив</span>');
+        if (p.comment_written) badges.push('<span class="post-badge comment-written">Комментарий написан</span>');
+        const sourceText = (p.title || p.content || '').trim() || 'Без заголовка';
+        const words = sourceText.split(/\s+/).filter(Boolean);
+        const title = escapeHtml(words.slice(0, 4).join(' ') + (words.length > 4 ? '…' : ''));
+        const content = (p.content || '').trim();
+        const sentences = content ? content.split(/(?<=[.!?])\s+/).filter(Boolean) : [];
+        const descLen = 3;
+        const description = sentences.length ? sentences.slice(0, descLen).join(' ') + (sentences.length > descLen ? '…' : '') : '';
+        const meta = [];
+        if (p.likes_count != null) meta.push('👍 ' + p.likes_count);
+        if (p.comments_count != null) meta.push('💬 ' + p.comments_count);
+        if (p.views_count != null) meta.push('👁 ' + p.views_count);
+        const metaStr = meta.length ? escapeHtml(meta.join(' · ')) : '';
+        const tagsStr = Array.isArray(p.tags) ? p.tags.join(', ') : (p.tags || '');
+        const openIcon = '<span aria-hidden="true">↗</span>';
+        return '<article class="post-card" data-id="' + p.id + '">' +
+          '<div class="post-card-top">' +
+            '<span class="post-card-meta">' + authorDate + '</span>' +
+            '<span class="post-card-badges">' + badges.join('') + '</span>' +
+          '</div>' +
+          '<h2 class="post-card-title">' + title + '</h2>' +
+          (description ? '<p class="post-card-snippet">' + escapeHtml(description) + '</p>' : '') +
+          '<div class="post-card-footer">' +
+            '<button type="button" class="post-card-read-more btn-view-full" data-id="' + p.id + '">Читать полностью</button>' +
+            '<div class="post-card-actions">' +
+              (p.post_url ? '<a href="' + escapeHtml(p.post_url) + '" target="_blank" rel="noopener" class="btn-icon post-card-open" aria-label="Открыть в LinkedIn" title="Открыть в LinkedIn">' + openIcon + '</a>' : '') +
+              '<button type="button" class="btn primary btn-sm btn-generate-post" data-id="' + p.id + '">Сгенерировать комментарий</button>' +
+              '<button type="button" class="btn secondary btn-sm btn-delete" data-id="' + p.id + '">Удалить</button>' +
+            '</div>' +
+          '</div>' +
+          (metaStr || tagsStr ? '<div class="post-card-stats">' + (metaStr ? '<span class="post-card-stats-meta">' + metaStr + '</span>' : '') + (tagsStr ? '<span class="post-card-tags">' + escapeHtml(tagsStr) + '</span>' : '') + '</div>' : '') +
+        '</article>';
+      }).join('');
+      postsList.querySelectorAll('.post-card').forEach(card => {
+        const id = parseInt(card.dataset.id, 10);
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-delete') || e.target.closest('.btn-generate-post') || e.target.closest('.post-card-open')) return;
+          if (e.target.closest('.post-card-read-more') || e.target.closest('.post-card-title') || e.target.closest('.post-card-snippet') || e.target.closest('.post-card-meta')) {
+            e.preventDefault();
+            openViewPostModal(id);
+          }
+        });
+      });
+      postsList.querySelectorAll('.btn-view-full').forEach(btn => {
+        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openViewPostModal(parseInt(btn.dataset.id, 10)); });
+      });
+      postsList.querySelectorAll('.btn-generate-post').forEach(btn => {
+        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openViewPostModal(parseInt(btn.dataset.id, 10), { focusGenerate: true }); });
+      });
+      postsList.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const id = parseInt(btn.dataset.id, 10);
+          if (await confirmDeleteModal()) {
+            deletePost(id).then(r => { if (r.ok) loadPosts(false); });
+          }
+        });
+      });
+    }).catch(() => {
+      postsLoading.style.display = 'none';
+      document.getElementById('posts-error').style.display = 'block';
+    });
+  }
+  periodSelect.addEventListener('change', () => loadPosts(false));
+  sortSelect.addEventListener('change', () => loadPosts(false));
+  document.getElementById('posts-empty-cta').addEventListener('click', () => document.getElementById('btn-parse-by-url').click());
+  document.getElementById('posts-error-retry').addEventListener('click', () => loadPosts(false));
+
+  const confirmDeleteModalEl = document.getElementById('confirm-delete-modal');
+  const confirmDeleteCancelBtn = document.getElementById('confirm-delete-cancel');
+  const confirmDeleteOkBtn = document.getElementById('confirm-delete-ok');
+  let confirmDeleteResolve = null;
+  function confirmDeleteModal() {
+    return new Promise(function(resolve) {
+      confirmDeleteResolve = resolve;
+      confirmDeleteModalEl.removeAttribute('hidden');
+      confirmDeleteModalEl.style.display = 'flex';
+      confirmDeleteOkBtn.focus();
+    });
+  }
+  function closeConfirmDeleteModal(result) {
+    if (confirmDeleteModalEl.hasAttribute('hidden')) return;
+    confirmDeleteModalEl.setAttribute('hidden', '');
+    confirmDeleteModalEl.style.display = 'none';
+    if (confirmDeleteResolve) confirmDeleteResolve(result);
+    confirmDeleteResolve = null;
+  }
+  confirmDeleteCancelBtn.addEventListener('click', () => closeConfirmDeleteModal(false));
+  confirmDeleteOkBtn.addEventListener('click', () => closeConfirmDeleteModal(true));
+  confirmDeleteModalEl.addEventListener('click', (e) => { if (e.target === confirmDeleteModalEl) closeConfirmDeleteModal(false); });
+  confirmDeleteModalEl.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeConfirmDeleteModal(false); e.preventDefault(); } });
+
+  const viewPostModal = document.getElementById('view-post-modal');
+  const viewPostDrawerClose = document.getElementById('view-post-drawer-close');
+  let viewPostRestoreFocus = null;
+  function getDrawerFocusables() {
+    if (!viewPostModal || !viewPostModal.offsetParent) return [];
+    const panel = document.getElementById('view-post-drawer-panel');
+    if (!panel) return [];
+    return [].slice.call(panel.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])')).filter(el => !el.hidden && el.offsetParent !== null);
+  }
+  function trapDrawerFocus(e) {
+    if (e.key !== 'Tab' || viewPostModal.hasAttribute('hidden')) return;
+    const focusables = getDrawerFocusables();
+    if (focusables.length === 0) return;
+    const first = focusables[0], last = focusables[focusables.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  }
+  function closeViewPostDrawer() {
+    viewPostModal.setAttribute('hidden', '');
+    viewPostModal.style.display = 'none';
+    if (viewPostRestoreFocus && typeof viewPostRestoreFocus.focus === 'function') viewPostRestoreFocus.focus();
+    viewPostRestoreFocus = null;
+  }
+  viewPostModal.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { closeViewPostDrawer(); e.preventDefault(); }
+    trapDrawerFocus(e);
+  });
+  viewPostDrawerClose.addEventListener('click', closeViewPostDrawer);
+  viewPostModal.addEventListener('click', (e) => {
+    if (e.target === viewPostModal) closeViewPostDrawer();
+  });
+
+  const viewPostLink = document.getElementById('view-post-link');
+  const viewPostLinkHeader = document.getElementById('view-post-link-header');
+  const viewPostGenerateReply = document.getElementById('view-post-generate-reply');
+  const viewPostReplyResult = document.getElementById('view-post-reply-result');
+  const viewPostReplySingle = document.getElementById('view-post-reply-single');
+  const viewPostReplyAll = document.getElementById('view-post-reply-all');
+  const viewPostSegmentedWrap = document.querySelector('.view-post-segmented');
+  const viewPostShowAllBtn = document.getElementById('view-post-show-all-variants');
+  let currentViewPostId = null;
+  let currentViewPostContent = '';
+  let currentViewPostUrl = '';
+  let currentReplyVariants = null;
+  let showingAllVariants = false;
+  function updateGenerateReplyButtonLabel() {
+    if (!viewPostGenerateReply) return;
+    const hasReplies = currentReplyVariants && typeof currentReplyVariants === 'object' && (currentReplyVariants.short || currentReplyVariants.medium || currentReplyVariants.long);
+    viewPostGenerateReply.textContent = hasReplies ? 'Регенерировать комментарии' : 'Сгенерировать комментарий';
+  }
+  function renderOneReplyVariant(key, comments) {
+    if (!comments || !comments[key]) return '';
+    const id = 'view-reply-' + key;
+    const text = (comments[key] || '').trim();
+    const label = replyVariantLabels[key] || key;
+    const openIconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+    const openLabel = currentViewPostUrl && currentViewPostUrl !== '#' ? '<a href="' + escapeHtml(currentViewPostUrl) + '" target="_blank" rel="noopener" class="view-post-open-link" title="Открыть пост в LinkedIn" aria-label="Открыть пост в LinkedIn">' + openIconSvg + '</a>' : '';
+    return '<div class="view-post-reply-variant">' +
+      '<div class="view-post-reply-variant-header">' +
+        '<span class="view-post-reply-variant-title">' + escapeHtml(label) + '</span>' +
+        '<div class="view-post-reply-variant-actions">' +
+          '<button type="button" class="btn-copy-reply secondary" data-copy-id="' + id + '" title="Копировать в буфер" aria-label="Копировать вариант">Копировать</button>' + (openLabel ? openLabel : '') +
+        '</div>' +
+      '</div>' +
+      '<p class="view-post-reply-variant-text" id="' + id + '">' + escapeHtml(text) + '</p>' +
+      '</div>';
+  }
+  function renderReplyVariants(comments) {
+    if (typeof comments !== 'object' || (!comments.short && !comments.medium && !comments.long)) return '';
+    return ['short', 'medium', 'long'].filter(k => comments[k]).map(k => renderOneReplyVariant(k, comments)).join('');
+  }
+  function attachCopyHandlers(container) {
+    if (!container) return;
+    container.querySelectorAll('.btn-copy-reply').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const el = document.getElementById(btn.dataset.copyId);
+        const text = el ? el.textContent : '';
+        navigator.clipboard.writeText(text).then(() => {
+          const origText = btn.textContent;
+          btn.textContent = 'Скопировано';
+          if (typeof window.toast === 'function') window.toast('Скопировано', 'success');
+          setTimeout(() => { btn.textContent = origText; }, 1500);
+        });
+      });
+    });
+  }
+  function showReplyVariantsUI(comments) {
+    if (!comments || (!comments.short && !comments.medium && !comments.long)) return;
+    currentReplyVariants = comments;
+    const keys = ['short', 'medium', 'long'].filter(k => comments[k]);
+    if (viewPostSegmentedWrap) {
+      viewPostSegmentedWrap.style.display = 'inline-flex';
+      const firstKey = keys[0];
+      viewPostSegmentedWrap.querySelectorAll('.segmented-tab').forEach(tab => {
+        const v = tab.dataset.variant;
+        tab.style.display = keys.includes(v) ? '' : 'none';
+        tab.setAttribute('aria-selected', !showingAllVariants && v === firstKey ? 'true' : 'false');
+      });
+      viewPostSegmentedWrap.querySelectorAll('.segmented-tab').forEach(tab => {
+        tab.replaceWith(tab.cloneNode(true));
+      });
+      viewPostSegmentedWrap.querySelectorAll('.segmented-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          viewPostSegmentedWrap.querySelectorAll('.segmented-tab').forEach(t => t.setAttribute('aria-selected', 'false'));
+          tab.setAttribute('aria-selected', 'true');
+          const v = tab.dataset.variant;
+          if (viewPostReplySingle) {
+            viewPostReplySingle.innerHTML = renderOneReplyVariant(v, comments);
+            viewPostReplySingle.style.display = 'block';
+            attachCopyHandlers(viewPostReplySingle);
+          }
+          if (viewPostReplyAll) viewPostReplyAll.style.display = 'none';
+          if (viewPostShowAllBtn) { viewPostShowAllBtn.textContent = 'Показать все варианты'; viewPostShowAllBtn.style.display = keys.length > 1 ? 'inline-flex' : 'none'; }
+          showingAllVariants = false;
+        });
+      });
+    }
+    if (viewPostShowAllBtn) {
+      viewPostShowAllBtn.style.display = keys.length > 1 ? 'inline-flex' : 'none';
+      viewPostShowAllBtn.textContent = showingAllVariants ? 'Показать один вариант' : 'Показать все варианты';
+      viewPostShowAllBtn.onclick = () => {
+        showingAllVariants = !showingAllVariants;
+        if (showingAllVariants) {
+          if (viewPostReplySingle) viewPostReplySingle.style.display = 'none';
+          if (viewPostReplyAll) {
+            viewPostReplyAll.innerHTML = renderReplyVariants(comments);
+            viewPostReplyAll.style.display = 'block';
+            attachCopyHandlers(viewPostReplyAll);
+          }
+          viewPostShowAllBtn.textContent = 'Показать один вариант';
+          if (viewPostSegmentedWrap) viewPostSegmentedWrap.querySelectorAll('.segmented-tab').forEach(t => t.setAttribute('aria-selected', 'false'));
+        } else {
+          if (viewPostReplyAll) viewPostReplyAll.style.display = 'none';
+          const first = keys[0];
+          if (viewPostReplySingle) {
+            viewPostReplySingle.innerHTML = renderOneReplyVariant(first, comments);
+            viewPostReplySingle.style.display = 'block';
+            attachCopyHandlers(viewPostReplySingle);
+          }
+          viewPostShowAllBtn.textContent = 'Показать все варианты';
+          if (viewPostSegmentedWrap) {
+            viewPostSegmentedWrap.querySelectorAll('.segmented-tab').forEach(t => { t.setAttribute('aria-selected', t.dataset.variant === first ? 'true' : 'false'); });
+          }
+        }
+      };
+    }
+    if (viewPostReplySingle) {
+      viewPostReplySingle.innerHTML = renderOneReplyVariant('short', comments);
+      viewPostReplySingle.style.display = showingAllVariants ? 'none' : 'block';
+      attachCopyHandlers(viewPostReplySingle);
+    }
+    if (viewPostReplyAll) {
+      viewPostReplyAll.innerHTML = showingAllVariants ? renderReplyVariants(comments) : '';
+      viewPostReplyAll.style.display = showingAllVariants ? 'block' : 'none';
+      if (showingAllVariants) attachCopyHandlers(viewPostReplyAll);
+    }
+  }
+  function openViewPostModal(id, opts) {
+    opts = opts || {};
+    viewPostRestoreFocus = document.activeElement;
+    viewPostModal.removeAttribute('hidden');
+    viewPostModal.style.display = 'flex';
+    currentViewPostId = id;
+    fetch('/posts/' + id).then(r => r.json()).then(p => {
+      currentViewPostContent = p.content || '';
+      currentViewPostUrl = p.post_url || '#';
+      document.getElementById('view-post-modal-title').textContent = p.title || 'Пост';
+      document.getElementById('view-post-author').textContent = (p.person_name || 'Контакт #' + p.person_id);
+      document.getElementById('view-post-date').textContent = formatDate(p.posted_at);
+      const metaRow = document.getElementById('view-post-meta-row');
+      const metaParts = [];
+      if (p.likes_count != null) metaParts.push('👍 ' + p.likes_count);
+      if (p.comments_count != null) metaParts.push('💬 ' + p.comments_count);
+      if (p.views_count != null) metaParts.push('👁 ' + p.views_count);
+      metaRow.textContent = metaParts.length ? metaParts.join(' · ') : '';
+      document.getElementById('view-post-content').textContent = currentViewPostContent || '(нет текста)';
+      viewPostLink.href = currentViewPostUrl;
+      viewPostLink.style.display = (currentViewPostUrl !== '#' ? 'inline' : 'none');
+      const viewPostLinkHeader = document.getElementById('view-post-link-header');
+      if (viewPostLinkHeader) {
+        viewPostLinkHeader.href = currentViewPostUrl;
+        viewPostLinkHeader.style.display = (currentViewPostUrl !== '#' ? 'inline-flex' : 'none');
+      }
+      const savedReplies = p.reply_variants && typeof p.reply_variants === 'object';
+      if (savedReplies) {
+        currentReplyVariants = p.reply_variants;
+        showingAllVariants = false;
+        viewPostReplyResult.style.display = 'block';
+        showReplyVariantsUI(p.reply_variants);
+      } else {
+        currentReplyVariants = null;
+        viewPostReplyResult.style.display = 'none';
+        if (viewPostSegmentedWrap) viewPostSegmentedWrap.style.display = 'none';
+        if (viewPostShowAllBtn) viewPostShowAllBtn.style.display = 'none';
+        if (viewPostReplySingle) { viewPostReplySingle.style.display = 'none'; viewPostReplySingle.innerHTML = ''; }
+        if (viewPostReplyAll) { viewPostReplyAll.style.display = 'none'; viewPostReplyAll.innerHTML = ''; }
+      }
+      updateGenerateReplyButtonLabel();
+      const commentWrittenCb = document.getElementById('view-post-comment-written');
+      if (commentWrittenCb) commentWrittenCb.checked = !!p.comment_written;
+      const markedMeta = document.getElementById('view-post-comment-written-desc');
+      const undoBtn = document.getElementById('view-post-comment-undo');
+      if (markedMeta) markedMeta.style.display = p.comment_written ? 'inline' : 'none';
+      if (undoBtn) undoBtn.style.display = p.comment_written ? 'inline' : 'none';
+      const deleteBtn = document.getElementById('view-post-delete-btn');
+      if (deleteBtn) deleteBtn.style.display = 'inline-flex';
+      requestAnimationFrame(() => {
+        const firstFocusable = getDrawerFocusables()[0];
+        if (firstFocusable) firstFocusable.focus();
+        if (opts.focusGenerate && viewPostGenerateReply) viewPostGenerateReply.focus();
+      });
+    }).catch(() => { currentViewPostId = null; closeViewPostDrawer(); });
+  }
+  const replyVariantLabels = { short: 'Короткий', medium: 'Средний', long: 'Длинный' };
+  viewPostGenerateReply.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const postText = (currentViewPostContent || '').trim() || (document.getElementById('view-post-content').textContent || '').trim();
+    if (!postText || postText === '(нет текста)') {
+      viewPostReplyResult.style.display = 'block';
+      if (viewPostSegmentedWrap) viewPostSegmentedWrap.style.display = 'none';
+      if (viewPostReplyAll) viewPostReplyAll.style.display = 'none';
+      viewPostReplySingle.innerHTML = '<p style="color: var(--text-muted); font-size: var(--text-14);">Нет текста поста для генерации.</p>';
+      viewPostReplySingle.style.display = 'block';
+      return;
+    }
+    const goal = document.getElementById('view-post-goal').value;
+    const authorIndex = document.getElementById('view-post-author-select').value;
+    const author = (authorIndex !== '' && viewPostAuthorsList.length) ? viewPostAuthorsList[parseInt(authorIndex, 10)] : null;
+    const payload = { post_text: postText, goal };
+    if (author) payload.author = { full_name: author.full_name, role: author.role || '', history: author.history || '', linkedin_url: author.linkedin_url || '' };
+    if (viewPostSetupDraft.products && viewPostSetupDraft.products.length) payload.products = viewPostSetupDraft.products;
+    viewPostGenerateReply.disabled = true;
+    viewPostGenerateReply.textContent = 'Генерация…';
+    viewPostReplyResult.style.display = 'block';
+    if (viewPostSegmentedWrap) viewPostSegmentedWrap.style.display = 'none';
+    if (viewPostShowAllBtn) viewPostShowAllBtn.style.display = 'none';
+    if (viewPostReplyAll) { viewPostReplyAll.style.display = 'none'; viewPostReplyAll.innerHTML = ''; }
+    viewPostReplySingle.innerHTML = '<p class="drawer-state-loading" aria-live="polite">Генерация…</p>';
+    viewPostReplySingle.style.display = 'block';
+    try {
+      const res = await fetch('/agents/comment_agent/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ payload }) });
+      const data = await res.json();
+      const comments = data.result?.comments || data.result || {};
+      if (typeof comments !== 'object' || (!comments.short && !comments.medium && !comments.long)) {
+        viewPostReplySingle.innerHTML = '<p style="color: var(--text-muted); font-size: var(--text-14);">Нет вариантов. ' + (data.detail || JSON.stringify(comments).slice(0, 150)) + '…</p>';
+        return;
+      }
+      showingAllVariants = false;
+      showReplyVariantsUI(comments);
+      if (currentViewPostId != null) {
+        fetch('/posts/' + currentViewPostId, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reply_variants: { short: comments.short || '', medium: comments.medium || '', long: comments.long || '' } }) }).catch(() => {});
+      }
+    } finally {
+      viewPostGenerateReply.disabled = false;
+      updateGenerateReplyButtonLabel();
+    }
+  });
+  document.getElementById('view-post-delete-btn').addEventListener('click', async () => {
+    if (currentViewPostId == null) return;
+    if (!(await confirmDeleteModal())) return;
+    deletePost(currentViewPostId).then(r => {
+      if (r && r.ok) { closeViewPostDrawer(); loadPosts(false); }
+    });
+  });
+
+  (function() {
+    const commentWrittenCb = document.getElementById('view-post-comment-written');
+    const markedMeta = document.getElementById('view-post-comment-written-desc');
+    const undoBtn = document.getElementById('view-post-comment-undo');
+    function updateMarkedUI(checked) {
+      if (markedMeta) markedMeta.style.display = checked ? 'inline' : 'none';
+      if (undoBtn) undoBtn.style.display = checked ? 'inline' : 'none';
+    }
+    commentWrittenCb.addEventListener('change', function() {
+      if (currentViewPostId == null) return;
+      const checked = !!this.checked;
+      updateMarkedUI(checked);
+      fetch('/posts/' + currentViewPostId, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ comment_written: checked }) })
+        .then(r => { if (r.ok) loadPosts(false); })
+        .catch(() => {});
+    });
+    if (undoBtn) undoBtn.addEventListener('click', function() {
+      commentWrittenCb.checked = false;
+      updateMarkedUI(false);
+      if (currentViewPostId == null) return;
+      fetch('/posts/' + currentViewPostId, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ comment_written: false }) })
+        .then(r => { if (r.ok) loadPosts(false); })
+        .catch(() => {});
+    });
+  })();
+
+  function deletePost(id) {
+    return fetch('/posts/' + id, { method: 'DELETE' }).then(r => {
+      if (r.ok && typeof window.toast === 'function') window.toast('Пост удалён', 'success');
+      return r;
+    });
+  }
+
+  let parsePeopleList = [];
+  function fillPersonSelect(people) {
+    const kept = postPersonSelect.querySelector('option[value=""]');
+    postPersonSelect.innerHTML = '';
+    if (kept) postPersonSelect.appendChild(kept);
+    (people || []).forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.full_name || ('Контакт #' + p.id);
+      postPersonSelect.appendChild(opt);
+    });
+    parsePeopleList = people || [];
+  }
+
+  const postFormExtra = document.getElementById('post-form-extra');
+  const labelPostUrl = document.getElementById('label-post-url');
+
+  function openModal(editPost) {
+    document.getElementById('post-url').required = false;
+    postFormExtra.style.display = 'block';
+    labelPostUrl.textContent = 'Ссылка на пост';
+    document.getElementById('post-url').placeholder = 'https://...';
+    document.getElementById('post-title').placeholder = 'Заголовок поста';
+    document.getElementById('post-modal-title').textContent = editPost ? 'Редактировать пост' : 'Добавить пост';
+    if (editPost) {
+      document.getElementById('post-id').value = editPost.id;
+      postPersonSelect.value = editPost.person_id;
+      document.getElementById('post-title').value = editPost.title || '';
+      document.getElementById('post-content').value = editPost.content || '';
+      document.getElementById('post-url').value = editPost.post_url || '';
+      postPostedAt.value = toDatetimeLocal(editPost.posted_at);
+      document.getElementById('post-likes').value = editPost.likes_count ?? '';
+      document.getElementById('post-comments').value = editPost.comments_count ?? '';
+      document.getElementById('post-views').value = editPost.views_count ?? '';
+      document.getElementById('post-tags').value = Array.isArray(editPost.tags) ? editPost.tags.join(', ') : (editPost.tags || '');
+    } else {
+      postForm.reset();
+      document.getElementById('post-id').value = '';
+      postPostedAt.value = toDatetimeLocal(new Date().toISOString());
+    }
+    modal.style.display = 'flex';
+  }
+
+  function closeModal() {
+    modal.style.display = 'none';
+  }
+
+  const parseModal = document.getElementById('parse-modal');
+  const parseUrlInput = document.getElementById('parse-url');
+  const parseUrlError = document.getElementById('parse-url-error');
+  const parsePersonSearch = document.getElementById('parse-person-search');
+  const parsePersonIdInput = document.getElementById('parse-person-id');
+  const parsePersonDropdown = document.getElementById('parse-person-dropdown');
+  const parseStatus = document.getElementById('parse-status');
+  const parseSubmitBtn = document.getElementById('parse-submit');
+  let parseModalRestoreFocus = null;
+
+  function isLinkedInPostUrl(s) {
+    const v = (s || '').trim();
+    if (!v) return false;
+    try {
+      const u = new URL(v);
+      return (u.hostname === 'www.linkedin.com' || u.hostname === 'linkedin.com') && (u.pathname.indexOf('/feed/update') !== -1 || u.pathname.indexOf('/posts/') !== -1);
+    } catch (_) { return false; }
+  }
+  function validateParseForm() {
+    const urlOk = isLinkedInPostUrl(parseUrlInput.value);
+    const personOk = !!parseInt(parsePersonIdInput.value, 10);
+    if (parseUrlError) {
+      parseUrlError.style.display = urlOk ? 'none' : 'block';
+      parseUrlError.textContent = parseUrlInput.value.trim() ? 'Введите ссылку на пост LinkedIn (например feed/update/... или posts/...)' : '';
+      parseUrlInput.setAttribute('aria-invalid', urlOk ? 'false' : 'true');
+    }
+    parseSubmitBtn.disabled = !(urlOk && personOk);
+  }
+  parseUrlInput.addEventListener('input', validateParseForm);
+  parseUrlInput.addEventListener('blur', validateParseForm);
+
+  function getParseModalFocusables() {
+    if (!parseModal || !parseModal.offsetParent) return [];
+    return [].slice.call(parseModal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])')).filter(el => !el.hidden && el.offsetParent !== null);
+  }
+  function trapParseModalFocus(e) {
+    if (e.key !== 'Tab' || parseModal.hasAttribute('hidden')) return;
+    const focusables = getParseModalFocusables();
+    if (focusables.length === 0) return;
+    const first = focusables[0], last = focusables[focusables.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  }
+  function closeParseModal() {
+    parseModal.setAttribute('hidden', '');
+    parseModal.style.display = 'none';
+    const preview = document.getElementById('parse-result-preview');
+    if (preview) { preview.style.display = 'none'; }
+    const cancelBtn = document.getElementById('parse-modal-cancel');
+    if (cancelBtn) { cancelBtn.textContent = 'Отмена'; }
+    loadPosts(false);
+    if (parseModalRestoreFocus && typeof parseModalRestoreFocus.focus === 'function') parseModalRestoreFocus.focus();
+    parseModalRestoreFocus = null;
+  }
+
+  function renderParsePersonDropdown(query) {
+    const q = (query || '').trim().toLowerCase();
+    const list = q
+      ? parsePeopleList.filter(p => (p.full_name || '').toLowerCase().includes(q) || ('Контакт #' + p.id).toLowerCase().includes(q))
+      : parsePeopleList.slice(0, 50);
+    parsePersonDropdown.innerHTML = list.length
+      ? list.map(p => '<div class="parse-person-item" role="option" data-id="' + p.id + '" data-name="' + escapeHtml(p.full_name || 'Контакт #' + p.id) + '">' + escapeHtml(p.full_name || 'Контакт #' + p.id) + '</div>').join('')
+      : '<div class="parse-person-item empty">Нет подходящих контактов</div>';
+    parsePersonDropdown.hidden = false;
+    parsePersonDropdown.querySelectorAll('.parse-person-item[data-id]').forEach(el => {
+      el.addEventListener('click', () => {
+        parsePersonIdInput.value = el.dataset.id;
+        parsePersonSearch.value = el.dataset.name || '';
+        parsePersonDropdown.hidden = true;
+        if (typeof validateParseForm === 'function') validateParseForm();
+      });
+    });
+  }
+  parsePersonSearch.addEventListener('input', () => {
+    parsePersonIdInput.value = '';
+    renderParsePersonDropdown(parsePersonSearch.value);
+  });
+  parsePersonSearch.addEventListener('focus', () => {
+    renderParsePersonDropdown(parsePersonSearch.value);
+  });
+  document.addEventListener('click', (e) => {
+    if (!parsePersonSearch.contains(e.target) && !parsePersonDropdown.contains(e.target)) parsePersonDropdown.hidden = true;
+  });
+
+  document.getElementById('btn-parse-by-url').addEventListener('click', () => {
+    parseModalRestoreFocus = document.activeElement;
+    parseStatus.textContent = '';
+    parseStatus.style.color = '';
+    parseUrlInput.value = '';
+    parsePersonSearch.value = '';
+    parsePersonIdInput.value = '';
+    parsePersonDropdown.hidden = true;
+    const preview = document.getElementById('parse-result-preview');
+    if (preview) { preview.style.display = 'none'; }
+    document.getElementById('parse-modal-cancel').textContent = 'Отмена';
+    validateParseForm();
+    parseModal.removeAttribute('hidden');
+    parseModal.style.display = 'flex';
+    requestAnimationFrame(() => { parseUrlInput.focus(); });
+  });
+  parseModal.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { closeParseModal(); e.preventDefault(); }
+    trapParseModalFocus(e);
+  });
+  document.getElementById('parse-modal-cancel').addEventListener('click', closeParseModal);
+  parseSubmitBtn.addEventListener('click', () => {
+    const url = (parseUrlInput.value || '').trim();
+    const personId = parseInt(parsePersonIdInput.value, 10);
+    if (!url || !personId) {
+      parseStatus.textContent = 'Укажите ссылку и контакт.';
+      parseStatus.style.color = 'var(--danger)';
+      return;
+    }
+    parseSubmitBtn.disabled = true;
+    parseUrlInput.disabled = true;
+    parsePersonSearch.disabled = true;
+    parseStatus.textContent = 'Распознаём…';
+    parseStatus.style.color = '';
+    fetch('/posts/parse-from-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url, person_id: personId })
+    }).then(r => r.json()).then(data => {
+      if (data.error) {
+        parseStatus.textContent = data.error + ' Повторить: нажмите кнопку ещё раз после проверки.';
+        parseStatus.style.color = 'var(--danger)';
+        document.getElementById('parse-result-preview').style.display = 'none';
+      } else {
+        if (typeof window.toast === 'function') window.toast('Пост добавлен', 'success');
+        const preview = document.getElementById('parse-result-preview');
+        const resultText = document.getElementById('parse-result-text');
+        const resultImg = document.getElementById('parse-result-screenshot');
+        const text = (data.parsed && data.parsed.text) ? data.parsed.text : (data.post && data.post.content) ? data.post.content : '(нет текста)';
+        resultText.textContent = text;
+        if (data.screenshot_base64) {
+          resultImg.src = 'data:image/png;base64,' + data.screenshot_base64;
+          resultImg.style.display = 'block';
+        } else {
+          resultImg.style.display = 'none';
+        }
+        preview.style.display = 'block';
+        document.getElementById('parse-modal-cancel').textContent = 'Закрыть';
+      }
+    }).catch(err => {
+      parseStatus.textContent = 'Ошибка: ' + (err.message || 'сеть') + ' Повторить: нажмите кнопку ещё раз.';
+      parseStatus.style.color = 'var(--danger)';
+    }).finally(() => {
+      parseSubmitBtn.disabled = !(isLinkedInPostUrl(parseUrlInput.value) && !!parseInt(parsePersonIdInput.value, 10));
+      parseUrlInput.disabled = false;
+      parsePersonSearch.disabled = false;
+    });
+  });
+
+  document.getElementById('post-modal-cancel').addEventListener('click', () => { document.getElementById('post-url').required = false; closeModal(); });
+  document.getElementById('btn-refresh-posts').addEventListener('click', () => {
+    const btn = document.getElementById('btn-refresh-posts');
+    const origText = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span aria-hidden="true">…</span> Обновление…'; }
+    fetch('/posts/sync?source=linkedin', { method: 'POST' }).then(r => r.json()).then(data => {
+      if (btn) { btn.disabled = false; btn.innerHTML = origText; }
+      if (typeof window.toast === 'function') window.toast(data.message || 'Готово', 'success');
+      loadPosts(false);
+    }).catch(() => {
+      if (btn) { btn.disabled = false; btn.innerHTML = origText; }
+      if (typeof window.toast === 'function') window.toast('Ошибка обновления', 'error');
+      loadPosts(false);
+    });
+  });
+
+  document.getElementById('post-modal-save').addEventListener('click', () => {
+    const id = document.getElementById('post-id').value;
+    const tagsStr = document.getElementById('post-tags').value;
+    const tags = tagsStr ? tagsStr.split(',').map(s => s.trim()).filter(Boolean) : null;
+    const postedAt = postPostedAt.value ? (postPostedAt.value.length === 16 ? postPostedAt.value + ':00' : postPostedAt.value.slice(0, 19)) : nowInDisplayTz();
+    const payload = {
+      person_id: parseInt(postPersonSelect.value, 10),
+      title: document.getElementById('post-title').value.trim(),
+      content: document.getElementById('post-content').value.trim() || null,
+      post_url: document.getElementById('post-url').value.trim() || null,
+      posted_at: postedAt,
+      likes_count: document.getElementById('post-likes').value ? parseInt(document.getElementById('post-likes').value, 10) : null,
+      comments_count: document.getElementById('post-comments').value ? parseInt(document.getElementById('post-comments').value, 10) : null,
+      views_count: document.getElementById('post-views').value ? parseInt(document.getElementById('post-views').value, 10) : null,
+      tags: tags
+    };
+    if (id) {
+      fetch('/posts/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+        .then(r => { if (r.ok) { document.getElementById('post-url').required = false; closeModal(); loadPosts(false); } });
+    } else {
+      fetch('/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+        .then(r => { if (r.ok) { document.getElementById('post-url').required = false; closeModal(); loadPosts(false); } });
+    }
+  });
+
+  let viewPostAuthorsList = [];
+  let viewPostSetupDraft = { authors: [], products: [] };
+  function fillAuthorSelect(authors) {
+    viewPostAuthorsList = Array.isArray(authors) ? authors : [];
+    const sel = document.getElementById('view-post-author-select');
+    sel.innerHTML = '';
+    if (!viewPostAuthorsList.length) {
+      sel.appendChild(new Option('— Добавьте авторов в Settings —', ''));
+      return;
+    }
+    viewPostAuthorsList.forEach((a, i) => {
+      sel.appendChild(new Option(a.full_name || ('Автор ' + (i + 1)), String(i)));
+    });
+  }
+  fetch('/setup/draft').then(r => r.json()).then(draft => {
+    viewPostSetupDraft = { authors: draft.authors || [], products: draft.products || [] };
+    fillAuthorSelect(draft.authors);
+  }).catch(() => { viewPostSetupDraft = { authors: [], products: [] }; fillAuthorSelect([]); });
+
+  fetch('/people').then(r => r.json()).then(people => {
+    fillPersonSelect(people || []);
+    loadPosts(true);
+  }).catch(() => loadPosts(true));
+</script>
+<!--
+  QA checklist (MyVOICE's UI redesign):
+  - a11y: focus-visible on interactive elements; modal and drawer focus trap + Esc close + restore focus; icon buttons aria-label/title and ≥44px hit area; keyboard flow (open post, author/goal, generate, variants, copy, close).
+  - Visual hierarchy: no duplicate author/heading on cards; primary CTA "Сгенерировать комментарий"; "Читать полностью" tertiary; filter bar compact.
+  - Async states: parse modal loading "Распознаём…", success toast "Пост добавлен", error + "Повторить"; drawer generation "Генерация…"; copy toast "Скопировано"; mark as sent "Отмечено" + undo.
+  - No route/API changes; no removal of features; no console errors.
+-->
+{% endblock %}

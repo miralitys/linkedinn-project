@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Очередь дня — MyVOICE's{% endblock %}
+{% block content %}
+<header class="page-hero">
+  <h1>Очередь дня</h1>
+  <p class="lead">Комментарии под KOL, посты, warm DM. Загрузите очередь и сгенерируйте контент.</p>
+</header>
+
+<div class="card">
+  <h2 class="section-title">Очередь</h2>
+  <p style="margin: 0 0 var(--space-4); font-size: var(--text-14); color: var(--text-muted);">Данные: <a href="/daily-queue">GET /daily-queue</a>.</p>
+  <div class="form-actions" style="display: flex; gap: var(--space-2);">
+    <button type="button" id="load-queue" class="btn primary">Загрузить очередь</button>
+  </div>
+  <div id="queue-content" class="queue-content-block"></div>
+  <div id="queue-empty" class="empty-state-card" style="display: none;">
+    <p class="empty-state-title">Очередь пуста</p>
+    <p class="empty-state-desc">Загрузите очередь кнопкой выше или настройте данные в других разделах.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="section-title">Сгенерировать комментарий под пост KOL</h2>
+  <label style="display: block; margin-bottom: var(--space-1); font-size: var(--text-14);">Текст поста KOL</label>
+  <textarea id="post-text" rows="5" placeholder="Вставь текст поста..." style="width: 100%; margin-bottom: var(--space-3); padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: var(--text-14);"></textarea>
+  <label style="display: block; margin-bottom: var(--space-1); font-size: var(--text-14);">Цель</label>
+  <select id="goal" style="margin-bottom: var(--space-4); padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: var(--text-14);"><option value="network">Network</option><option value="native_ads">Нативная реклама</option><option value="full_ads">Сто процентов рекламы</option></select>
+  <div class="form-actions" style="display: flex; gap: var(--space-2);">
+    <button type="button" id="gen-comment" class="btn primary">Сгенерировать 3 варианта</button>
+  </div>
+  <div id="comment-result" class="comment-variants"></div>
+</div>
+<style>
+  .empty-state-card { text-align: center; padding: var(--space-8); }
+  .empty-state-title { margin: 0 0 var(--space-2); font-size: var(--text-16); font-weight: 600; color: var(--text); }
+  .empty-state-desc { margin: 0; font-size: var(--text-14); color: var(--text-muted); }
+  .queue-content-block { margin-top: var(--space-4); padding: var(--space-4); background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+  .comment-variants { display: flex; flex-direction: column; gap: var(--space-4); margin-top: var(--space-4); }
+  .comment-variant { background: var(--surface); padding: var(--space-4); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+  .comment-variant-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-2); }
+  .comment-variant-title { font-weight: 600; font-size: var(--text-14); color: var(--text); }
+  .comment-variant-text { font-size: var(--text-14); line-height: 1.5; color: var(--text-muted); white-space: pre-wrap; margin: 0; }
+  .comment-variant button { margin: 0; padding: var(--space-1) var(--space-3); font-size: var(--text-12); }
+</style>
+<script>
+  document.getElementById('load-queue').addEventListener('click', async () => {
+    const res = await fetch('/daily-queue');
+    const data = await res.json();
+    const el = document.getElementById('queue-content');
+    const emptyEl = document.getElementById('queue-empty');
+    const hasComments = data.comments && data.comments.length;
+    const hasPosts = data.posts && data.posts.length;
+    const hasDm = data.dm_queue && data.dm_queue.length;
+    if (!hasComments && !hasPosts && !hasDm) {
+      el.style.display = 'none';
+      emptyEl.style.display = 'block';
+      return;
+    }
+    el.style.display = 'block';
+    emptyEl.style.display = 'none';
+    el.innerHTML = '<h3 style="margin: 0 0 var(--space-2); font-size: var(--text-16);">Комменты (KOL)</h3>' + (hasComments ? data.comments.map(c => `<p style="margin: 0 0 var(--space-1); font-size: var(--text-14);">KOL #${c.kol_id} ${c.kol_name}</p>`).join('') : '<p style="margin: 0; font-size: var(--text-14); color: var(--text-muted);">Нет KOL</p>') +
+      '<h3 style="margin: var(--space-4) 0 var(--space-2); font-size: var(--text-16);">Посты</h3>' + (hasPosts ? data.posts.map(p => `<p style="margin: 0 0 var(--space-1); font-size: var(--text-14);">${p.idea}</p>`).join('') : '<p style="margin: 0; font-size: var(--text-14); color: var(--text-muted);">—</p>') +
+      '<h3 style="margin: var(--space-4) 0 var(--space-2); font-size: var(--text-16);">DM очередь (Warm)</h3>' + (hasDm ? data.dm_queue.map(d => `<p style="margin: 0 0 var(--space-1); font-size: var(--text-14);">${d.person_name} (${d.status}) ${d.reason || ''}</p>`).join('') : '<p style="margin: 0; font-size: var(--text-14); color: var(--text-muted);">Нет warm контактов</p>');
+  });
+
+  const variantLabels = { short: 'Короткий', medium: 'Средний', long: 'Длинный' };
+  document.getElementById('gen-comment').addEventListener('click', async () => {
+    const postText = document.getElementById('post-text').value;
+    const goal = document.getElementById('goal').value;
+    const res = await fetch('/agents/comment_agent/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ payload: { post_text: postText, goal } }) });
+    const data = await res.json();
+    const comments = data.result?.comments || data.result || {};
+    const container = document.getElementById('comment-result');
+    if (typeof comments !== 'object' || (!comments.short && !comments.medium && !comments.long)) {
+      container.innerHTML = '<p style="color: var(--text-secondary);">Нет вариантов. Ответ: ' + JSON.stringify(comments).slice(0, 200) + '…</p>';
+      return;
+    }
+    function escapeHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+    container.innerHTML = ['short', 'medium', 'long'].filter(k => comments[k]).map(key => {
+      const id = 'comment-' + key;
+      const text = (comments[key] || '').trim();
+      const label = variantLabels[key] || key;
+      return '<div class="comment-variant">' +
+        '<div class="comment-variant-header">' +
+          '<span class="comment-variant-title">' + escapeHtml(label) + '</span>' +
+          '<button type="button" class="btn-copy secondary" data-copy-id="' + id + '">Скопировать</button>' +
+        '</div>' +
+        '<p class="comment-variant-text" id="' + id + '">' + escapeHtml(text) + '</p>' +
+        '</div>';
+    }).join('');
+    container.querySelectorAll('.btn-copy').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const el = document.getElementById(btn.dataset.copyId);
+        const text = el ? el.textContent : '';
+        navigator.clipboard.writeText(text).then(() => {
+          const t = btn.textContent;
+          btn.textContent = 'Скопировано';
+          setTimeout(() => { btn.textContent = t; }, 1500);
+        });
+      });
+    });
+  });
+</script>
+{% endblock %}

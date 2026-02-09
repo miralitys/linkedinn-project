@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}MyVOICE's — Главная{% endblock %}
+{% block content %}
+<header class="page-hero">
+  <h1>LinkedIn Funnel Agent System</h1>
+  <p class="lead">Единый data layer и агенты. Посты контактов, распознавание по ссылке, генерация ответов.</p>
+</header>
+
+<div class="card">
+  <h2 class="section-title">Разделы</h2>
+  <ul style="margin: var(--space-3) 0 0 0; padding-left: var(--space-6); font-size: var(--text-14); color: var(--text);">
+    <li><a href="/ui/posts">Комментарии</a> — лента постов контактов, распознавание по ссылке, написание комментариев</li>
+    <li><a href="/ui/reddit">Reddit</a> — посты из сабреддитов, загрузка по r/…, генерация комментариев</li>
+    <li><a href="/ui/people">Контакты</a> — люди, компании, отметка «Лидер мнения»</li>
+    <li><a href="/ui/companies">Компании</a> — список компаний и контакты в них</li>
+    <li><a href="/ui/setup">Settings</a> — онбординг: продукт, ICP, тон, цели</li>
+  </ul>
+</div>
+
+{% endblock %}

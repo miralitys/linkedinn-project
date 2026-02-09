@@ -1,0 +1,8 @@
+По сырым гипотезам и примерам сформируй сегменты ICP.
+
+Гипотезы: {hypotheses}
+Примеры компаний/людей (текст): {examples}
+
+Верни JSON:
+- segments: массив объектов { name, rules (объект с критериями), priority (число), red_flags (строка), include_examples, exclude_examples }
+От 2 до 5 сегментов. Только валидный JSON.

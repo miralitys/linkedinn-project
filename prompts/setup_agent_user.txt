@@ -1,0 +1,15 @@
+Создай стартовый скелет data layer для LinkedIn-воронки.
+
+Входные данные:
+- Продукт: {product}
+- ICP (сырое описание): {icp_raw}
+- Тон: {tone}
+- Цели: {goals}
+
+Верни один JSON с ключами:
+- sales_avatar: {{ name, positioning, tone_guidelines, do_say (массив), dont_say (массив), examples_good, examples_bad }}
+- segments: массив {{ name, rules (объект), priority, red_flags, include_examples, exclude_examples }}, 2–5 штук
+- offers: массив {{ name, promise, proof_points, objections, cta_style }}, 1–2 штуки
+- lead_magnets: массив {{ title, format, description, outline }}, 1–2 штуки
+
+Только валидный JSON, без markdown-обёртки.

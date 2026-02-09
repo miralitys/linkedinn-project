@@ -1,0 +1,1673 @@
+{% extends "base.html" %}
+{% block title %}Settings — MyVOICE's{% endblock %}
+{% block content %}
+<header class="setup-page-header">
+  <h1 class="setup-page-title">Settings</h1>
+  <p class="setup-page-desc">Авторы и продукты для комментариев. Сохраняйте каждый блок отдельно. Профиль автора можно настроить через интервью.</p>
+</header>
+
+<div class="setup-grid">
+  <form id="setup-form" class="setup-form">
+    <section class="setup-section setup-section-author">
+      <div class="setup-section-header">
+        <span class="setup-section-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+        <h2 class="setup-section-title">Авторы</h2>
+      </div>
+      <div id="saved-authors-section" class="setup-list-block">
+        <h3 class="saved-section-title">Сохранённые авторы</h3>
+        <div id="saved-authors-cards" class="saved-cards"><p class="saved-empty-msg">Нет сохранённых авторов.</p></div>
+      </div>
+      <div class="setup-add-toolbar">
+        <button type="button" id="add-author" class="btn primary add-block-btn" aria-expanded="false"><span class="btn-add-icon">+</span> Добавить автора</button>
+      </div>
+      <div id="authors-form-wrap" class="setup-form-wrap" hidden>
+        <div class="setup-form-panel">
+          <div id="authors-wrap">
+            <div class="author-block">
+              <label class="sub">Имя и фамилия</label>
+              <input name="author_full_name" type="text" placeholder="Имя Фамилия">
+              <label class="sub">Ссылка на LinkedIn</label>
+              <input name="author_linkedin_url" type="text" placeholder="https://www.linkedin.com/in/...">
+              <label class="sub">Его роль</label>
+              <input name="author_role" type="text" placeholder="Должность, экспертиза...">
+              <label class="sub">Его история</label>
+              <textarea name="author_history" rows="4" placeholder="Опыт, бэкграунд, стиль общения — оттуда будет браться информация для комментариев"></textarea>
+            </div>
+          </div>
+          <div class="form-actions-inline">
+            <button type="button" id="save-authors" class="btn primary">Сохранить</button>
+            <button type="button" id="btn-author-interview" class="btn secondary">Пройти интервью</button>
+            <button type="button" id="authors-form-cancel" class="btn secondary">Отмена</button>
+          </div>
+          <p id="save-authors-msg" class="save-msg"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="setup-section setup-section-product">
+      <div class="setup-section-header">
+        <span class="setup-section-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></span>
+        <h2 class="setup-section-title">Продукты</h2>
+      </div>
+      <div id="saved-products-section" class="setup-list-block">
+        <h3 class="saved-section-title">Сохранённые продукты</h3>
+        <div id="saved-products-cards" class="saved-cards"><p class="saved-empty-msg">Нет сохранённых продуктов.</p></div>
+      </div>
+      <div class="setup-add-toolbar">
+        <button type="button" id="add-product" class="btn primary add-block-btn" aria-expanded="false"><span class="btn-add-icon">+</span> Добавить продукт</button>
+      </div>
+      <div id="products-form-wrap" class="setup-form-wrap" hidden>
+        <div class="setup-form-panel">
+          <div id="products-wrap">
+            <div class="product-block">
+              <label class="sub">Название продукта</label>
+              <input name="product_name" type="text" placeholder="Например: CRM для малого бизнеса">
+              <label class="sub">Описание продукта</label>
+              <textarea name="product_desc" rows="2" placeholder="Краткое описание: что делает продукт, для кого, ценность"></textarea>
+            </div>
+          </div>
+          <div class="form-actions-inline">
+            <button type="button" id="save-products" class="btn primary">Сохранить</button>
+            <button type="button" id="products-form-cancel" class="btn secondary">Отмена</button>
+          </div>
+          <p id="save-products-msg" class="save-msg"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="setup-section setup-section-icp">
+      <div class="setup-section-header">
+        <span class="setup-section-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+        <h2 class="setup-section-title">Портрет клиента (ICP)</h2>
+      </div>
+      <div id="saved-icp-section" class="setup-list-block">
+        <h3 class="saved-section-title">Сохранённые портреты клиентов</h3>
+        <div id="saved-icp-cards" class="saved-cards"><p class="saved-empty-msg">Нет сохранённых портретов клиентов.</p></div>
+      </div>
+      <div class="setup-add-toolbar">
+        <button type="button" id="add-icp" class="btn primary add-block-btn" aria-expanded="false"><span class="btn-add-icon">+</span> Добавить портрет клиента</button>
+      </div>
+      <div id="icp-form-wrap" class="setup-form-wrap" hidden>
+        <div class="setup-form-panel">
+          <div id="icp-wrap">
+            <div class="icp-block">
+              <label class="sub">Название</label>
+              <input name="icp_name" type="text" placeholder="Название портрета клиента">
+              <label class="sub">Роли</label>
+              <input name="icp_roles" type="text" placeholder="Например: CEO, CTO, CFO">
+              <label class="sub">Индустрия</label>
+              <input name="icp_industry" type="text" placeholder="Например: Логистика, IT, Финансы">
+              <label class="sub">Размер</label>
+              <input name="icp_size" type="text" placeholder="Например: 50-200 сотрудников, Enterprise">
+              <label class="sub">Гео</label>
+              <input name="icp_geo" type="text" placeholder="Например: США, Европа, Россия">
+              <label class="sub">Продукты</label>
+              <div id="icp-products-checkboxes" class="icp-products-checkboxes" style="max-height: 12rem; overflow-y: auto; padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg);">
+                <p style="margin: 0; color: var(--text-muted); font-size: var(--text-14);">Загрузка продуктов...</p>
+              </div>
+            </div>
+          </div>
+          <div class="form-actions-inline">
+            <button type="button" id="save-icp" class="btn primary">Сохранить</button>
+            <button type="button" id="icp-form-cancel" class="btn secondary">Отмена</button>
+          </div>
+          <p id="save-icp-msg" class="save-msg"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="setup-section setup-section-subreddits">
+      <div class="setup-section-header">
+        <span class="setup-section-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg></span>
+        <h2 class="setup-section-title">Сабреддиты</h2>
+      </div>
+      <p class="setup-section-desc">Список сабреддитов для раздела Reddit. Добавьте сюда все сабреддиты — в разделе Reddit посты будут подгружаться только из этого списка.</p>
+      <div id="saved-subreddits-section" class="setup-list-block">
+        <h3 class="saved-section-title">Сохранённые сабреддиты</h3>
+        <div id="saved-subreddits-list" class="saved-subreddits-list"><p class="saved-empty-msg">Нет сабреддитов. Добавьте первый ниже.</p></div>
+      </div>
+      <div class="setup-add-toolbar" id="subreddit-add-toolbar">
+        <input type="text" id="subreddit-name-input" class="setup-subreddit-input" placeholder="Имя сабреддита (напр. python)" aria-label="Имя сабреддита" maxlength="128" autocomplete="off" onkeydown="if(event.key==='Enter'){ event.preventDefault(); var b=document.getElementById('add-subreddit'); if(b) b.click(); return false; }">
+        <button type="button" id="add-subreddit" class="btn primary add-block-btn"><span class="btn-add-icon">+</span> Добавить</button>
+      </div>
+      <p id="save-subreddits-msg" class="save-msg"></p>
+    </section>
+  </form>
+</div>
+
+<!-- Подтверждение запуска интервью -->
+<div id="interview-confirm-modal" class="interview-modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="interview-confirm-title">
+  <div class="interview-modal interview-confirm-box">
+    <h2 id="interview-confirm-title" class="interview-modal-title">Интервью для настройки профиля</h2>
+    <p class="interview-confirm-text">Я задам вопросы про твой опыт, тон и манеру общения. По итогу соберём чёткий профиль.<br>Обычно уходит около 30 минут. Готов(а) стартовать?</p>
+    <div class="interview-confirm-actions">
+      <button type="button" id="interview-confirm-yes" class="btn primary">Готов(а)</button>
+      <button type="button" id="interview-confirm-no" class="btn secondary">Не сейчас</button>
+    </div>
+  </div>
+</div>
+
+<!-- Продолжить или пройти заново (если есть черновик) -->
+<div id="interview-resume-modal" class="interview-modal-overlay" hidden aria-modal="true" role="dialog">
+  <div class="interview-modal interview-confirm-box">
+    <h2 class="interview-modal-title">Сохранённый прогресс</h2>
+    <p id="interview-resume-text" class="interview-confirm-text">У вас есть сохранённые ответы. Продолжить с того места, где остановились, или пройти интервью заново?</p>
+    <div class="interview-confirm-actions">
+      <button type="button" id="interview-resume-continue" class="btn primary">Продолжить</button>
+      <button type="button" id="interview-resume-restart" class="btn secondary">Пройти заново</button>
+    </div>
+  </div>
+</div>
+
+<!-- Интервью: по одному вопросу + прогресс -->
+<div id="interview-modal" class="interview-modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="interview-question-title">
+  <div class="interview-modal interview-question-box">
+    <div class="interview-progress-wrap">
+      <div class="interview-progress-bar" id="interview-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><span class="fill" id="interview-progress-fill" style="width: 0%;"></span></div>
+      <p class="interview-progress-text" id="interview-progress-text">Вопрос 0 из 0</p>
+    </div>
+    <h2 id="interview-section-label" class="interview-section-label"></h2>
+    <p id="interview-question-title" class="interview-question-text"></p>
+    <textarea id="interview-answer-input" class="interview-answer-input" rows="4" placeholder="Ваш ответ..."></textarea>
+    <div class="interview-question-actions">
+      <button type="button" id="interview-close" class="btn secondary" style="margin-right: auto;">Закрыть (сохранить прогресс)</button>
+      <button type="button" id="interview-prev" class="btn secondary">Назад</button>
+      <button type="button" id="interview-next" class="btn primary">Далее</button>
+    </div>
+  </div>
+</div>
+
+<!-- Панель просмотра автора -->
+<div id="author-view-drawer" class="setup-view-drawer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="author-view-drawer-title">
+  <div class="setup-view-drawer-backdrop" id="author-view-drawer-backdrop"></div>
+  <div class="setup-view-drawer-panel card">
+    <div class="setup-view-drawer-header">
+      <h2 id="author-view-drawer-title" class="setup-view-drawer-name"></h2>
+      <button type="button" id="author-view-drawer-close" class="setup-view-drawer-close btn-icon" title="Закрыть (Esc)" aria-label="Закрыть">×</button>
+    </div>
+    <div class="setup-view-drawer-body">
+      <dl class="setup-view-drawer-dl">
+        <dt>Имя</dt><dd id="author-view-full-name"></dd>
+        <dt>Роль</dt><dd id="author-view-role"></dd>
+        <dt>LinkedIn</dt><dd id="author-view-linkedin"></dd>
+        <dt>История / контекст</dt><dd id="author-view-history"></dd>
+      </dl>
+      <div class="setup-view-drawer-actions">
+        <button type="button" id="author-view-drawer-edit" class="btn secondary">Редактировать</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Панель просмотра продукта -->
+<div id="product-view-drawer" class="setup-view-drawer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="product-view-drawer-title">
+  <div class="setup-view-drawer-backdrop" id="product-view-drawer-backdrop"></div>
+  <div class="setup-view-drawer-panel card">
+    <div class="setup-view-drawer-header">
+      <h2 id="product-view-drawer-title" class="setup-view-drawer-name"></h2>
+      <button type="button" id="product-view-drawer-close" class="setup-view-drawer-close btn-icon" title="Закрыть (Esc)" aria-label="Закрыть">×</button>
+    </div>
+    <div class="setup-view-drawer-body">
+      <dl class="setup-view-drawer-dl">
+        <dt>Название</dt><dd id="product-view-name"></dd>
+        <dt>Описание</dt><dd id="product-view-desc"></dd>
+      </dl>
+      <div class="setup-view-drawer-actions">
+        <button type="button" id="product-view-drawer-edit" class="btn secondary">Редактировать</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Панель просмотра ICP -->
+<div id="icp-view-drawer" class="setup-view-drawer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="icp-view-drawer-title">
+  <div class="setup-view-drawer-backdrop" id="icp-view-drawer-backdrop"></div>
+  <div class="setup-view-drawer-panel card">
+    <div class="setup-view-drawer-header">
+      <h2 id="icp-view-drawer-title" class="setup-view-drawer-name"></h2>
+      <button type="button" id="icp-view-drawer-close" class="setup-view-drawer-close btn-icon" title="Закрыть (Esc)" aria-label="Закрыть">×</button>
+    </div>
+    <div class="setup-view-drawer-body">
+      <dl class="setup-view-drawer-dl">
+        <dt>Название</dt><dd id="icp-view-name"></dd>
+        <dt>Роли</dt><dd id="icp-view-roles"></dd>
+        <dt>Индустрия</dt><dd id="icp-view-industry"></dd>
+        <dt>Размер</dt><dd id="icp-view-size"></dd>
+        <dt>Гео</dt><dd id="icp-view-geo"></dd>
+        <dt>Продукты</dt><dd id="icp-view-products"></dd>
+      </dl>
+      <div class="setup-view-drawer-actions">
+        <button type="button" id="icp-view-drawer-edit" class="btn secondary">Редактировать</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* --- Setup page layout --- */
+  .setup-page-header { margin-bottom: var(--space-6); }
+  .setup-page-title { margin: 0 0 var(--space-2); font-size: 1.75rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+  .setup-page-desc { margin: 0; font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; max-width: 42rem; }
+
+  .setup-grid { display: grid; gap: var(--space-6); width: 100%; }
+  .setup-form { display: contents; }
+
+  .setup-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-5);
+    box-shadow: var(--elevation-1);
+    transition: box-shadow var(--motion-fast), border-color var(--motion-fast);
+  }
+  .setup-section:hover { border-color: rgba(99, 102, 241, 0.2); }
+  .setup-section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border);
+  }
+  .setup-section-header.linkedin-app-header { cursor: pointer; margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+  .setup-section-header.linkedin-app-header:hover { opacity: 0.9; }
+  .setup-section-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-radius: var(--radius-sm);
+  }
+  .setup-section-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+  }
+  .setup-section-title { margin: 0; font-size: var(--text-16); font-weight: 600; color: var(--text); }
+  .linkedin-app-header .setup-section-title { flex: 1; }
+  .btn-sm { padding: var(--space-1) var(--space-3); font-size: var(--text-12); }
+
+  .setup-list-block { margin-bottom: var(--space-3); }
+  .saved-section-title { margin: 0 0 var(--space-2); font-size: var(--text-12); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+  .saved-cards { display: flex; flex-direction: column; gap: var(--space-2); min-height: 2rem; }
+  .saved-empty-msg { margin: 0; padding: var(--space-4); font-size: var(--text-14); color: var(--text-muted); text-align: center; background: var(--bg); border-radius: var(--radius-sm); border: 1px dashed var(--border); }
+  .setup-section-desc { margin: 0 0 var(--space-3); font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; }
+  .saved-subreddits-list { display: flex; flex-wrap: wrap; gap: var(--space-2); min-height: 2rem; align-items: center; }
+  .saved-subreddits-list .saved-empty-msg { flex: 1; min-width: 100%; }
+  .subreddit-chip {
+    display: inline-flex; align-items: center; gap: var(--space-2);
+    padding: var(--space-1) var(--space-3); font-size: var(--text-14);
+    background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text);
+  }
+  .subreddit-chip .subreddit-chip-name { font-weight: 500; }
+  .subreddit-chip .subreddit-chip-remove { padding: 0; min-width: 1.5rem; min-height: 1.5rem; border: none; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: var(--radius-sm); font-size: 1rem; line-height: 1; }
+  .subreddit-chip .subreddit-chip-remove:hover { background: var(--danger-soft); color: var(--danger); }
+  .setup-subreddit-input { min-width: 180px; height: 2.25rem; padding: 0 var(--space-3); font-size: var(--text-14); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); margin-right: var(--space-2); }
+
+  .setup-add-toolbar { margin-top: var(--space-3); }
+  .add-block-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .add-block-btn .btn-add-icon { font-size: 1.25rem; line-height: 1; font-weight: 600; }
+
+  .setup-form-wrap[hidden] { display: none !important; }
+  .setup-form-wrap:not([hidden]) {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.5);
+    display: flex !important;
+    align-items: flex-start;
+    justify-content: center;
+    padding: var(--space-6);
+    overflow-y: auto;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+  }
+  .setup-form-wrap:not([hidden]) .setup-form-panel {
+    margin: auto;
+    max-width: 36rem;
+    width: 100%;
+    background: var(--surface);
+    box-shadow: var(--elevation-modal);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    border: 1px solid var(--border);
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+  }
+  .setup-form-wrap .product-block { min-width: 0; }
+  .setup-form-wrap textarea, .setup-form-wrap input[type="text"] { max-width: 100%; box-sizing: border-box; }
+  .setup-form-wrap textarea { overflow-y: hidden; min-height: 2.5rem; resize: none; }
+  .form-actions-inline { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+  .save-msg { font-size: var(--text-12); color: var(--primary); margin: var(--space-2) 0 0 0; }
+
+  .author-block, .product-block, .icp-block {
+    background: var(--surface);
+    padding: var(--space-4);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  .author-block { margin-bottom: 0; }
+  .product-block { margin-bottom: var(--space-3); }
+  .product-block:last-child { margin-bottom: 0; }
+  .icp-block { margin-bottom: 0; }
+  .author-block .sub, .product-block label.sub, .icp-block label.sub { display: block; margin-bottom: var(--space-1); font-size: var(--text-12); font-weight: 500; color: var(--text-muted); }
+  .author-block input, .author-block textarea { width: 100%; margin-bottom: var(--space-3); }
+  .product-block textarea { margin-bottom: 0; min-height: 2.5rem; }
+  .product-block input:last-of-type { margin-bottom: 0; }
+  .icp-block input { width: 100%; margin-bottom: var(--space-3); }
+  .icp-block input:last-of-type { margin-bottom: 0; }
+  .icp-products-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .icp-product-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+    transition: background var(--motion-fast);
+  }
+  .icp-product-checkbox-item:hover {
+    background: var(--primary-soft);
+  }
+  .icp-product-checkbox-item input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .icp-product-checkbox-item label {
+    margin: 0;
+    cursor: pointer;
+    flex: 1;
+    font-size: var(--text-14);
+    color: var(--text);
+    user-select: none;
+  }
+  .icp-product-checkbox-item input[type="checkbox"]:checked + label {
+    color: var(--primary);
+    font-weight: 500;
+  }
+  .product-row { display: flex; gap: var(--space-2); align-items: flex-start; margin-bottom: var(--space-3); }
+  .product-row .product-block { flex: 1; margin-bottom: 0; }
+  .product-row .btn-remove { padding: var(--space-2) var(--space-3); margin-top: var(--space-2); flex-shrink: 0; background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: background var(--motion-fast), color var(--motion-fast); }
+  .product-row .btn-remove:hover { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-soft); }
+
+  /* Saved item cards — удобные карточки с явными кнопками */
+  .saved-author-card, .saved-product-card, .saved-icp-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--motion-fast), background var(--motion-fast), box-shadow var(--motion-fast);
+  }
+  .saved-author-card, .saved-product-card, .saved-icp-card { cursor: pointer; }
+  .saved-author-card:hover, .saved-product-card:hover, .saved-icp-card:hover {
+    background: var(--primary-soft);
+    border-color: rgba(99, 102, 241, 0.35);
+  }
+  .saved-author-card.editing, .saved-product-card.editing, .saved-icp-card.editing {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+    box-shadow: 0 0 0 1px var(--primary);
+  }
+  .saved-author-card .saved-name, .saved-product-card .saved-name, .saved-icp-card .saved-name {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--text-14);
+    font-weight: 500;
+    color: var(--text);
+  }
+  .saved-author-card .actions, .saved-product-card .actions, .saved-icp-card .actions {
+    display: flex;
+    flex-shrink: 0;
+  }
+  .saved-cards .kebab-wrap { position: relative; }
+  .saved-cards .btn-icon {
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--motion-fast), color var(--motion-fast);
+  }
+  .saved-cards .btn-icon:hover {
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+  .saved-cards .kebab-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: var(--space-1);
+    min-width: 160px;
+    padding: var(--space-1);
+    list-style: none;
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--elevation-2);
+    z-index: 20;
+  }
+  .saved-cards .kebab-menu[hidden] { display: none !important; }
+  .saved-cards .kebab-item {
+    display: block;
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    text-align: left;
+    font-size: var(--text-14);
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: inherit;
+  }
+  .saved-cards .kebab-item:hover { background: var(--bg); }
+  .saved-cards .kebab-item.danger { color: var(--danger); }
+  .saved-cards .kebab-item.danger:hover { background: var(--danger-soft); }
+  .setup-form-wrap .icp-block { min-width: 0; }
+  .setup-form-wrap .icp-block input { max-width: 100%; box-sizing: border-box; }
+
+  /* Окно просмотра автора/продукта — всплывающее по центру (как окно редактирования) */
+  .setup-view-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: none;
+    pointer-events: none;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+    overflow-y: auto;
+  }
+  .setup-view-drawer.is-open {
+    display: flex;
+    pointer-events: auto;
+  }
+  .setup-view-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: -1;
+  }
+  .setup-view-drawer-panel {
+    margin: auto;
+    max-width: 36rem;
+    width: 100%;
+    max-height: calc(100vh - 3rem);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--elevation-modal);
+    overflow: hidden;
+  }
+  .setup-view-drawer-header { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-4); border-bottom: 1px solid var(--border); }
+  .setup-view-drawer-name { margin: 0; font-size: var(--text-20); font-weight: 600; color: var(--text); line-height: 1.3; flex: 1; }
+  .setup-view-drawer-close { min-width: 44px; min-height: 44px; padding: 0; border: none; background: var(--bg); color: var(--text-muted); font-size: 1.5rem; line-height: 1; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background var(--motion-fast), color var(--motion-fast); flex-shrink: 0; }
+  .setup-view-drawer-close:hover { background: var(--border); color: var(--text); }
+  .setup-view-drawer-body { padding: var(--space-4); overflow-y: auto; flex: 1; min-height: 0; }
+  .setup-view-drawer-dl { margin: 0 0 var(--space-4); font-size: var(--text-14); display: grid; gap: var(--space-1) var(--space-4); grid-template-columns: auto 1fr; }
+  .setup-view-drawer-dl dt { color: var(--text-muted); font-weight: 500; }
+  .setup-view-drawer-dl dd { margin: 0; color: var(--text); overflow-wrap: break-word; white-space: pre-wrap; line-height: 1.6; max-width: 100%; }
+  .setup-view-drawer-dl dd:empty::after { content: '—'; color: var(--text-muted); }
+  .setup-view-drawer-actions { margin-top: var(--space-3); }
+
+  .setup-section-linkedin { margin-top: var(--space-6); }
+
+  .linkedin-setup-body { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border); }
+  .linkedin-setup-body[hidden] { display: none !important; }
+
+  /* Interview modals (без изменений логики) */
+  .interview-modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: var(--space-4); }
+  .interview-modal-overlay[hidden] { display: none !important; }
+  .interview-modal { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--elevation-modal); max-width: 560px; width: 100%; padding: var(--space-6); }
+  .interview-confirm-box { text-align: center; }
+  .interview-modal-title { margin: 0 0 var(--space-3); font-size: var(--text-20); }
+  .interview-confirm-text { margin: 0 0 var(--space-5); color: var(--text); }
+  .interview-confirm-actions { display: flex; gap: var(--space-3); justify-content: center; }
+  .interview-question-box { max-height: 90vh; overflow-y: auto; }
+  .interview-progress-wrap { margin-bottom: var(--space-4); }
+  .interview-progress-bar { height: 8px; background: var(--border); border-radius: var(--radius-pill); overflow: hidden; }
+  .interview-progress-bar > .fill { display: block; height: 100%; background: var(--primary); border-radius: var(--radius-pill); transition: width var(--motion-normal); min-width: 2%; }
+  .interview-progress-text { font-size: var(--text-14); color: var(--text-muted); margin: var(--space-1) 0 0 0; }
+  .interview-section-label { font-size: var(--text-14); font-weight: 600; color: var(--primary); margin: 0 0 var(--space-2); }
+  .interview-question-text { font-size: var(--text-16); color: var(--text); margin: 0 0 var(--space-3); line-height: 1.5; }
+  .interview-answer-input { width: 100%; padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: var(--text-14); resize: vertical; min-height: 100px; box-sizing: border-box; }
+  .interview-answer-input:focus { outline: none; border-color: var(--primary); box-shadow: var(--focus-ring); }
+  .interview-question-actions { display: flex; gap: var(--space-2); justify-content: space-between; margin-top: var(--space-4); }
+
+  @media (min-width: 768px) {
+    .setup-grid { grid-template-columns: 1fr 1fr; }
+    .setup-section-linkedin { grid-column: 1 / -1; }
+  }
+</style>
+<script>
+  let savedAuthorsList = [];
+  let editingAuthorIndex = null;
+  let savedProductsList = [];
+  let editingProductIndex = null;
+  let savedIcpList = [];
+  let editingIcpIndex = null;
+  function getProductsFromForm() {
+    const names = document.querySelectorAll('input[name="product_name"]');
+    const descs = document.querySelectorAll('textarea[name="product_desc"]');
+    return Array.from(names).map((inp, i) => ({
+      name: (inp.value || '').trim(),
+      description: (descs[i] && descs[i].value ? descs[i].value.trim() : '')
+    })).filter(p => p.name);
+  }
+  function getIcpFromForm() {
+    const name = document.querySelector('input[name="icp_name"]');
+    const roles = document.querySelector('input[name="icp_roles"]');
+    const industry = document.querySelector('input[name="icp_industry"]');
+    const size = document.querySelector('input[name="icp_size"]');
+    const geo = document.querySelector('input[name="icp_geo"]');
+    const checkboxes = document.querySelectorAll('#icp-products-checkboxes input[type="checkbox"][name="icp_product"]');
+    const selectedProducts = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value).filter(v => v);
+    return {
+      name: (name && name.value ? name.value.trim() : '') || null,
+      roles: (roles && roles.value ? roles.value.trim() : '') || null,
+      industry: (industry && industry.value ? industry.value.trim() : '') || null,
+      size: (size && size.value ? size.value.trim() : '') || null,
+      geo: (geo && geo.value ? geo.value.trim() : '') || null,
+      product_ids: selectedProducts.length > 0 ? selectedProducts : null
+    };
+  }
+  function setIcpToForm(icp) {
+    const icpData = icp || { name: '', roles: '', industry: '', size: '', geo: '', product_ids: [] };
+    const wrap = document.getElementById('icp-wrap');
+    if (!wrap) return;
+    const nameInput = wrap.querySelector('input[name="icp_name"]');
+    const rolesInput = wrap.querySelector('input[name="icp_roles"]');
+    const industryInput = wrap.querySelector('input[name="icp_industry"]');
+    const sizeInput = wrap.querySelector('input[name="icp_size"]');
+    const geoInput = wrap.querySelector('input[name="icp_geo"]');
+    if (nameInput) nameInput.value = icpData.name || '';
+    if (rolesInput) rolesInput.value = icpData.roles || '';
+    if (industryInput) industryInput.value = icpData.industry || '';
+    if (sizeInput) sizeInput.value = icpData.size || '';
+    if (geoInput) geoInput.value = icpData.geo || '';
+    const checkboxes = document.querySelectorAll('#icp-products-checkboxes input[type="checkbox"][name="icp_product"]');
+    const selectedIds = (icpData.product_ids && Array.isArray(icpData.product_ids)) ? icpData.product_ids.map(String) : [];
+    checkboxes.forEach(cb => {
+      cb.checked = selectedIds.includes(String(cb.value));
+    });
+  }
+  function setIcpFormVisible(visible) {
+    const wrap = document.getElementById('icp-form-wrap');
+    const btn = document.getElementById('add-icp');
+    if (wrap) {
+      wrap.hidden = !visible;
+      if (visible) wrap.removeAttribute('hidden'); else wrap.setAttribute('hidden', '');
+    }
+    if (btn) btn.setAttribute('aria-expanded', !!visible);
+    if (visible) {
+      fillIcpProductsSelect();
+    }
+  }
+  function fillIcpProductsSelect() {
+    const container = document.getElementById('icp-products-checkboxes');
+    if (!container) return;
+    if (!savedProductsList || savedProductsList.length === 0) {
+      container.innerHTML = '<p style="margin: 0; color: var(--text-muted); font-size: var(--text-14);">Нет сохранённых продуктов. Добавьте продукты в разделе "Продукты".</p>';
+      return;
+    }
+    container.innerHTML = savedProductsList.map((p, i) => {
+      const name = (p && p.name) || (p && p.title) || 'Без названия';
+      const checkboxId = 'icp-product-' + i;
+      return '<div class="icp-product-checkbox-item">' +
+        '<input type="checkbox" name="icp_product" id="' + checkboxId + '" value="' + i + '">' +
+        '<label for="' + checkboxId + '">' + esc(name) + '</label>' +
+        '</div>';
+    }).join('');
+  }
+  function renderSavedIcpCards() {
+    const container = document.getElementById('saved-icp-cards');
+    if (!container) return;
+    if (!savedIcpList || savedIcpList.length === 0) {
+      container.innerHTML = '<p class="saved-empty-msg">Нет сохранённых портретов клиентов.</p>';
+      return;
+    }
+    container.innerHTML = savedIcpList.map((icp, i) => {
+      const isEditing = editingIcpIndex === i;
+      const name = (icp && icp.name) || (icp && icp.title) || 'Без названия';
+      const productIds = (icp && icp.product_ids && Array.isArray(icp.product_ids)) ? icp.product_ids : [];
+      const productNames = productIds.map(idx => {
+        const p = savedProductsList[parseInt(idx, 10)];
+        return p ? ((p.name || p.title) || 'Без названия') : null;
+      }).filter(Boolean);
+      const productsText = productNames.length > 0 ? '<span style="font-size: var(--text-12); color: var(--text-muted); margin-left: var(--space-2);">· ' + productNames.join(', ') + '</span>' : '';
+      return '<div class="saved-icp-card' + (isEditing ? ' editing' : '') + '" data-index="' + i + '">' +
+        '<div style="flex: 1; min-width: 0;"><span class="saved-name">' + esc(name) + '</span>' + productsText + '</div>' +
+        '<div class="actions kebab-wrap">' +
+        '<button type="button" class="btn-icon kebab-trigger" aria-label="Действия" aria-expanded="false" aria-haspopup="menu" title="Действия">' + kebabSvg + '</button>' +
+        '<div class="kebab-menu" role="menu" hidden>' +
+        '<button type="button" class="kebab-item btn-edit-icp" role="menuitem">Редактировать</button>' +
+        '<button type="button" class="kebab-item btn-delete-icp danger" role="menuitem">Удалить</button>' +
+        '</div></div></div>';
+    }).join('');
+    container.querySelectorAll('.kebab-trigger').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const menu = btn.closest('.kebab-wrap').querySelector('.kebab-menu');
+        const isOpen = !menu.hidden;
+        closeAllSetupKebabs();
+        if (!isOpen) { menu.hidden = false; btn.setAttribute('aria-expanded', 'true'); }
+      });
+    });
+    container.querySelectorAll('.btn-edit-icp').forEach(btn => {
+      btn.addEventListener('click', (e) => { e.stopPropagation();
+        const card = btn.closest('.saved-icp-card');
+        const i = parseInt(card.dataset.index, 10);
+        btn.closest('.kebab-menu').hidden = true;
+        card.querySelector('.kebab-trigger').setAttribute('aria-expanded', 'false');
+        editingIcpIndex = i;
+        setIcpToForm(savedIcpList[i]);
+        setIcpFormVisible(true);
+        renderSavedIcpCards();
+      });
+    });
+    container.querySelectorAll('.btn-delete-icp').forEach(btn => {
+      btn.addEventListener('click', async (e) => { e.stopPropagation();
+        const card = btn.closest('.saved-icp-card');
+        const i = parseInt(card.dataset.index, 10);
+        btn.closest('.kebab-menu').hidden = true;
+        card.querySelector('.kebab-trigger').setAttribute('aria-expanded', 'false');
+        const newList = savedIcpList.filter((_, idx) => idx !== i);
+        const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'icp', value: newList }) });
+        if (res.ok && (await res.json()).ok) {
+          savedIcpList = newList;
+          if (editingIcpIndex === i) { editingIcpIndex = null; setIcpFormVisible(false); }
+          else if (editingIcpIndex > i) editingIcpIndex--;
+          renderSavedIcpCards();
+          if (savedIcpList.length === 0) setIcpToForm({ name: '', roles: '', industry: '', size: '', geo: '', product_ids: [] });
+        }
+      });
+    });
+    container.querySelectorAll('.saved-icp-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.actions')) return;
+        const i = parseInt(card.dataset.index, 10);
+        openIcpView(i);
+      });
+    });
+  }
+  const kebabSvg = '<svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>';
+  function setProductsFormVisible(visible) {
+    const wrap = document.getElementById('products-form-wrap');
+    const btn = document.getElementById('add-product');
+    if (wrap) {
+      wrap.hidden = !visible;
+      if (visible) wrap.removeAttribute('hidden'); else wrap.setAttribute('hidden', '');
+    }
+    if (btn) btn.setAttribute('aria-expanded', !!visible);
+    if (visible) setTimeout(resizeAllSetupTextareas, 50);
+  }
+  function setAuthorsFormVisible(visible) {
+    const wrap = document.getElementById('authors-form-wrap');
+    const btn = document.getElementById('add-author');
+    if (wrap) {
+      wrap.hidden = !visible;
+      if (visible) wrap.removeAttribute('hidden'); else wrap.setAttribute('hidden', '');
+    }
+    if (btn) btn.setAttribute('aria-expanded', !!visible);
+    if (visible) setTimeout(resizeAllSetupTextareas, 50);
+  }
+  function getAuthorsFromForm() {
+    const names = document.querySelectorAll('input[name="author_full_name"]');
+    const linkedinUrl = document.querySelectorAll('input[name="author_linkedin_url"]');
+    const roles = document.querySelectorAll('input[name="author_role"]');
+    const histories = document.querySelectorAll('textarea[name="author_history"]');
+    return Array.from(names).map((inp, i) => ({
+      full_name: (inp.value || '').trim(),
+      linkedin_url: (linkedinUrl[i] && linkedinUrl[i].value ? linkedinUrl[i].value.trim() : '') || null,
+      role: (roles[i] && roles[i].value ? roles[i].value.trim() : '') || null,
+      history: (histories[i] && histories[i].value ? histories[i].value.trim() : '') || null
+    })).filter(a => a.full_name);
+  }
+  function setAuthorsToForm(authors) {
+    const list = Array.isArray(authors) && authors.length ? authors : [{ full_name: '', linkedin_url: '', role: '', history: '' }];
+    const wrap = document.getElementById('authors-wrap');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const block = document.createElement('div');
+    block.className = 'author-block';
+    const a = list[0];
+    block.innerHTML = '<label class="sub">Имя и фамилия</label><input name="author_full_name" type="text" placeholder="Имя Фамилия" value="' + esc(a.full_name || '') + '">' +
+      '<label class="sub">Ссылка на LinkedIn</label><input name="author_linkedin_url" type="text" placeholder="https://www.linkedin.com/in/..." value="' + esc(a.linkedin_url || '') + '">' +
+      '<label class="sub">Его роль</label><input name="author_role" type="text" placeholder="Должность, экспертиза..." value="' + esc(a.role || '') + '">' +
+      '<label class="sub">Его история</label><textarea name="author_history" rows="4" placeholder="Опыт, бэкграунд, стиль общения...">' + esc(a.history || '') + '</textarea>';
+    wrap.appendChild(block);
+    setTimeout(resizeAllSetupTextareas, 0);
+  }
+  function renderSavedAuthorsCards() {
+    const container = document.getElementById('saved-authors-cards');
+    if (!container) return;
+    if (!savedAuthorsList || savedAuthorsList.length === 0) {
+      container.innerHTML = '<p class="saved-empty-msg">Нет сохранённых авторов.</p>';
+      return;
+    }
+    container.innerHTML = savedAuthorsList.map((a, i) => {
+      const isEditing = editingAuthorIndex === i;
+      const name = (a && (a.full_name || a.name)) || 'Без имени';
+      return '<div class="saved-author-card' + (isEditing ? ' editing' : '') + '" data-index="' + i + '">' +
+        '<span class="saved-name">' + esc(name) + '</span>' +
+        '<div class="actions kebab-wrap">' +
+        '<button type="button" class="btn-icon kebab-trigger" aria-label="Действия" aria-expanded="false" aria-haspopup="menu" title="Действия">' + kebabSvg + '</button>' +
+        '<div class="kebab-menu" role="menu" hidden>' +
+        '<button type="button" class="kebab-item btn-edit-author" role="menuitem">Редактировать</button>' +
+        '<button type="button" class="kebab-item btn-delete-author danger" role="menuitem">Удалить</button>' +
+        '</div></div></div>';
+    }).join('');
+    container.querySelectorAll('.kebab-trigger').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const menu = btn.closest('.kebab-wrap').querySelector('.kebab-menu');
+        const isOpen = !menu.hidden;
+        closeAllSetupKebabs();
+        if (!isOpen) { menu.hidden = false; btn.setAttribute('aria-expanded', 'true'); }
+      });
+    });
+    container.querySelectorAll('.btn-edit-author').forEach(btn => {
+      btn.addEventListener('click', (e) => { e.stopPropagation();
+        const card = btn.closest('.saved-author-card');
+        const i = parseInt(card.dataset.index, 10);
+        btn.closest('.kebab-menu').hidden = true;
+        btn.closest('.kebab-wrap').querySelector('.kebab-trigger').setAttribute('aria-expanded', 'false');
+        editingAuthorIndex = i;
+        setAuthorsToForm([savedAuthorsList[i]]);
+        setAuthorsFormVisible(true);
+        renderSavedAuthorsCards();
+      });
+    });
+    container.querySelectorAll('.btn-delete-author').forEach(btn => {
+      btn.addEventListener('click', async (e) => { e.stopPropagation();
+        const card = btn.closest('.saved-author-card');
+        const i = parseInt(card.dataset.index, 10);
+        btn.closest('.kebab-menu').hidden = true;
+        card.querySelector('.kebab-trigger').setAttribute('aria-expanded', 'false');
+        const newList = savedAuthorsList.filter((_, idx) => idx !== i);
+        const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'authors', value: newList }) });
+        if (res.ok && (await res.json()).ok) {
+          savedAuthorsList = newList;
+          if (editingAuthorIndex === i) { editingAuthorIndex = null; setAuthorsFormVisible(false); }
+          else if (editingAuthorIndex > i) editingAuthorIndex--;
+          renderSavedAuthorsCards();
+          if (savedAuthorsList.length === 0) setAuthorsToForm([{ full_name: '', linkedin_url: '', role: '', history: '' }]);
+        }
+      });
+    });
+    container.querySelectorAll('.saved-author-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.actions')) return;
+        const i = parseInt(card.dataset.index, 10);
+        openAuthorView(i);
+      });
+    });
+  }
+  function renderSavedProductsCards() {
+    const container = document.getElementById('saved-products-cards');
+    if (!container) return;
+    if (!savedProductsList || savedProductsList.length === 0) {
+      container.innerHTML = '<p class="saved-empty-msg">Нет сохранённых продуктов.</p>';
+      return;
+    }
+    container.innerHTML = savedProductsList.map((p, i) => {
+      const isEditing = editingProductIndex === i;
+      const name = (p && p.name) || (p && p.title) || 'Без названия';
+      return '<div class="saved-product-card' + (isEditing ? ' editing' : '') + '" data-index="' + i + '">' +
+        '<span class="saved-name">' + esc(name) + '</span>' +
+        '<div class="actions kebab-wrap">' +
+        '<button type="button" class="btn-icon kebab-trigger" aria-label="Действия" aria-expanded="false" aria-haspopup="menu" title="Действия">' + kebabSvg + '</button>' +
+        '<div class="kebab-menu" role="menu" hidden>' +
+        '<button type="button" class="kebab-item btn-edit-product" role="menuitem">Редактировать</button>' +
+        '<button type="button" class="kebab-item btn-delete-product danger" role="menuitem">Удалить</button>' +
+        '</div></div></div>';
+    }).join('');
+    container.querySelectorAll('.kebab-trigger').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const menu = btn.closest('.kebab-wrap').querySelector('.kebab-menu');
+        const isOpen = !menu.hidden;
+        closeAllSetupKebabs();
+        if (!isOpen) { menu.hidden = false; btn.setAttribute('aria-expanded', 'true'); }
+      });
+    });
+    container.querySelectorAll('.btn-edit-product').forEach(btn => {
+      btn.addEventListener('click', (e) => { e.stopPropagation();
+        const card = btn.closest('.saved-product-card');
+        const i = parseInt(card.dataset.index, 10);
+        btn.closest('.kebab-menu').hidden = true;
+        card.querySelector('.kebab-trigger').setAttribute('aria-expanded', 'false');
+        editingProductIndex = i;
+        setProductsToForm([savedProductsList[i]]);
+        setProductsFormVisible(true);
+        renderSavedProductsCards();
+      });
+    });
+    container.querySelectorAll('.btn-delete-product').forEach(btn => {
+      btn.addEventListener('click', async (e) => { e.stopPropagation();
+        const card = btn.closest('.saved-product-card');
+        const i = parseInt(card.dataset.index, 10);
+        btn.closest('.kebab-menu').hidden = true;
+        card.querySelector('.kebab-trigger').setAttribute('aria-expanded', 'false');
+        const newList = savedProductsList.filter((_, idx) => idx !== i);
+        const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'products', value: newList }) });
+        if (res.ok && (await res.json()).ok) {
+          savedProductsList = newList;
+          if (editingProductIndex === i) { editingProductIndex = null; setProductsFormVisible(false); }
+          else if (editingProductIndex > i) editingProductIndex--;
+          renderSavedProductsCards();
+          if (savedProductsList.length === 0) setProductsToForm([]);
+        }
+      });
+    });
+    container.querySelectorAll('.saved-product-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.actions')) return;
+        const i = parseInt(card.dataset.index, 10);
+        openProductView(i);
+      });
+    });
+  }
+  function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function closeAllSetupKebabs() {
+    document.querySelectorAll('#saved-authors-cards .kebab-menu, #saved-products-cards .kebab-menu, #saved-icp-cards .kebab-menu').forEach(m => { m.hidden = true; });
+    document.querySelectorAll('#saved-authors-cards .kebab-trigger, #saved-products-cards .kebab-trigger, #saved-icp-cards .kebab-trigger').forEach(b => b.setAttribute('aria-expanded', 'false'));
+  }
+
+  let viewedAuthorIndex = null;
+  let viewedProductIndex = null;
+  let viewedIcpIndex = null;
+  function openAuthorView(i) {
+    const a = savedAuthorsList[i];
+    if (!a) return;
+    viewedAuthorIndex = i;
+    const drawer = document.getElementById('author-view-drawer');
+    if (!drawer) return;
+    document.getElementById('author-view-drawer-title').textContent = (a.full_name || a.name) || 'Без имени';
+    document.getElementById('author-view-full-name').textContent = (a.full_name || a.name) || '—';
+    document.getElementById('author-view-role').textContent = a.role || '—';
+    const linkedinEl = document.getElementById('author-view-linkedin');
+    if (a.linkedin_url) { linkedinEl.innerHTML = ''; const link = document.createElement('a'); link.href = a.linkedin_url; link.target = '_blank'; link.rel = 'noopener'; link.textContent = a.linkedin_url; linkedinEl.appendChild(link); } else linkedinEl.textContent = '—';
+    document.getElementById('author-view-history').textContent = a.history || '—';
+    drawer.classList.add('is-open');
+    drawer.setAttribute('aria-hidden', 'false');
+  }
+  function closeAuthorView() {
+    viewedAuthorIndex = null;
+    const drawer = document.getElementById('author-view-drawer');
+    if (drawer) { drawer.classList.remove('is-open'); drawer.setAttribute('aria-hidden', 'true'); }
+  }
+  function openProductView(i) {
+    const p = savedProductsList[i];
+    if (!p) return;
+    viewedProductIndex = i;
+    const drawer = document.getElementById('product-view-drawer');
+    if (!drawer) return;
+    const name = (p.name || p.title) || 'Без названия';
+    document.getElementById('product-view-drawer-title').textContent = name;
+    document.getElementById('product-view-name').textContent = name;
+    document.getElementById('product-view-desc').textContent = (p.description || p.desc || '') || '—';
+    drawer.classList.add('is-open');
+    drawer.setAttribute('aria-hidden', 'false');
+  }
+  function closeProductView() {
+    viewedProductIndex = null;
+    const drawer = document.getElementById('product-view-drawer');
+    if (drawer) { drawer.classList.remove('is-open'); drawer.setAttribute('aria-hidden', 'true'); }
+  }
+  function openIcpView(i) {
+    const icp = savedIcpList[i];
+    if (!icp) return;
+    viewedIcpIndex = i;
+    const drawer = document.getElementById('icp-view-drawer');
+    if (!drawer) return;
+    const name = (icp.name || icp.title) || 'Без названия';
+    document.getElementById('icp-view-drawer-title').textContent = name;
+    document.getElementById('icp-view-name').textContent = name;
+    document.getElementById('icp-view-roles').textContent = icp.roles || '—';
+    document.getElementById('icp-view-industry').textContent = icp.industry || '—';
+    document.getElementById('icp-view-size').textContent = icp.size || '—';
+    document.getElementById('icp-view-geo').textContent = icp.geo || '—';
+    const productIds = (icp && icp.product_ids && Array.isArray(icp.product_ids)) ? icp.product_ids : [];
+    const productNames = productIds.map(idx => {
+      const p = savedProductsList[parseInt(idx, 10)];
+      return p ? ((p.name || p.title) || 'Без названия') : null;
+    }).filter(Boolean);
+    document.getElementById('icp-view-products').textContent = productNames.length > 0 ? productNames.join(', ') : '—';
+    drawer.classList.add('is-open');
+    drawer.setAttribute('aria-hidden', 'false');
+  }
+  function closeIcpView() {
+    viewedIcpIndex = null;
+    const drawer = document.getElementById('icp-view-drawer');
+    if (drawer) { drawer.classList.remove('is-open'); drawer.setAttribute('aria-hidden', 'true'); }
+  }
+
+  function resizeTextarea(ta) {
+    ta.style.height = 'auto';
+    ta.style.height = Math.max(ta.scrollHeight, 40) + 'px';
+  }
+  function resizeAllSetupTextareas() {
+    document.querySelectorAll('.setup-form-wrap textarea').forEach(resizeTextarea);
+  }
+  function setProductsToForm(products) {
+    const wrap = document.getElementById('products-wrap');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    const list = products.length ? products : [{ name: '', description: '' }];
+    list.forEach((p, i) => {
+      if (i === 0) {
+        const block = document.createElement('div');
+        block.className = 'product-block';
+        block.innerHTML = '<label class="sub">Название продукта</label>' +
+          '<input name="product_name" type="text" placeholder="Название продукта" value="' + esc(p.name) + '">' +
+          '<label class="sub">Описание продукта</label>' +
+          '<textarea name="product_desc" rows="2" placeholder="Описание...">' + esc(p.description) + '</textarea>';
+        wrap.appendChild(block);
+      } else {
+        const row = document.createElement('div');
+        row.className = 'product-row';
+        row.innerHTML = '<div class="product-block">' +
+          '<label class="sub">Название продукта</label>' +
+          '<input name="product_name" type="text" placeholder="Название продукта" value="' + esc(p.name) + '">' +
+          '<label class="sub">Описание продукта</label>' +
+          '<textarea name="product_desc" rows="2" placeholder="Описание...">' + esc(p.description) + '</textarea>' +
+          '</div><button type="button" class="btn-remove btn-add" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+        row.querySelector('.btn-remove').addEventListener('click', () => row.remove());
+        wrap.appendChild(row);
+      }
+    });
+    setTimeout(resizeAllSetupTextareas, 0);
+  }
+
+  function attachSetupListeners() {
+  const setupForm = document.getElementById('setup-form');
+  if (setupForm) setupForm.addEventListener('input', function(e) {
+    if (e.target.matches('textarea')) resizeTextarea(e.target);
+  });
+  const addProductBtn = document.getElementById('add-product');
+  if (addProductBtn) addProductBtn.addEventListener('click', function() {
+    const formWrap = document.getElementById('products-form-wrap');
+    if (formWrap && formWrap.hidden) {
+      editingProductIndex = null;
+      setProductsToForm([{ name: '', description: '' }]);
+      setProductsFormVisible(true);
+    } else {
+      setProductsFormVisible(false);
+    }
+  });
+  const productsCancelBtn = document.getElementById('products-form-cancel');
+  if (productsCancelBtn) productsCancelBtn.addEventListener('click', () => {
+    editingProductIndex = null;
+    setProductsFormVisible(false);
+  });
+  const addAuthorBtn = document.getElementById('add-author');
+  if (addAuthorBtn) addAuthorBtn.addEventListener('click', function() {
+    const formWrap = document.getElementById('authors-form-wrap');
+    if (formWrap && formWrap.hidden) {
+      editingAuthorIndex = null;
+      setAuthorsToForm([{ full_name: '', linkedin_url: '', role: '', history: '' }]);
+      setAuthorsFormVisible(true);
+    } else {
+      setAuthorsFormVisible(false);
+    }
+  });
+  const authorsCancelBtn = document.getElementById('authors-form-cancel');
+  if (authorsCancelBtn) authorsCancelBtn.addEventListener('click', () => {
+    editingAuthorIndex = null;
+    setAuthorsFormVisible(false);
+  });
+  const authorsFormWrap = document.getElementById('authors-form-wrap');
+  if (authorsFormWrap) authorsFormWrap.addEventListener('click', function(e) {
+    if (e.target === authorsFormWrap) setAuthorsFormVisible(false);
+  });
+  const productsFormWrap = document.getElementById('products-form-wrap');
+  if (productsFormWrap) productsFormWrap.addEventListener('click', function(e) {
+    if (e.target === productsFormWrap) setProductsFormVisible(false);
+  });
+  const addIcpBtn = document.getElementById('add-icp');
+  if (addIcpBtn) addIcpBtn.addEventListener('click', function() {
+    const formWrap = document.getElementById('icp-form-wrap');
+    if (formWrap && formWrap.hidden) {
+      editingIcpIndex = null;
+      setIcpToForm({ name: '', roles: '', industry: '', size: '', geo: '', product_ids: [] });
+      setIcpFormVisible(true);
+    } else {
+      setIcpFormVisible(false);
+    }
+  });
+  const icpCancelBtn = document.getElementById('icp-form-cancel');
+  if (icpCancelBtn) icpCancelBtn.addEventListener('click', () => {
+    editingIcpIndex = null;
+    setIcpFormVisible(false);
+  });
+  const icpFormWrap = document.getElementById('icp-form-wrap');
+  if (icpFormWrap) icpFormWrap.addEventListener('click', function(e) {
+    if (e.target === icpFormWrap) setIcpFormVisible(false);
+  });
+
+  const authorViewBackdrop = document.getElementById('author-view-drawer-backdrop');
+  if (authorViewBackdrop) authorViewBackdrop.addEventListener('click', closeAuthorView);
+  const authorViewClose = document.getElementById('author-view-drawer-close');
+  if (authorViewClose) authorViewClose.addEventListener('click', closeAuthorView);
+  const authorViewEdit = document.getElementById('author-view-drawer-edit');
+  if (authorViewEdit) authorViewEdit.addEventListener('click', () => {
+    if (viewedAuthorIndex !== null) {
+      editingAuthorIndex = viewedAuthorIndex;
+      setAuthorsToForm([savedAuthorsList[viewedAuthorIndex]]);
+      setAuthorsFormVisible(true);
+      renderSavedAuthorsCards();
+    }
+    closeAuthorView();
+  });
+
+  const productViewBackdrop = document.getElementById('product-view-drawer-backdrop');
+  if (productViewBackdrop) productViewBackdrop.addEventListener('click', closeProductView);
+  const productViewClose = document.getElementById('product-view-drawer-close');
+  if (productViewClose) productViewClose.addEventListener('click', closeProductView);
+  const productViewEdit = document.getElementById('product-view-drawer-edit');
+  if (productViewEdit) productViewEdit.addEventListener('click', () => {
+    if (viewedProductIndex !== null) {
+      editingProductIndex = viewedProductIndex;
+      setProductsToForm([savedProductsList[viewedProductIndex]]);
+      setProductsFormVisible(true);
+      renderSavedProductsCards();
+    }
+    closeProductView();
+  });
+
+  const icpViewBackdrop = document.getElementById('icp-view-drawer-backdrop');
+  if (icpViewBackdrop) icpViewBackdrop.addEventListener('click', closeIcpView);
+  const icpViewClose = document.getElementById('icp-view-drawer-close');
+  if (icpViewClose) icpViewClose.addEventListener('click', closeIcpView);
+  const icpViewEdit = document.getElementById('icp-view-drawer-edit');
+  if (icpViewEdit) icpViewEdit.addEventListener('click', () => {
+    if (viewedIcpIndex !== null) {
+      editingIcpIndex = viewedIcpIndex;
+      setIcpToForm(savedIcpList[viewedIcpIndex]);
+      setIcpFormVisible(true);
+      renderSavedIcpCards();
+    }
+    closeIcpView();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { closeAuthorView(); closeProductView(); closeIcpView(); closeAllSetupKebabs(); }
+  });
+  document.addEventListener('click', (e) => {
+    if (e.target.closest && e.target.closest('.kebab-wrap')) return;
+    closeAllSetupKebabs();
+  });
+  }
+
+  const INTERVIEW_QUESTIONS = [
+    { s: "1) Кто я по легенде (персонаж)", q: "Где ты родился и откуда ты «по вайбу»? (город/регион, 1 строка)" },
+    { s: "1) Кто я по легенде (персонаж)", q: "Когда и почему переехал(а)? (год + 1-2 причины)" },
+    { s: "1) Кто я по легенде (персонаж)", q: "Были ли страны/города, которые сильно повлияли? (где жил(а), сколько, что изменило)" },
+    { s: "1) Кто я по легенде (персонаж)", q: "Где живешь сейчас и как это правильно называть безопасно? (город/регион, допустимые формулировки)" },
+    { s: "1) Кто я по легенде (персонаж)", q: "Главный проект/достижение, которое дает тебе право «говорить по теме»: что это было, какую проблему решал(а), чем закончилось? (коротко)" },
+    { s: "1) Кто я по легенде (персонаж)", q: "Был ли акселератор/программа типа YC? Какая именно и как корректно это упоминать без понтов?" },
+    { s: "1) Кто я по легенде (персонаж)", q: "В каких 3-5 темах ты реально эксперт(ка)? (списком)" },
+    { s: "1) Кто я по легенде (персонаж)", q: "Чем занимаешься сейчас? (название проекта/компании, что делает, 1-2 предложения)" },
+    { s: "1) Кто я по легенде (персонаж)", q: "Возраст, семейный статус, дети, быт: что из этого можно упоминать и как? (без деанона)" },
+    { s: "1) Кто я по легенде (персонаж)", q: "Какие 2-4 «человеческие» детали добавляют объем? (хобби, музыка, спорт, игры)" },
+    { s: "1) Кто я по легенде (персонаж)", q: "Практики/привычки типа медитации: есть? какие? как об этом говорить спокойно?" },
+    { s: "1) Кто я по легенде (персонаж)", q: "Есть ли культурные штуки типа фестивалей/комьюнити (Burning Man): можно ли упоминать, и как аккуратно?" },
+    { s: "1) Кто я по легенде (персонаж)", q: "Какие факты о себе ты упоминаешь только когда это реально к месту, а не в каждом посте/ответе? (списком). Примеры: «поднимал инвестиции», «был в YC», «делал большой продукт»." },
+    { s: "1) Кто я по легенде (персонаж)", q: "Для 4 контекстов (логистика/индустрия, стартапы/AI, жизнь/выгорание/семья, музыка/игры/хобби): какие 1-2 «якоря опыта» ты вставляешь мимоходом?" },
+    { s: "2) Общий тон: как я говорю", q: "Как ты сам описал(а) бы свой тон 3 словами?" },
+    { s: "2) Общий тон: как я говорю", q: "Что для тебя «разговорно и тепло» в тексте? (2-3 правила)" },
+    { s: "2) Общий тон: как я говорю", q: "Какая длина предложений у тебя естественная? (коротко/средне/иногда длинно)" },
+    { s: "2) Общий тон: как я говорю", q: "Насколько ты прямой(ая) по шкале 1-10?" },
+    { s: "2) Общий тон: как я говорю", q: "Как ты сохраняешь уважение, когда человек тупит/горит? (2-3 приемчика)" },
+    { s: "2) Общий тон: как я говорю", q: "Юмор: какой именно юмор у тебя «сухой и спокойный»? (1-2 предложения)" },
+    { s: "2) Общий тон: как я говорю", q: "Как ты обычно входишь в ответ? (2-3 типовых начала)" },
+    { s: "2) Общий тон: как я говорю", q: "Дай 5 стартовых фраз, которые реально звучат как ты (можно на английском, как в примере)" },
+    { s: "3) Что я никогда не делаю", q: "Какие 5 вещей ты никогда не пишешь (стиль/интонация/позиция)?" },
+    { s: "3) Что я никогда не делаю", q: "Какие фразы или «запахи текста» ты ненавидишь? (пример: пафос, канцелярит)" },
+    { s: "3) Что я никогда не делаю", q: "Какие темы ты не трогаешь вообще? (списком)" },
+    { s: "3) Что я никогда не делаю", q: "Как ты отвечаешь, когда тебя тянут в психотерапию/диагнозы? (2-3 безопасные формулировки)" },
+    { s: "3) Что я никогда не делаю", q: "Какие слова из «бизнес-английского» ты точно не используешь? (списком)" },
+    { s: "3) Что я никогда не делаю", q: "В каких случаях ты все же упоминаешь статус/опыт, и как это звучит «без флекса»? (2-3 примера)" },
+    { s: "3) Что я никогда не делаю", q: "Какие «общие ответы» ты запрещаешь себе? (типа It depends) И чем их заменяешь?" },
+    { s: "4) Структура типичного ответа", q: "Сколько абзацев обычно? (диапазон)" },
+    { s: "4) Структура типичного ответа", q: "Твой стандартный порядок: что идет первым, вторым, третьим? (схема)" },
+    { s: "4) Структура типичного ответа", q: "Как ты «подхватываешь эмоцию» человека? (2-3 примера фраз)" },
+    { s: "4) Структура типичного ответа", q: "Как ты добавляешь свой опыт так, чтобы это было к месту? (1-2 правила)" },
+    { s: "4) Структура типичного ответа", q: "Что считать «конкретной мыслью» у тебя? (пример)" },
+    { s: "4) Структура типичного ответа", q: "Когда ты задаешь вопрос в конце, а когда нет? (правило)" },
+    { s: "5) Темы: логистика/траки/supply chain", q: "Как ты объясняешь сложное «простыми словами»? (2 правила)" },
+    { s: "5) Темы: логистика/траки/supply chain", q: "Какие термины ты используешь, а какие избегаешь?" },
+    { s: "5) Темы: логистика/траки/supply chain", q: "Дай 5 фраз, которые ты часто вставляешь в этой теме (в стиле Happens all the time)" },
+    { s: "5) Темы: логистика/траки/supply chain", q: "Дай 1 образную мини-зарисовку как в примере про лед/траки (3-5 строк)" },
+    { s: "5) Темы: AI/автоматизация/агенты", q: "Твоя позиция: где AI реально работает, а где хайп? (3-5 пунктов)" },
+    { s: "5) Темы: AI/автоматизация/агенты", q: "Твои «3 тезиса-линиии» как в примере (технология останется, пузырь, данные)" },
+    { s: "5) Темы: AI/автоматизация/агенты", q: "Дай 2 короткие фирменные формулировки на английском, как в примерах (типа bubble will pop…)" },
+    { s: "5) Темы: стартапы/карьера/взрослость", q: "Три тезиса про работу и границы (лояльность, перегруз, здоровье)" },
+    { s: "6) Юмор и интонация", q: "Уровень юмора 1-10: где ты?" },
+    { s: "6) Юмор и интонация", q: "Какие темы можно шутить, а какие нельзя?" },
+    { s: "6) Юмор и интонация", q: "Твой юмор больше: ирония над собой, над жизнью, над индустрией? (выбери)" },
+    { s: "6) Юмор и интонация", q: "Напиши 3 коротких шутки в своем стиле (как Excel/еда/погода), по 2-4 строки" },
+    { s: "7) Жизненные вопросы (личные)", q: "Какая твоя «одна правда про жизнь», которую ты часто видишь? (2-4 строки)" },
+    { s: "7) Жизненные вопросы (личные)", q: "Что для тебя значит «doing well in life»? (2-4 строки)" },
+    { s: "7) Жизненные вопросы (личные)", q: "Твоя позиция про дружбу/отношения и границы (2-6 строк)" },
+    { s: "7) Жизненные вопросы (личные)", q: "Дай 3 примера коротких честных ответов на разные жизненные вопросы (ты сам выбери вопросы)" },
+    { s: "8) Как отвечаю в спорах", q: "Что ты делаешь, чтобы не агрессировать? (2-3 правила)" },
+    { s: "8) Как отвечаю в спорах", q: "Твоя связка «согласен и добавлю» в твоих словах: 3 шаблона фраз" },
+    { s: "8) Как отвечаю в спорах", q: "На какую тему ты чаще споришь (AI/стартапы/индустрия)? И какой у тебя типовой аргумент?" },
+    { s: "8) Как отвечаю в спорах", q: "Дай пример ответа в споре на 6-10 строк (как в примере про пузырь)" },
+    { s: "9) Палитра фраз (строительные блоки)", q: "Напиши 15-25 «кирпичиков» фраз, которые звучат как ты (не обязательно штамповать)" },
+    { s: "9) Палитра фраз (строительные блоки)", q: "Какие 10 фраз ты запрещаешь, потому что они «не ты»?" },
+    { s: "10) Как взаимодействую с людьми", q: "Как ты поддерживаешь человека, когда ему тяжело, не скатываясь в терапию? (2-3 правила)" },
+    { s: "10) Как взаимодействую с людьми", q: "Как ты не обесцениваешь, даже если человек «сам виноват»? (2-3 фразы)" },
+    { s: "10) Как взаимодействую с людьми", q: "Как ты gently challenge-ишь мысль человека? (2-3 шаблона)" },
+    { s: "10) Как взаимодействую с людьми", q: "Дай пример ответа на токсичную формулировку человека (как пример про «white trash friends»), но в твоем стиле" },
+    { s: "11) Резюме стиля одним абзацем", q: "Напиши один абзац: кто ты, как звучишь, что человек чувствует после твоего ответа." },
+    { s: "11) Резюме стиля одним абзацем", q: "Укажи 5 обязательных правил, которые всегда должны соблюдаться в твоих текстах." }
+  ];
+
+  const INTERVIEW_DRAFT_KEY = 'myvoices_author_interview_draft';
+  let interviewIndex = 0;
+  let interviewAnswers = [];
+
+  function getInterviewDraft() {
+    try {
+      const raw = localStorage.getItem(INTERVIEW_DRAFT_KEY);
+      if (!raw) return null;
+      const d = JSON.parse(raw);
+      if (!d || typeof d.index !== 'number' || !Array.isArray(d.answers)) return null;
+      if (d.index < 0 || d.index >= INTERVIEW_QUESTIONS.length) return null;
+      return { index: d.index, answers: d.answers };
+    } catch (e) { return null; }
+  }
+  function setInterviewDraft() {
+    saveCurrentAnswer();
+    const total = INTERVIEW_QUESTIONS.length;
+    const answers = interviewAnswers.slice(0, total);
+    while (answers.length < total) answers.push('');
+    try {
+      localStorage.setItem(INTERVIEW_DRAFT_KEY, JSON.stringify({ index: interviewIndex, answers: answers }));
+    } catch (e) {}
+  }
+  function clearInterviewDraft() {
+    try { localStorage.removeItem(INTERVIEW_DRAFT_KEY); } catch (e) {}
+  }
+
+  function openInterviewConfirm() {
+    document.getElementById('interview-confirm-modal').hidden = false;
+  }
+  function closeInterviewConfirm() {
+    document.getElementById('interview-confirm-modal').hidden = true;
+  }
+  function openInterviewResumeModal(draft) {
+    const n = draft.index + 1;
+    const total = INTERVIEW_QUESTIONS.length;
+    document.getElementById('interview-resume-text').textContent =
+      'У вас есть сохранённый прогресс (пройдено ' + n + ' из ' + total + ' вопросов). Продолжить с того места или пройти интервью заново?';
+    document.getElementById('interview-resume-modal').hidden = false;
+  }
+  function closeInterviewResumeModal() {
+    document.getElementById('interview-resume-modal').hidden = true;
+  }
+  function openInterviewModal(draft) {
+    const total = INTERVIEW_QUESTIONS.length;
+    if (draft && draft.answers && draft.answers.length) {
+      interviewIndex = Math.min(draft.index, total - 1);
+      interviewAnswers = draft.answers.slice(0, total);
+      while (interviewAnswers.length < total) interviewAnswers.push('');
+    } else {
+      interviewIndex = 0;
+      interviewAnswers = new Array(total).fill('');
+    }
+    document.getElementById('interview-modal').hidden = false;
+    renderInterviewQuestion();
+  }
+  function closeInterviewModal(completed) {
+    if (completed !== true) setInterviewDraft();
+    document.getElementById('interview-modal').hidden = true;
+  }
+  function saveCurrentAnswer() {
+    const input = document.getElementById('interview-answer-input');
+    if (input && interviewAnswers.length > 0 && interviewIndex >= 0 && interviewIndex < interviewAnswers.length) {
+      interviewAnswers[interviewIndex] = input.value || '';
+    }
+  }
+  function buildInterviewDocument() {
+    const parts = [];
+    let prevSection = '';
+    INTERVIEW_QUESTIONS.forEach((item, i) => {
+      if (item.s !== prevSection) {
+        parts.push('\n## ' + item.s + '\n');
+        prevSection = item.s;
+      }
+      const ans = (interviewAnswers[i] || '').trim();
+      parts.push((i + 1) + '. ' + item.q + '\n' + (ans ? ans + '\n' : '—\n'));
+    });
+    return parts.join('').trim();
+  }
+  function renderInterviewQuestion() {
+    const total = INTERVIEW_QUESTIONS.length;
+    const item = INTERVIEW_QUESTIONS[interviewIndex];
+    const progressFill = document.getElementById('interview-progress-fill');
+    const progressText = document.getElementById('interview-progress-text');
+    const sectionLabel = document.getElementById('interview-section-label');
+    const questionEl = document.getElementById('interview-question-title');
+    const input = document.getElementById('interview-answer-input');
+    const nextBtn = document.getElementById('interview-next');
+
+    const pct = total ? Math.round(((interviewIndex + 1) / total) * 100) : 0;
+    if (progressFill) progressFill.style.width = pct + '%';
+    if (progressText) progressText.textContent = 'Вопрос ' + (interviewIndex + 1) + ' из ' + total + ' · осталось примерно ' + Math.max(0, Math.ceil((total - interviewIndex - 1) * (30 / total))) + ' мин';
+    if (sectionLabel) sectionLabel.textContent = item.s;
+    if (questionEl) questionEl.textContent = item.q;
+    if (input) input.value = interviewAnswers[interviewIndex] || '';
+
+    document.getElementById('interview-prev').hidden = interviewIndex === 0;
+    nextBtn.textContent = interviewIndex === total - 1 ? 'Завершить' : 'Далее';
+  }
+  function interviewNext() {
+    saveCurrentAnswer();
+    if (interviewIndex >= INTERVIEW_QUESTIONS.length - 1) {
+      clearInterviewDraft();
+      const doc = buildInterviewDocument();
+      const ta = document.querySelector('#authors-wrap textarea[name="author_history"]');
+      if (ta) ta.value = doc;
+      closeInterviewModal(true);
+      return;
+    }
+    interviewIndex++;
+    renderInterviewQuestion();
+  }
+  function interviewPrev() {
+    saveCurrentAnswer();
+    if (interviewIndex > 0) {
+      interviewIndex--;
+      renderInterviewQuestion();
+    }
+  }
+
+  function onInterviewConfirmYes() {
+    closeInterviewConfirm();
+    const draft = getInterviewDraft();
+    if (draft) openInterviewResumeModal(draft);
+    else openInterviewModal();
+  }
+
+  function attachInterviewAndSaveListeners() {
+    var el;
+    el = document.getElementById('btn-author-interview'); if (el) el.addEventListener('click', openInterviewConfirm);
+    el = document.getElementById('interview-confirm-no'); if (el) el.addEventListener('click', () => closeInterviewConfirm());
+    el = document.getElementById('interview-confirm-yes'); if (el) el.addEventListener('click', onInterviewConfirmYes);
+    el = document.getElementById('interview-next'); if (el) el.addEventListener('click', interviewNext);
+    el = document.getElementById('interview-prev'); if (el) el.addEventListener('click', interviewPrev);
+    el = document.getElementById('interview-close'); if (el) el.addEventListener('click', () => closeInterviewModal(false));
+    el = document.getElementById('interview-modal'); if (el) el.addEventListener('click', function(e) {
+      if (e.target === el) closeInterviewModal(false);
+    });
+    el = document.getElementById('interview-confirm-modal'); if (el) el.addEventListener('click', function(e) {
+      if (e.target === el) closeInterviewConfirm();
+    });
+    el = document.getElementById('interview-resume-continue'); if (el) el.addEventListener('click', () => {
+      const draft = getInterviewDraft();
+      closeInterviewResumeModal();
+      openInterviewModal(draft || undefined);
+    });
+    el = document.getElementById('interview-resume-restart'); if (el) el.addEventListener('click', () => {
+      clearInterviewDraft();
+      closeInterviewResumeModal();
+      openInterviewModal();
+    });
+    el = document.getElementById('interview-resume-modal'); if (el) el.addEventListener('click', function(e) {
+      if (e.target === el) closeInterviewResumeModal();
+    });
+
+    el = document.getElementById('save-authors');
+    if (el) el.addEventListener('click', async () => {
+      var msgEl = document.getElementById('save-authors-msg');
+      var formAuthors = getAuthorsFromForm();
+      var authors;
+      if (editingAuthorIndex !== null && formAuthors.length > 0) {
+        authors = savedAuthorsList.slice();
+        authors[editingAuthorIndex] = formAuthors[0];
+        editingAuthorIndex = null;
+      } else if (formAuthors.length > 0) {
+        authors = savedAuthorsList.concat(formAuthors);
+      } else {
+        if (msgEl) { msgEl.textContent = 'Укажите имя автора.'; msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000); }
+        return;
+      }
+      try {
+        var res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'authors', value: authors }) });
+        var data = await res.json().catch(function() { return {}; });
+        if (msgEl) { msgEl.textContent = data.ok ? 'Автор сохранён.' : (data.error || 'Ошибка'); msgEl.style.color = data.ok ? 'var(--primary)' : 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; msgEl.style.color = ''; }, 4000); }
+        if (data.ok) {
+          savedAuthorsList = authors;
+          editingAuthorIndex = null;
+          setAuthorsFormVisible(false);
+          renderSavedAuthorsCards();
+          setAuthorsToForm([{ full_name: '', linkedin_url: '', role: '', history: '' }]);
+        }
+      } catch (err) {
+        if (msgEl) { msgEl.textContent = 'Ошибка: ' + (err.message || 'сеть'); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 4000); }
+      }
+    });
+    el = document.getElementById('save-products');
+    if (el) el.addEventListener('click', async () => {
+      const msgEl = document.getElementById('save-products-msg');
+      const formProducts = getProductsFromForm();
+      let products;
+      if (editingProductIndex !== null && formProducts.length > 0) {
+        products = savedProductsList.slice();
+        products[editingProductIndex] = formProducts[0];
+        editingProductIndex = null;
+      } else if (formProducts.length > 0) {
+        products = savedProductsList.concat(formProducts);
+      } else {
+        if (msgEl) { msgEl.textContent = 'Добавьте название продукта.'; msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000); }
+        return;
+      }
+      try {
+        const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'products', value: products }) });
+        const data = await res.json().catch(function() { return {}; });
+        var errMsg = data.error || (data.detail ? (Array.isArray(data.detail) ? data.detail.map(function(d) { return d.msg || d.loc; }).join(' ') : data.detail) : null);
+        if (!res.ok && res.status === 404) errMsg = 'Маршрут не найден (404).';
+        else if (!res.ok && !errMsg) errMsg = 'Ошибка ' + res.status;
+        if (msgEl) { msgEl.textContent = data.ok ? 'Продукты сохранены.' : (errMsg || 'Ошибка'); msgEl.style.color = data.ok ? 'var(--primary)' : 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; msgEl.style.color = ''; }, 6000); }
+        if (data.ok) {
+          savedProductsList = products;
+          editingProductIndex = null;
+          setProductsFormVisible(false);
+          renderSavedProductsCards();
+          setProductsToForm([{ name: '', description: '' }]);
+          fillIcpProductsSelect();
+        }
+      } catch (err) {
+        if (msgEl) { msgEl.textContent = 'Ошибка: ' + (err.message || 'сеть'); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 4000); }
+      }
+    });
+    el = document.getElementById('save-icp');
+    if (el) el.addEventListener('click', async () => {
+      const msgEl = document.getElementById('save-icp-msg');
+      const formIcp = getIcpFromForm();
+      if (!formIcp.name) {
+        if (msgEl) { msgEl.textContent = 'Укажите название портрета клиента.'; msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000); }
+        return;
+      }
+      let icpList;
+      if (editingIcpIndex !== null) {
+        icpList = savedIcpList.slice();
+        icpList[editingIcpIndex] = formIcp;
+        editingIcpIndex = null;
+      } else {
+        icpList = savedIcpList.concat([formIcp]);
+      }
+      try {
+        const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'icp', value: icpList }) });
+        const data = await res.json().catch(function() { return {}; });
+        if (msgEl) { msgEl.textContent = data.ok ? 'Портрет клиента сохранён.' : (data.error || 'Ошибка'); msgEl.style.color = data.ok ? 'var(--primary)' : 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; msgEl.style.color = ''; }, 4000); }
+        if (data.ok) {
+          savedIcpList = icpList;
+          editingIcpIndex = null;
+          setIcpFormVisible(false);
+          renderSavedIcpCards();
+          setIcpToForm({ name: '', roles: '', industry: '', size: '', geo: '', product_ids: [] });
+        }
+      } catch (err) {
+        if (msgEl) { msgEl.textContent = 'Ошибка: ' + (err && err.message || 'сеть'); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 4000); }
+      }
+    });
+  }
+
+  function escapeHtmlSetup(s) {
+    if (s == null || s === undefined) return '';
+    var div = document.createElement('div');
+    div.textContent = String(s);
+    return div.innerHTML;
+  }
+  function renderSavedSubredditsList(names) {
+    var container = document.getElementById('saved-subreddits-list');
+    if (!container) return;
+    if (!names || names.length === 0) {
+      container.innerHTML = '<p class="saved-empty-msg">Нет сабреддитов. Добавьте первый ниже.</p>';
+      return;
+    }
+    container.innerHTML = names.map(function(name) {
+      return '<span class="subreddit-chip" data-name="' + escapeHtmlSetup(name) + '">' +
+        '<span class="subreddit-chip-name">r/' + escapeHtmlSetup(name) + '</span>' +
+        '<button type="button" class="subreddit-chip-remove" aria-label="Удалить r/' + escapeHtmlSetup(name) + '">×</button>' +
+      '</span>';
+    }).join('');
+    container.querySelectorAll('.subreddit-chip-remove').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var chip = btn.closest('.subreddit-chip');
+        var name = chip && chip.dataset.name;
+        if (!name) return;
+        fetch('/setup/subreddits/' + encodeURIComponent(name), { method: 'DELETE' })
+          .then(function(r) {
+            if (r.ok || r.status === 204) loadSavedSubreddits();
+            else if (typeof window.toast === 'function') window.toast('Не удалось удалить', 'error');
+          })
+          .catch(function() { if (typeof window.toast === 'function') window.toast('Ошибка сети', 'error'); });
+      });
+    });
+  }
+  function loadSavedSubreddits() {
+    fetch('/setup/subreddits')
+      .then(function(r) { return r.ok ? r.json() : []; })
+      .then(function(names) { renderSavedSubredditsList(names || []); })
+      .catch(function() { renderSavedSubredditsList([]); });
+  }
+
+  // Загрузка списков из того же API, что и страница Комментарии (GET /setup/draft)
+  function initSetupLists() {
+    renderSavedAuthorsCards();
+    renderSavedProductsCards();
+    renderSavedIcpCards();
+    loadSavedSubreddits();
+    fetch('/setup/draft')
+      .then(function(r) {
+        if (!r.ok) return {};
+        try { return r.json(); } catch (e) { return {}; }
+      })
+      .then(function(draft) {
+        if (!draft || typeof draft !== 'object') draft = {};
+        var rawAuthors = draft.authors || draft.setup_authors;
+        var rawProducts = draft.products || draft.setup_products;
+        var rawIcp = draft.icp || [];
+        savedAuthorsList = Array.isArray(rawAuthors) ? rawAuthors : [];
+        savedProductsList = Array.isArray(rawProducts) ? rawProducts : [];
+        savedIcpList = Array.isArray(rawIcp) ? rawIcp : [];
+        setAuthorsToForm([{ full_name: '', linkedin_url: '', role: '', history: '' }]);
+        setProductsToForm([{ name: '', description: '' }]);
+        setIcpToForm({ name: '', roles: '', industry: '', size: '', geo: '', product_ids: [] });
+        fillIcpProductsSelect();
+        renderSavedAuthorsCards();
+        renderSavedProductsCards();
+        renderSavedIcpCards();
+      })
+      .catch(function() {
+        savedAuthorsList = [];
+        savedProductsList = [];
+        savedIcpList = [];
+        fillIcpProductsSelect();
+        renderSavedAuthorsCards();
+        renderSavedProductsCards();
+        renderSavedIcpCards();
+      });
+  }
+  function attachSubredditListeners() {
+    var addBtn = document.getElementById('add-subreddit');
+    if (!addBtn) return;
+    addBtn.addEventListener('click', function() {
+      var input = document.getElementById('subreddit-name-input');
+      var msgEl = document.getElementById('save-subreddits-msg');
+      var name = (input && input.value || '').trim().replace(/^\/?r\//, '');
+      if (!name) {
+        if (msgEl) { msgEl.textContent = 'Введите имя сабреддита.'; msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000); }
+        return;
+      }
+      addBtn.disabled = true;
+      fetch('/setup/subreddits', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name }) })
+        .then(function(r) {
+          return r.json().catch(function() { return {}; }).then(function(data) {
+            if (typeof data !== 'object') data = {};
+            data._resOk = r.ok;
+            data._status = r.status;
+            return data;
+          });
+        })
+        .then(function(data) {
+          var ok = data && data.ok === true;
+          if (msgEl) {
+            msgEl.textContent = ok ? (data.message || 'Сабреддит добавлен.') : (data.detail || (data._status ? 'Ошибка ' + data._status : 'Ошибка'));
+            msgEl.style.color = ok ? 'var(--primary)' : 'var(--danger)';
+            setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 4000);
+          }
+          if (ok) { if (input) input.value = ''; loadSavedSubreddits(); }
+        })
+        .catch(function(err) {
+          if (msgEl) { msgEl.textContent = 'Ошибка: ' + (err && err.message || 'сеть'); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 4000); }
+        })
+        .finally(function() { addBtn.disabled = false; });
+    });
+    var subredditInput = document.getElementById('subreddit-name-input');
+    if (subredditInput) subredditInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); addBtn.click(); } });
+  }
+
+  function onSetupReady() {
+    attachSetupListeners();
+    attachInterviewAndSaveListeners();
+    initSetupLists();
+    attachSubredditListeners();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', onSetupReady);
+  } else {
+    onSetupReady();
+  }
+</script>
+
+<section class="setup-section setup-section-linkedin">
+  <div class="setup-section-header linkedin-app-header" id="linkedin-app-header" role="button" tabindex="0" aria-expanded="false" aria-controls="linkedin-setup-body">
+    <span class="setup-section-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+    <h2 class="setup-section-title">Настройка LinkedIn API</h2>
+    <button type="button" id="linkedin-app-toggle" class="btn secondary btn-sm" aria-expanded="false">Показать</button>
+  </div>
+  <div id="linkedin-setup-body" class="linkedin-setup-body" hidden>
+    {% if request.query_params.get('linkedin') == 'connected' %}
+    <div style="border-left: 4px solid var(--accent); padding-left: 0.75rem; margin-bottom: 1rem;">
+      <p style="margin:0; color: var(--accent); font-weight: 500;">LinkedIn подключён. Метрики постов будут подтягиваться по расписанию (раз в сутки).</p>
+    </div>
+    {% elif request.query_params.get('linkedin') == 'config' %}
+    <div style="border-left: 4px solid #ca8a04; padding-left: 0.75rem; margin-bottom: 1rem;">
+      <p style="margin:0;">Укажите в .env: LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET, LINKEDIN_REDIRECT_URI.</p>
+      <p style="margin:0.75rem 0 0; font-size: 0.875rem;">В LinkedIn Developer Portal → Auth → Authorized redirect URLs добавьте <strong>точно</strong> такой же URL (как в .env), например: <code style="background: var(--bg-secondary); padding: 0.2rem 0.4rem;">http://localhost:8000/linkedin/oauth/callback</code> — без слэша в конце, с портом.</p>
+    </div>
+    {% elif request.query_params.get('linkedin') == 'denied' %}
+    <div style="border-left: 4px solid #dc2626; padding-left: 0.75rem; margin-bottom: 1rem;">
+      <p style="margin:0; font-weight: 500;">LinkedIn вернул ошибку при авторизации.</p>
+      <p style="margin:0.5rem 0 0; font-size: 0.875rem;"><strong>error:</strong> <code>{{ request.query_params.get('error', '') }}</code></p>
+      {% if request.query_params.get('error_description') %}
+      <p style="margin:0.25rem 0 0; font-size: 0.875rem;"><strong>описание:</strong> {{ request.query_params.get('error_description') }}</p>
+      {% endif %}
+      {% if request.query_params.get('error') == 'unauthorized_scope_error' %}
+      <p style="margin:0.75rem 0 0; font-size: 0.875rem; color: var(--text-secondary);">Запрошен доступ к метрикам постов, но у приложения нет такого разрешения. Сначала нажмите «Подключить LinkedIn» (только вход). После успешного входа можно нажать «Доступ к метрикам постов».</p>
+      {% endif %}
+    </div>
+    {% endif %}
+    <p style="margin:0 0 0.75rem 0; font-size: 0.9375rem; color: var(--text-secondary);">OAuth 2.0 + Community Management API: раз в сутки вызывается memberCreatorPostAnalytics (q=me), результаты пишутся в DailyMetrics.</p>
+    <p id="linkedin-status" style="margin: 0 0 0.5rem 0; font-size: 0.875rem;">Загрузка…</p>
+    <div id="linkedin-btns" style="display: none;">
+      <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem; color: var(--text-secondary);">Сначала нажмите «Подключить LinkedIn» (только вход). Если появится «Bummer» — в портале проверьте Auth → Redirect URLs. После успешного входа можно нажать «Доступ к метрикам постов».</p>
+      <a href="/linkedin/oauth/authorize" id="linkedin-connect-btn" class="btn secondary">Подключить LinkedIn</a>
+      <a href="/linkedin/oauth/authorize?metrics=1" class="btn secondary" style="margin-left: 0.5rem;">Доступ к метрикам постов</a>
+    </div>
+    <p id="linkedin-connected-msg" style="display: none; margin: 0; font-size: 0.875rem; color: var(--accent);">Аккаунт подключён. Метрики: <a href="/docs#/linkedin/linkedin_metrics_linkedin_metrics_get">GET /linkedin/metrics</a></p>
+    <div id="linkedin-setup" style="display: none; margin-top: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: 6px; font-size: 0.875rem;">
+      <p style="margin: 0 0 0.5rem 0; font-weight: 500;">Если «Bummer, something went wrong» — проверьте в <a href="https://www.linkedin.com/developers/apps" target="_blank" rel="noopener">LinkedIn Developer Portal</a>:</p>
+      <ol style="margin: 0.5rem 0 0 1rem; padding: 0;">
+        <li>Продукты <strong>Sign In with LinkedIn using OpenID Connect</strong> и <strong>Share on LinkedIn</strong> добавлены (Products).</li>
+        <li>В Auth → <strong>Authorized redirect URLs</strong> оставьте <strong>только один</strong> URL (удалите <code>http://localhost:8000/ui</code>, если есть):<br>
+          <code id="linkedin-redirect-uri" style="display: inline-block; margin-top: 0.25rem; padding: 0.25rem 0.5rem; background: var(--bg); border-radius: 4px; word-break: break-all;"></code>
+          <button type="button" id="linkedin-copy-uri" class="btn secondary" style="margin-left: 0.5rem; padding: 0.2rem 0.5rem; font-size: 0.8125rem;">Копировать</button>
+        </li>
+        <li>Client ID в приложении: <code id="linkedin-client-id"></code>. Убедитесь, что вы в <strong>Team members</strong> приложения.</li>
+        <li>После «Bummer» подождите 5 секунд — куда перенаправит? Если на эту страницу с красным блоком «LinkedIn вернул ошибку» — пришлите текст ошибки.</li>
+        <li><a href="/linkedin/oauth/debug-url" target="_blank">Показать точный URL запроса (JSON)</a> — скопируйте <code>authorization_url</code> и откройте в браузере для проверки.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+<script>
+  (function() {
+    const header = document.getElementById('linkedin-app-header');
+    const toggle = document.getElementById('linkedin-app-toggle');
+    const body = document.getElementById('linkedin-setup-body');
+    function toggleLinkedInSection() {
+      if (!body) return;
+      const open = body.hidden;
+      body.hidden = !open;
+      if (toggle) {
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        toggle.textContent = open ? 'Свернуть' : 'Показать';
+      }
+      if (header) header.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    if (header && body) {
+      header.addEventListener('click', function(e) { e.preventDefault(); toggleLinkedInSection(); });
+      header.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleLinkedInSection(); } });
+    }
+    if (toggle) toggle.addEventListener('click', function(e) { e.stopPropagation(); toggleLinkedInSection(); });
+  })();
+  fetch('/linkedin/status').then(r => r.json()).then(d => {
+    const statusEl = document.getElementById('linkedin-status');
+    const btns = document.getElementById('linkedin-btns');
+    const msg = document.getElementById('linkedin-connected-msg');
+    if (d.connected) { if (statusEl) statusEl.textContent = 'Статус: подключён'; if (btns) btns.style.display = 'none'; if (msg) msg.style.display = 'block'; }
+    else { if (statusEl) statusEl.textContent = 'Статус: не подключён'; if (btns) btns.style.display = 'block'; if (msg) msg.style.display = 'none'; }
+  }).catch(() => { const el = document.getElementById('linkedin-status'); if (el) el.textContent = 'Статус: ошибка запроса'; });
+  fetch('/linkedin/oauth/setup').then(r => r.json()).then(d => {
+    if (d && d.redirect_uri) {
+      const setupEl = document.getElementById('linkedin-setup');
+      const uriEl = document.getElementById('linkedin-redirect-uri');
+      const clientEl = document.getElementById('linkedin-client-id');
+      const copyBtn = document.getElementById('linkedin-copy-uri');
+      if (setupEl) setupEl.style.display = 'block';
+      if (uriEl) uriEl.textContent = d.redirect_uri;
+      if (clientEl) clientEl.textContent = d.client_id || '—';
+      if (copyBtn) copyBtn.onclick = () => {
+        navigator.clipboard.writeText(d.redirect_uri);
+        copyBtn.textContent = 'Скопировано';
+        setTimeout(() => { copyBtn.textContent = 'Копировать'; }, 2000);
+      };
+    }
+  }).catch(() => {});
+</script>
+{% endblock %}

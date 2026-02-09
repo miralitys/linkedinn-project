@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}KOL — MyVOICE's{% endblock %}
+{% block content %}
+<header class="page-hero">
+  <h1>KOL (лидеры мнений)</h1>
+  <p class="lead">Добавляйте лидеров мнений для генерации комментариев под их постами.</p>
+</header>
+
+<div class="card">
+  <h2 class="section-title">Добавить KOL</h2>
+  <form id="kol-form">
+    <label style="display: block; margin-bottom: var(--space-1); font-size: var(--text-14);">Имя</label>
+    <input name="full_name" placeholder="Имя" required style="width: 100%; margin-bottom: var(--space-3); padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: var(--text-14);">
+    <label style="display: block; margin-bottom: var(--space-1); font-size: var(--text-14);">LinkedIn URL</label>
+    <input name="linkedin_url" placeholder="LinkedIn URL" style="width: 100%; margin-bottom: var(--space-3); padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: var(--text-14);">
+    <label style="display: block; margin-bottom: var(--space-1); font-size: var(--text-14);">Теги (через запятую)</label>
+    <input name="topic_tags" placeholder="Теги через запятую" style="width: 100%; margin-bottom: var(--space-4); padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: var(--text-14);">
+    <div class="form-actions" style="display: flex; gap: var(--space-2);">
+      <button type="submit" class="btn primary">Добавить</button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h2 class="section-title">Справка</h2>
+  <p style="margin: 0; font-size: var(--text-14); color: var(--text-muted);">Список KOL — через <a href="/docs#/kol/list_kol_kol_get">GET /kol</a>. Комментарии под постами генерируются на странице <a href="/ui/posts">Комментарии</a> (открой пост и нажми «Сгенерировать ответ»).</p>
+</div>
+<script>
+  document.getElementById('kol-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const tags = fd.get('topic_tags') ? String(fd.get('topic_tags')).split(',').map(s => s.trim()) : null;
+    const res = await fetch('/kol', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ full_name: fd.get('full_name'), linkedin_url: fd.get('linkedin_url'), topic_tags: tags }) });
+    if (res.ok) { e.target.reset(); alert('Добавлено'); } else { alert(await res.text()); }
+  });
+</script>
+{% endblock %}

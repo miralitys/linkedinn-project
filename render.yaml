@@ -1,0 +1,19 @@
+# Render Blueprint: MyVOICE's / LFAS
+# https://render.com/docs/blueprint-spec
+# Подключи репозиторий в Render → New → Blueprint → укажи этот файл.
+# В Environment добавь DATABASE_URL (Supabase), SESSION_SECRET, OPENAI_API_KEY и др.
+
+services:
+  - type: web
+    name: myvoices
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false

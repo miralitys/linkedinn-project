@@ -1,0 +1,968 @@
+{% extends "base.html" %}
+{% block title %}Новости — MyVOICE's{% endblock %}
+{% block content %}
+<div class="news-page-wrap">
+<header class="news-page-header">
+  <div class="news-header-top">
+    <h1 class="news-page-title">Новости</h1>
+    <button type="button" id="news-refresh-btn" class="btn primary btn-icon-text news-refresh-btn" aria-label="Обновить" title="Обновить"><span aria-hidden="true">↻</span> Обновить</button>
+  </div>
+  <p class="news-header-desc">Новости Land Line Media, Transport Topics и CDLLife за последние 3 дня — в одной ленте по дате.</p>
+  <div class="news-toolbar-row">
+    <div class="news-toolbar-field">
+      <label class="news-toolbar-label" for="news-source-filter">Источник</label>
+      <select id="news-source-filter" class="news-toolbar-select" aria-label="Источник">
+        <option value="">Все источники</option>
+        <option value="Land Line Media">Land Line Media</option>
+        <option value="Transport Topics">Transport Topics</option>
+        <option value="CDLLife">CDLLife</option>
+      </select>
+    </div>
+    <div class="news-toolbar-field">
+      <label class="news-toolbar-label" for="news-score-filter">Score</label>
+      <select id="news-score-filter" class="news-toolbar-select" aria-label="Фильтр по релевантности">
+        <option value="">Все</option>
+        <option value="blue">Синий (81+)</option>
+        <option value="green">Зелёный (61–80)</option>
+        <option value="yellow">Жёлтый (31–60)</option>
+        <option value="red">Красный (0–30)</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<div id="news-feed" class="news-feed">
+  <div id="news-loading" class="news-loading-skeleton" style="display: none;" aria-live="polite">
+    <div class="news-skeleton-card"></div>
+    <div class="news-skeleton-card"></div>
+    <div class="news-skeleton-card"></div>
+  </div>
+  <div id="news-list"></div>
+  <div id="news-empty" class="news-empty-state" style="display: none;">
+    <p class="news-empty-title">Нет новостей</p>
+    <p class="news-empty-desc">За последние 3 дня записей не найдено. Нажмите «Обновить» или зайдите позже.</p>
+    <button type="button" id="news-empty-retry" class="btn primary">Обновить</button>
+  </div>
+  <div id="news-error" class="news-error-state" style="display: none;">
+    <p class="news-error-text">Не удалось загрузить новости.</p>
+    <p id="news-error-detail" class="news-error-detail"></p>
+    <button type="button" id="news-error-retry" class="btn secondary">Повторить</button>
+  </div>
+</div>
+</div>
+
+<!-- Панель статьи — выезжает справа -->
+<div id="news-view-drawer" class="news-view-drawer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="news-view-title">
+  <div class="news-view-backdrop" id="news-view-backdrop"></div>
+  <div class="news-view-panel">
+    <div class="news-view-header">
+      <div class="news-view-title-row">
+        <h2 id="news-view-title" class="news-view-title"></h2>
+        <a id="news-view-link" href="#" target="_blank" rel="noopener" class="news-view-link-icon btn-icon" title="Открыть на сайте" aria-label="Открыть на сайте" style="display: none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>
+      </div>
+      <button type="button" id="news-view-close" class="news-view-close btn-icon" title="Закрыть (Esc)" aria-label="Закрыть">×</button>
+    </div>
+    <div class="news-view-meta" id="news-view-meta">
+      <span id="news-view-score-wrap" style="display: none; margin-left: var(--space-3);">
+        <span id="news-view-score" class="news-card-score-loading" title="Оценка релевантности...">—</span>
+        <button type="button" id="news-view-score-refresh" class="news-score-refresh-btn" title="Обновить оценку релевантности" style="display: none; margin-left: var(--space-2);" aria-label="Обновить score">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+      </span>
+    </div>
+    <div class="news-view-source" id="news-view-source"></div>
+    <div id="news-view-body" class="news-view-body"></div>
+    <div class="news-rewrite-block">
+      <div class="news-rewrite-header">
+        <h3 class="news-rewrite-title">Переписать эту новость</h3>
+        <p class="news-rewrite-desc">Выберите автора и цель — AI переформулирует новость в пост для LinkedIn.</p>
+      </div>
+      <div class="news-rewrite-form">
+        <div class="news-rewrite-fields">
+          <div class="news-rewrite-field">
+            <label for="news-rewrite-author">От лица автора</label>
+            <select id="news-rewrite-author" aria-label="Автор"><option value="">— Загрузка… —</option></select>
+          </div>
+          <div class="news-rewrite-field">
+            <label for="news-rewrite-goal">Цель</label>
+            <select id="news-rewrite-goal" aria-label="Цель"><option value="network">Network</option><option value="native_ads">Нативная реклама</option><option value="full_ads">Сто процентов рекламы</option></select>
+          </div>
+          <div class="news-rewrite-field">
+            <label for="news-rewrite-length">Длина поста</label>
+            <select id="news-rewrite-length" aria-label="Длина поста"><option value="short">Короткий (600–900 знаков)</option><option value="medium" selected>Средний (900–1400 знаков)</option><option value="long">Длинный (1400–2200 знаков)</option></select>
+          </div>
+          <button type="button" id="news-rewrite-btn" class="btn primary news-rewrite-btn" aria-label="Переписать новость">Переписать</button>
+        </div>
+        <div class="news-rewrite-output">
+          <div class="news-rewrite-output-header">
+            <span class="news-rewrite-result-label">Результат</span>
+            <div style="display: flex; align-items: center; gap: var(--space-2);">
+              <span id="news-write-char-count" class="news-char-count" style="font-size: var(--text-12); color: var(--text-muted);"></span>
+              <button type="button" id="news-write-copy" class="btn secondary btn-sm news-copy-btn">Копировать</button>
+            </div>
+          </div>
+          <textarea id="news-write-textarea" rows="4" placeholder="Результат появится здесь…"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* ——— Страница новостей: аккуратный, читаемый дизайн ——— */
+  .news-page-wrap { margin-top: 0; }
+  .news-page-header { margin-bottom: var(--space-6); }
+  .news-header-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-2); }
+  .news-page-title { font-size: 1.75rem; font-weight: 700; margin: 0; color: var(--text); letter-spacing: -0.02em; }
+  .news-header-desc { margin: 0 0 var(--space-4); font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; max-width: 42rem; }
+  .news-toolbar-row { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+  .news-toolbar-field { display: flex; flex-direction: column; gap: var(--space-1); }
+  .news-toolbar-label { font-size: var(--text-12); font-weight: 500; color: var(--text-muted); margin: 0; text-transform: uppercase; letter-spacing: 0.04em; }
+  .news-toolbar-select { min-width: 160px; height: 2.25rem; padding: 0 var(--space-3); font-size: var(--text-14); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); box-sizing: border-box; }
+  .news-toolbar-select:focus { outline: none; border-color: var(--primary); box-shadow: var(--focus-ring); }
+  .btn-icon-text { display: inline-flex; align-items: center; gap: var(--space-2); }
+.news-refresh-btn { height: 2.25rem; padding: 0 var(--space-4); }
+  .news-feed { margin-top: 0; }
+  .news-loading-skeleton { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4) 0; }
+  .news-skeleton-card { height: 160px; border-radius: var(--radius-lg); background: linear-gradient(90deg, var(--border) 25%, var(--surface) 50%, var(--border) 75%); background-size: 200% 100%; animation: news-skeleton-shine 1.2s ease-in-out infinite; }
+  @keyframes news-skeleton-shine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .news-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6); margin-bottom: var(--space-4); cursor: pointer; transition: box-shadow var(--motion-normal), border-color var(--motion-fast), transform var(--motion-fast); box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; overflow: hidden; }
+  .news-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--primary) 0%, rgba(99,102,241,0.3) 100%); opacity: 0; transition: opacity var(--motion-fast); }
+  .news-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 6px rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.35); }
+  .news-card:hover::before { opacity: 1; }
+  .news-card-title { font-size: 1.0625rem; font-weight: 600; margin: 0 0 var(--space-3); line-height: 1.4; color: var(--text); }
+  .news-card-title a { color: inherit; text-decoration: none; }
+  .news-card-title a:hover { color: var(--primary); }
+  .news-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }
+  .news-card-meta-wrap { min-width: 0; }
+  .news-card-meta { display: block; font-size: var(--text-14); color: var(--text-muted); margin-bottom: var(--space-1); }
+  .news-card-source-wrap { font-size: var(--text-12); color: var(--text-muted); margin-top: var(--space-3); }
+  .news-card-source { font-size: inherit; color: inherit; }
+  .news-card-source a { color: var(--primary); font-weight: 500; }
+  .news-card-source a:hover { text-decoration: underline; }
+  .news-card-summary { font-size: 0.9375rem; line-height: 1.6; color: var(--text); margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .news-card-link-icon { flex-shrink: 0; color: var(--text-muted); }
+  .news-card-link-icon:hover { color: var(--primary); }
+  .news-card-score {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 4.5rem;
+    height: 1.5rem;
+    padding: 0 var(--space-2);
+    font-size: var(--text-12);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: 1px solid;
+  }
+  /* 0-30: красный */
+  .news-card-score.score-red {
+    background: #fee2e2;
+    color: #dc2626;
+    border-color: #dc2626;
+  }
+  /* 31-60: желтый */
+  .news-card-score.score-yellow {
+    background: #fef3c7;
+    color: #d97706;
+    border-color: #d97706;
+  }
+  /* 61-80: зеленый */
+  .news-card-score.score-green {
+    background: #d1fae5;
+    color: #10b981;
+    border-color: #10b981;
+  }
+  /* 81+: синий */
+  .news-card-score.score-blue {
+    background: #dbeafe;
+    color: #2563eb;
+    border-color: #2563eb;
+  }
+  .news-card-score-loading {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    height: 1.5rem;
+    padding: 0 var(--space-2);
+    font-size: var(--text-12);
+    font-weight: 600;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    border: 1px solid var(--border);
+  }
+  .news-score-refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: none;
+    background: var(--bg);
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--motion-fast), color var(--motion-fast);
+  }
+  .news-score-refresh-btn:hover:not(:disabled) {
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+  .news-score-refresh-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .news-score-refresh-btn:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+  .news-empty-state, .news-error-state { text-align: center; padding: var(--space-10); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .news-empty-title, .news-error-text { margin: 0 0 var(--space-2); font-weight: 600; font-size: var(--text-16); color: var(--text); }
+  .news-empty-desc, .news-error-detail { margin: 0 0 var(--space-4); color: var(--text-muted); font-size: var(--text-14); line-height: 1.5; }
+  /* Drawer: панель выезжает справа */
+  .news-view-drawer { position: fixed; inset: 0; z-index: 100; display: none; pointer-events: none; }
+  .news-view-drawer.is-open { display: block; pointer-events: auto; }
+  .news-view-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(6px); opacity: 0; transition: opacity 0.3s ease; }
+  .news-view-drawer.is-open .news-view-backdrop { opacity: 1; }
+  .news-view-panel { position: absolute; top: 0; right: 0; width: 65vw; max-width: 1200px; height: 100%; background: var(--surface); transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: -12px 0 48px rgba(0,0,0,0.12), -4px 0 16px rgba(0,0,0,0.06); overflow: hidden; }
+  .news-view-drawer.is-open .news-view-panel { transform: translateX(0); }
+  .news-view-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); padding: var(--space-5) var(--space-6); border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--surface); }
+  .news-view-title-row { display: flex; align-items: flex-start; gap: var(--space-3); flex: 1; min-width: 0; }
+  .news-view-title { margin: 0; font-size: var(--text-20); font-weight: 700; color: var(--text); line-height: 1.35; flex: 1; min-width: 0; letter-spacing: -0.02em; }
+  .news-view-link-icon { flex-shrink: 0; color: var(--text-muted); }
+  .news-view-link-icon:hover { color: var(--primary); }
+  .news-view-close { min-width: 44px; min-height: 44px; padding: 0; border: none; background: var(--bg); color: var(--text-muted); font-size: 1.5rem; line-height: 1; border-radius: var(--radius-sm); cursor: pointer; flex-shrink: 0; transition: background var(--motion-fast), color var(--motion-fast); }
+  .news-view-close:hover { background: var(--primary-soft); color: var(--primary); }
+  .news-view-meta { padding: var(--space-2) var(--space-6); font-size: var(--text-14); color: var(--text-muted); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .news-view-source { padding: var(--space-2) var(--space-6); font-size: var(--text-14); color: var(--text-muted); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .news-view-source a { color: var(--primary); font-weight: 500; }
+  .news-view-source a:hover { text-decoration: underline; }
+  .news-view-body { padding: var(--space-6); overflow-y: auto; flex: 1; min-height: 0; font-size: var(--text-16); line-height: 1.7; color: var(--text); }
+  .news-view-body p { margin: 0 0 var(--space-4); }
+  .news-view-body p:last-child { margin-bottom: 0; }
+  .news-view-body h2, .news-view-body h3 { margin: var(--space-6) 0 var(--space-3); font-size: 1.25em; font-weight: 600; color: var(--text); }
+  .news-view-body ul { margin: 0 0 var(--space-4); padding-left: var(--space-6); }
+  .news-view-loading { color: var(--text-muted); font-style: italic; margin: 0; }
+  /* Блок «Переписать эту новость» */
+  .news-rewrite-block {
+    flex-shrink: 0;
+    margin: var(--space-4) var(--space-6) var(--space-6);
+    padding: var(--space-5);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .news-rewrite-header {
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border);
+  }
+  .news-rewrite-title {
+    margin: 0 0 var(--space-1);
+    font-size: var(--text-16);
+    font-weight: 600;
+    color: var(--text);
+  }
+  .news-rewrite-desc {
+    margin: 0;
+    font-size: var(--text-14);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .news-rewrite-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .news-rewrite-fields {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-3);
+  }
+  .news-rewrite-field {
+    flex: 1;
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  .news-rewrite-field label {
+    font-size: var(--text-12);
+    font-weight: 500;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .news-rewrite-field select {
+    height: 2.5rem;
+    padding: 0 var(--space-3);
+    font-size: var(--text-14);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    box-sizing: border-box;
+    transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
+  }
+  .news-rewrite-field select:hover {
+    border-color: var(--text-muted);
+  }
+  .news-rewrite-field select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: var(--focus-ring);
+  }
+  .news-rewrite-btn {
+    height: 2.5rem;
+    padding: 0 var(--space-5);
+    font-weight: 600;
+  }
+  .news-rewrite-output {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .news-rewrite-output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+  .news-rewrite-result-label {
+    font-size: var(--text-12);
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .news-rewrite-block textarea {
+    width: 100%;
+    min-height: 5rem;
+    padding: var(--space-4);
+    font-family: inherit;
+    font-size: var(--text-14);
+    line-height: 1.6;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    resize: vertical;
+    box-sizing: border-box;
+    display: block;
+    transition: border-color var(--motion-fast), box-shadow var(--motion-fast);
+  }
+  .news-rewrite-block textarea:hover {
+    border-color: var(--text-muted);
+  }
+  .news-rewrite-block textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  }
+  .news-rewrite-block textarea::placeholder {
+    color: var(--text-muted);
+  }
+  .news-copy-btn {
+    flex-shrink: 0;
+  }
+  .news-char-count {
+    font-size: var(--text-12);
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .news-char-count-valid {
+    color: var(--success, #10b981);
+  }
+  .news-char-count-too-short,
+  .news-char-count-too-long {
+    color: var(--error, #ef4444);
+    font-weight: 500;
+  }
+</style>
+<script>
+(function() {
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+  function formatDate(iso) {
+    if (!iso) return '—';
+    try {
+      var d = new Date(iso);
+      return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch (e) { return iso; }
+  }
+  var listEl = document.getElementById('news-list');
+  var loadingEl = document.getElementById('news-loading');
+  var emptyEl = document.getElementById('news-empty');
+  var errorEl = document.getElementById('news-error');
+  var refreshBtn = document.getElementById('news-refresh-btn');
+  var emptyRetryBtn = document.getElementById('news-empty-retry');
+  var errorRetryBtn = document.getElementById('news-error-retry');
+  var lastNewsItems = [];
+  var currentNewsItem = null;
+
+  function setState(loading, empty, error) {
+    if (loadingEl) loadingEl.style.display = loading ? 'flex' : 'none';
+    if (emptyEl) emptyEl.style.display = empty ? 'block' : 'none';
+    if (errorEl) errorEl.style.display = error ? 'block' : 'none';
+    if (listEl) listEl.style.display = (loading || empty || error) ? 'none' : 'block';
+  }
+  function setErrorDetail(msg) {
+    var el = document.getElementById('news-error-detail');
+    if (el) { el.textContent = msg || ''; el.style.display = msg ? 'block' : 'none'; }
+  }
+  function renderNewsList() {
+    if (!listEl) return;
+    var sourceFilter = document.getElementById('news-source-filter');
+    var scoreFilterSelect = document.getElementById('news-score-filter');
+    var filterVal = sourceFilter ? sourceFilter.value : '';
+    var scoreRange = scoreFilterSelect ? scoreFilterSelect.value : '';
+    var withIdx = lastNewsItems.length ? lastNewsItems.map(function(item, idx) { return { item: item, origIdx: idx }; }) : [];
+    var filtered = filterVal ? withIdx.filter(function(x) { return x.item.source === filterVal; }) : withIdx;
+    if (scoreRange) {
+      filtered = filtered.filter(function(x) {
+        var s = x.item.score;
+        if (s === undefined || s === null) return false;
+        if (scoreRange === 'red') return s >= 0 && s <= 30;
+        if (scoreRange === 'yellow') return s >= 31 && s <= 60;
+        if (scoreRange === 'green') return s >= 61 && s <= 80;
+        if (scoreRange === 'blue') return s >= 81;
+        return true;
+      });
+    }
+    if (filtered.length === 0 && lastNewsItems.length > 0 && (filterVal || scoreRange)) {
+      if (emptyEl) {
+        emptyEl.style.display = 'block';
+        var titleEl = emptyEl.querySelector('.news-empty-title');
+        var descEl = emptyEl.querySelector('.news-empty-desc');
+        if (titleEl) titleEl.textContent = 'Нет новостей';
+        if (descEl) descEl.textContent = filterVal && scoreRange ? 'Нет новостей по выбранному источнику и Score. Смените фильтры.' : filterVal ? 'Выберите другой источник или зайдите позже.' : 'Нет новостей с выбранным Score. Смените фильтр.';
+      }
+      if (emptyRetryBtn) emptyRetryBtn.style.display = 'none';
+      if (listEl) { listEl.style.display = 'none'; listEl.innerHTML = ''; }
+      setState(false, true, false);
+      return;
+    }
+    if (filtered.length === 0 && lastNewsItems.length === 0) {
+      setState(false, true, false);
+      listEl.innerHTML = '';
+      return;
+    }
+    setState(false, false, false);
+    listEl.style.display = 'block';
+    if (emptyEl) emptyEl.style.display = 'none';
+    listEl.innerHTML = filtered.map(function(x) {
+      var item = x.item;
+      var idx = x.origIdx;
+      var title = escapeHtml(item.title || 'Без заголовка');
+      var link = (item.link || '').trim();
+      var summary = escapeHtml(item.summary || '');
+      var published = formatDate(item.published);
+      var sourceName = item.source || 'Land Line Media';
+      var sourceUrl = (item.sourceUrl || 'https://landline.media/news/').trim();
+      var sourceLabel = sourceName === 'Transport Topics' ? 'ttnews.com' : (sourceName === 'CDLLife' ? 'cdllife.com' : 'landline.media');
+      var sourceHtml = '<span class="news-card-source">Источник: <a href="' + escapeHtml(sourceUrl) + '" target="_blank" rel="noopener" class="news-card-source-link" onclick="event.stopPropagation()">' + escapeHtml(sourceName) + '</a> (' + escapeHtml(sourceLabel) + ')</span>';
+      var linkIcon = link ? '<a href="' + escapeHtml(link) + '" target="_blank" rel="noopener" class="news-card-link-icon btn-icon" title="Открыть на сайте" aria-label="Открыть на сайте" onclick="event.stopPropagation()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>' : '';
+      var score = item.score !== undefined && item.score !== null ? item.score : null;
+      var scoreColorClass = score !== null ? getScoreColorClass(score) : '';
+      var scoreHtml = score !== null 
+        ? '<span class="news-card-score ' + scoreColorClass + '" data-score="' + score + '" title="Релевантность: ' + score + '/100">Score: ' + score + '</span>' 
+        : '<span class="news-card-score-loading" data-index="' + idx + '" title="Оценка релевантности...">—</span>';
+      return '<article class="news-card" data-index="' + idx + '" role="button" tabindex="0">' +
+        '<div class="news-card-top">' +
+          '<div style="display: flex; align-items: center; gap: var(--space-2); flex: 1; min-width: 0;">' +
+            '<span class="news-card-meta">' + published + '</span>' +
+            scoreHtml +
+          '</div>' +
+          linkIcon +
+        '</div>' +
+        '<h2 class="news-card-title">' + title + '</h2>' +
+        (summary ? '<p class="news-card-summary">' + summary + '</p>' : '') +
+        '<div class="news-card-source-wrap">' + sourceHtml + '</div>' +
+        '</article>';
+    }).join('');
+    listEl.querySelectorAll('.news-card').forEach(function(card) {
+      card.addEventListener('click', function(e) {
+        if (e.target.closest('a')) return;
+        var idx = parseInt(card.getAttribute('data-index'), 10);
+        openNewsView(idx);
+      });
+      card.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        if (e.target.closest('a')) return;
+        e.preventDefault();
+        var idx = parseInt(card.getAttribute('data-index'), 10);
+        openNewsView(idx);
+      });
+    });
+  }
+  function itemKey(it) {
+    return (it.link || '').trim() || (it.title || '') + (it.published || '');
+  }
+  async function scoreNewsItems() {
+    // Скоррим только те новости, у которых еще нет score
+    var itemsToScore = lastNewsItems.filter(function(item, idx) {
+      return item.score === undefined || item.score === null;
+    });
+    if (itemsToScore.length === 0) {
+      console.log('No items to score');
+      return;
+    }
+    console.log('Scoring', itemsToScore.length, 'items');
+    
+    // Скоррим по одной новости за раз
+    for (var i = 0; i < itemsToScore.length; i++) {
+      var item = itemsToScore[i];
+      var idx = lastNewsItems.indexOf(item);
+      if (idx === -1) continue;
+      
+      try {
+        var response = await fetch('/agents/scoring_agent/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            payload: {
+              title: item.title || '',
+              body: item.summary || item.content || '',
+            }
+          })
+        });
+        if (!response.ok) {
+          console.warn('Scoring request failed for item', idx, response.status);
+          continue;
+        }
+        var result = await response.json();
+        if (result && result.result && result.result.score !== undefined) {
+          lastNewsItems[idx].score = result.result.score;
+          lastNewsItems[idx].score_flag = result.result.flag;
+          lastNewsItems[idx].score_reason = result.result.reason;
+          // Сохраняем score в БД, если у новости есть id
+          if (item.id) {
+            fetch('/news/items/' + item.id + '/score', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ score: result.result.score, flag: result.result.flag, reason: result.result.reason })
+            }).catch(function() {});
+          }
+          // Обновляем отображение этой карточки
+          updateNewsCardScore(idx, result.result.score);
+          console.log('Scored item', idx, 'score:', result.result.score);
+        } else {
+          console.warn('Invalid scoring result for item', idx, result);
+        }
+      } catch (e) {
+        console.error('Scoring error for item', idx, ':', e);
+      }
+    }
+  }
+  function getScoreColorClass(score) {
+    var num = Number(score);
+    if (num >= 0 && num <= 30) return 'score-red';
+    if (num >= 31 && num <= 60) return 'score-yellow';
+    if (num >= 61 && num <= 80) return 'score-green';
+    if (num >= 81) return 'score-blue';
+    return '';
+  }
+  function updateNewsCardScore(idx, score) {
+    var card = document.querySelector('.news-card[data-index="' + idx + '"]');
+    if (!card) {
+      console.warn('Card not found for index:', idx);
+      return;
+    }
+    var scoreEl = card.querySelector('.news-card-score-loading, .news-card-score');
+    if (!scoreEl) {
+      console.warn('Score element not found in card:', idx);
+      return;
+    }
+    var colorClass = getScoreColorClass(score);
+    scoreEl.className = 'news-card-score ' + colorClass;
+    scoreEl.setAttribute('data-score', score);
+    scoreEl.textContent = 'Score: ' + score;
+    scoreEl.title = 'Релевантность: ' + score + '/100';
+    // Убираем data-index если был
+    scoreEl.removeAttribute('data-index');
+    
+    // Обновляем score в детальном виде, если он открыт
+    if (currentNewsItem && currentNewsItem === lastNewsItems[idx]) {
+      var scoreWrap = document.getElementById('news-view-score-wrap');
+      var detailScoreEl = document.getElementById('news-view-score');
+      var scoreRefreshBtn = document.getElementById('news-view-score-refresh');
+      if (scoreWrap && detailScoreEl) {
+        detailScoreEl.className = 'news-card-score ' + colorClass;
+        detailScoreEl.setAttribute('data-score', score);
+        detailScoreEl.textContent = 'Score: ' + score;
+        detailScoreEl.title = 'Релевантность: ' + score + '/100';
+        if (scoreRefreshBtn) {
+          scoreRefreshBtn.style.display = 'inline-flex';
+          scoreRefreshBtn.onclick = function(e) {
+            e.stopPropagation();
+            refreshNewsScore(idx);
+          };
+        }
+      }
+    }
+  }
+  async function refreshNewsScore(index) {
+    var item = lastNewsItems[index];
+    if (!item) return;
+    var scoreEl = document.getElementById('news-view-score');
+    var scoreRefreshBtn = document.getElementById('news-view-score-refresh');
+    if (scoreEl) {
+      scoreEl.textContent = '…';
+      scoreEl.title = 'Обновление оценки...';
+    }
+    if (scoreRefreshBtn) scoreRefreshBtn.disabled = true;
+    try {
+      var response = await fetch('/agents/scoring_agent/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          payload: {
+            title: item.title || '',
+            body: item.summary || item.content || '',
+          }
+        })
+      });
+      if (!response.ok) {
+        throw new Error('Scoring request failed');
+      }
+      var result = await response.json();
+      if (result && result.result && result.result.score !== undefined) {
+        var score = result.result.score;
+        lastNewsItems[index].score = score;
+        lastNewsItems[index].score_flag = result.result.flag;
+        lastNewsItems[index].score_reason = result.result.reason;
+        if (lastNewsItems[index].id) {
+          fetch('/news/items/' + lastNewsItems[index].id + '/score', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ score: score, flag: result.result.flag, reason: result.result.reason })
+          }).catch(function() {});
+        }
+        updateNewsCardScore(index, score);
+        // Явно обновляем score в открытом drawer
+        if (scoreEl) {
+          var colorClass = getScoreColorClass(score);
+          scoreEl.className = 'news-card-score ' + colorClass;
+          scoreEl.setAttribute('data-score', score);
+          scoreEl.textContent = 'Score: ' + score;
+          scoreEl.title = 'Релевантность: ' + score + '/100';
+        }
+        if (scoreRefreshBtn) {
+          scoreRefreshBtn.style.display = 'inline-flex';
+          scoreRefreshBtn.onclick = function(e) {
+            e.stopPropagation();
+            refreshNewsScore(index);
+          };
+        }
+      } else {
+        if (scoreEl) {
+          scoreEl.textContent = '—';
+          scoreEl.title = 'Не удалось получить оценку';
+        }
+      }
+    } catch (e) {
+      console.error('Scoring error:', e);
+      if (scoreEl) {
+        scoreEl.textContent = '—';
+        scoreEl.title = 'Ошибка обновления';
+      }
+    } finally {
+      if (scoreRefreshBtn) scoreRefreshBtn.disabled = false;
+    }
+  }
+  function loadNews(forceRefresh) {
+    setErrorDetail('');
+    setState(true, false, false);
+    var url = forceRefresh ? '/news/refresh' : '/news';
+    var opts = forceRefresh ? { method: 'POST', headers: { 'Content-Type': 'application/json' } } : {};
+    fetch(url, opts)
+      .then(function(r) {
+        if (!r.ok) {
+          return r.json().then(function(body) {
+            var detail = (body && body.detail) ? body.detail : r.statusText || 'Ошибка загрузки';
+            setErrorDetail(detail);
+            throw new Error(detail);
+          }).catch(function(e) {
+            if (!document.getElementById('news-error-detail').textContent)
+              setErrorDetail(e.message || 'Сервер вернул ошибку ' + r.status);
+            throw e;
+          });
+        }
+        return r.json();
+      })
+      .then(function(data) {
+        var items = data.items || [];
+        setState(false, false, false);
+        lastNewsItems = items;
+        if (items.length === 0) {
+          setState(false, true, false);
+          listEl.innerHTML = '';
+          return;
+        }
+        renderNewsList();
+        // Запускаем скорринг для всех новостей без score
+        scoreNewsItems();
+        if (forceRefresh && typeof window.toast === 'function') window.toast('Новости обновлены');
+      })
+      .catch(function(err) {
+        setState(false, false, true);
+        listEl.innerHTML = '';
+        if (!document.getElementById('news-error-detail').textContent)
+          setErrorDetail(err && err.message ? err.message : 'Проверьте подключение к интернету.');
+      });
+  }
+  function stripLinksInHtml(html) {
+    if (!html || !/<a\b/i.test(html)) return html;
+    var div = document.createElement('div');
+    div.innerHTML = html;
+    div.querySelectorAll('a').forEach(function(a) {
+      a.replaceWith(document.createTextNode(a.textContent || ''));
+    });
+    return div.innerHTML;
+  }
+  function openNewsView(index) {
+    var item = lastNewsItems[index];
+    if (!item) return;
+    currentNewsItem = item;
+    var ta = document.getElementById('news-write-textarea');
+    if (ta) ta.value = '';
+    updateNewsCharCount();
+    var drawer = document.getElementById('news-view-drawer');
+    var titleEl = document.getElementById('news-view-title');
+    var metaEl = document.getElementById('news-view-meta');
+    var sourceEl = document.getElementById('news-view-source');
+    var bodyEl = document.getElementById('news-view-body');
+    var linkEl = document.getElementById('news-view-link');
+    var scoreWrap = document.getElementById('news-view-score-wrap');
+    var scoreEl = document.getElementById('news-view-score');
+    var scoreRefreshBtn = document.getElementById('news-view-score-refresh');
+    if (titleEl) titleEl.textContent = item.title || 'Без заголовка';
+    var dateText = formatDate(item.published);
+    // Обновляем score в детальном виде
+    if (scoreWrap && scoreEl) {
+      scoreWrap.style.display = 'inline-flex';
+      scoreWrap.style.alignItems = 'center';
+      scoreWrap.style.gap = 'var(--space-2)';
+      var score = item.score !== undefined && item.score !== null ? item.score : null;
+      if (score !== null) {
+        var colorClass = getScoreColorClass(score);
+        scoreEl.className = 'news-card-score ' + colorClass;
+        scoreEl.setAttribute('data-score', score);
+        scoreEl.textContent = 'Score: ' + score;
+        scoreEl.title = 'Релевантность: ' + score + '/100';
+        if (scoreRefreshBtn) {
+          scoreRefreshBtn.style.display = 'inline-flex';
+          scoreRefreshBtn.onclick = function(e) {
+            e.stopPropagation();
+            refreshNewsScore(index);
+          };
+        }
+      } else {
+        scoreEl.className = 'news-card-score-loading';
+        scoreEl.textContent = '—';
+        scoreEl.title = 'Оценка релевантности...';
+        if (scoreRefreshBtn) {
+          scoreRefreshBtn.style.display = 'inline-flex';
+          scoreRefreshBtn.onclick = function(e) {
+            e.stopPropagation();
+            refreshNewsScore(index);
+          };
+        }
+      }
+    }
+    // Устанавливаем мета-информацию (дата + score)
+    if (metaEl) {
+      metaEl.innerHTML = dateText + ' ';
+      if (scoreWrap) {
+        metaEl.appendChild(scoreWrap);
+      }
+    }
+    if (sourceEl) {
+      var sName = item.source || 'Land Line Media';
+      var sUrl = (item.sourceUrl || 'https://landline.media/news/').trim();
+      var sLabel = sName === 'Transport Topics' ? 'ttnews.com' : (sName === 'CDLLife' ? 'cdllife.com' : 'landline.media');
+      sourceEl.innerHTML = 'Источник: <a href="' + escapeHtml(sUrl) + '" target="_blank" rel="noopener">' + escapeHtml(sName) + '</a> (' + escapeHtml(sLabel) + ')';
+    }
+    var fallbackContent = item.content || item.summary || '';
+    if (bodyEl) {
+      bodyEl.innerHTML = '<p class="news-view-loading">Загрузка полного текста…</p>';
+    }
+    if (linkEl) {
+      linkEl.href = item.link || '#';
+      linkEl.style.display = (item.link && item.link !== '#') ? 'inline-flex' : 'none';
+    }
+    if (drawer) {
+      drawer.classList.add('is-open');
+      drawer.setAttribute('aria-hidden', 'false');
+    }
+    var articleUrl = (item.link || '').trim();
+    if (articleUrl && articleUrl !== '#') {
+      fetch('/news/full?url=' + encodeURIComponent(articleUrl))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!bodyEl) return;
+          if (data.content && data.content.length > 50) {
+            bodyEl.innerHTML = data.content;
+          } else {
+            if (bodyEl) {
+              if (/<[a-z][\s\S]*>/i.test(fallbackContent)) bodyEl.innerHTML = stripLinksInHtml(fallbackContent);
+              else bodyEl.textContent = fallbackContent || '';
+            }
+          }
+        })
+        .catch(function() {
+          if (bodyEl) {
+            if (/<[a-z][\s\S]*>/i.test(fallbackContent)) bodyEl.innerHTML = stripLinksInHtml(fallbackContent);
+            else bodyEl.textContent = fallbackContent || '';
+          }
+        });
+    } else {
+      if (bodyEl) {
+        if (/<[a-z][\s\S]*>/i.test(fallbackContent)) bodyEl.innerHTML = stripLinksInHtml(fallbackContent);
+        else bodyEl.textContent = fallbackContent || 'Нет текста.';
+      }
+    }
+  }
+  function closeNewsView() {
+    var drawer = document.getElementById('news-view-drawer');
+    if (drawer) {
+      drawer.classList.remove('is-open');
+      drawer.setAttribute('aria-hidden', 'true');
+    }
+  }
+  document.getElementById('news-view-backdrop').addEventListener('click', closeNewsView);
+  document.getElementById('news-view-close').addEventListener('click', closeNewsView);
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeNewsView();
+  });
+  var copyBtn = document.getElementById('news-write-copy');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function() {
+      var ta = document.getElementById('news-write-textarea');
+      var text = ta ? ta.value : '';
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(function() {
+        if (typeof window.toast === 'function') window.toast('Скопировано');
+      }).catch(function() {});
+    });
+  }
+
+  var newsRewriteAuthorsList = [];
+  var newsRewriteSetupDraft = { authors: [], products: [] };
+  function fillNewsAuthorSelect(authors) {
+    newsRewriteAuthorsList = Array.isArray(authors) ? authors : [];
+    var sel = document.getElementById('news-rewrite-author');
+    if (!sel) return;
+    sel.innerHTML = '';
+    if (!newsRewriteAuthorsList.length) {
+      sel.appendChild(new Option('— Добавьте авторов в Settings —', ''));
+      return;
+    }
+    newsRewriteAuthorsList.forEach(function(a, i) {
+      sel.appendChild(new Option(a.full_name || ('Автор ' + (i + 1)), String(i)));
+    });
+  }
+  fetch('/setup/draft').then(function(r) { return r.json(); }).then(function(draft) {
+    newsRewriteSetupDraft = { authors: draft.authors || [], products: draft.products || [] };
+    fillNewsAuthorSelect(draft.authors);
+  }).catch(function() { newsRewriteSetupDraft = { authors: [], products: [] }; fillNewsAuthorSelect([]); });
+
+  function updateNewsCharCount() {
+    var ta = document.getElementById('news-write-textarea');
+    var countEl = document.getElementById('news-write-char-count');
+    var lengthSelect = document.getElementById('news-rewrite-length');
+    if (!ta || !countEl || !lengthSelect) return;
+    var text = ta.value || '';
+    var charCount = text.length;
+    var length = lengthSelect.value || 'medium';
+    var ranges = {
+      short: { min: 600, max: 900 },
+      medium: { min: 900, max: 1400 },
+      long: { min: 1400, max: 2200 }
+    };
+    var range = ranges[length] || ranges.medium;
+    var isValid = charCount >= range.min && charCount <= range.max;
+    var status = isValid ? 'valid' : (charCount < range.min ? 'too-short' : 'too-long');
+    countEl.textContent = charCount + ' / ' + range.min + '–' + range.max + ' знаков';
+    countEl.className = 'news-char-count news-char-count-' + status;
+  }
+  var newsRewriteBtn = document.getElementById('news-rewrite-btn');
+  if (newsRewriteBtn) {
+    newsRewriteBtn.addEventListener('click', function() {
+      var bodyEl = document.getElementById('news-view-body');
+      var ta = document.getElementById('news-write-textarea');
+      var postText = bodyEl ? bodyEl.innerText || '' : '';
+      postText = postText.trim();
+      if (postText === 'Загрузка полного текста…' || postText.length < 100) {
+        if (currentNewsItem) {
+          var fc = currentNewsItem.content || currentNewsItem.summary || '';
+          postText = (fc + '').replace(/<[^>]+>/g, ' ').trim();
+        }
+      }
+      if (!postText || postText.length < 50) {
+        if (typeof window.toast === 'function') window.toast('Дождитесь загрузки статьи или обновите страницу', 'error');
+        return;
+      }
+      var goal = document.getElementById('news-rewrite-goal').value;
+      var length = document.getElementById('news-rewrite-length').value;
+      var authorIndex = document.getElementById('news-rewrite-author').value;
+      var author = (authorIndex !== '' && newsRewriteAuthorsList.length) ? newsRewriteAuthorsList[parseInt(authorIndex, 10)] : null;
+      var payload = { news_text: postText, goal: goal, length: length };
+      if (author) payload.author = { full_name: author.full_name, role: author.role || '', history: author.history || '', linkedin_url: author.linkedin_url || '' };
+      if (newsRewriteSetupDraft.products && newsRewriteSetupDraft.products.length) payload.products = newsRewriteSetupDraft.products;
+      newsRewriteBtn.disabled = true;
+      newsRewriteBtn.textContent = 'Генерация…';
+      if (ta) ta.value = 'Генерация…';
+      updateNewsCharCount();
+      fetch('/agents/news_post_agent/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ payload: payload }) })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var postTextResult = data.result && data.result.post ? data.result.post : '';
+          if (ta) ta.value = (postTextResult || '').trim() || 'Не удалось сгенерировать пост.';
+          updateNewsCharCount();
+        })
+        .catch(function(err) {
+          if (ta) ta.value = 'Ошибка: ' + (err && err.message ? err.message : 'Не удалось подключиться к серверу.');
+          updateNewsCharCount();
+        })
+        .finally(function() {
+          newsRewriteBtn.disabled = false;
+          newsRewriteBtn.textContent = 'Переписать';
+        });
+    });
+  }
+  var newsTextarea = document.getElementById('news-write-textarea');
+  var newsLengthSelect = document.getElementById('news-rewrite-length');
+  if (newsTextarea) {
+    newsTextarea.addEventListener('input', updateNewsCharCount);
+    newsTextarea.addEventListener('paste', function() { setTimeout(updateNewsCharCount, 10); });
+  }
+  if (newsLengthSelect) {
+    newsLengthSelect.addEventListener('change', updateNewsCharCount);
+  }
+
+  var sourceFilter = document.getElementById('news-source-filter');
+  var newsScoreFilter = document.getElementById('news-score-filter');
+  if (sourceFilter) sourceFilter.addEventListener('change', renderNewsList);
+  if (newsScoreFilter) newsScoreFilter.addEventListener('change', renderNewsList);
+  if (refreshBtn) refreshBtn.addEventListener('click', function() { loadNews(true); });  /* true = принудительное обновление с серверов */
+  if (emptyRetryBtn) emptyRetryBtn.addEventListener('click', loadNews);
+  if (errorRetryBtn) errorRetryBtn.addEventListener('click', loadNews);
+  loadNews();
+})();
+</script>
+{% endblock %}

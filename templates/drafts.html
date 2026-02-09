@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Черновики — MyVOICE's{% endblock %}
+{% block content %}
+<header class="page-hero">
+  <h1>Черновики</h1>
+  <p class="lead">Проверка через QA и апрув перед публикацией или отправкой.</p>
+</header>
+
+<div class="card">
+  <h2 class="section-title">Список черновиков</h2>
+  <div class="form-actions" style="display: flex; gap: var(--space-2); margin-bottom: var(--space-4);">
+    <button type="button" id="load-drafts" class="btn primary">Загрузить черновики</button>
+  </div>
+  <div id="drafts-list" class="drafts-list"></div>
+  <div id="drafts-empty" class="empty-state-card" style="display: none;">
+    <p class="empty-state-title">Нет черновиков</p>
+    <p class="empty-state-desc">Черновики появятся после создания контента в других разделах.</p>
+  </div>
+</div>
+<style>
+  .empty-state-card { text-align: center; padding: var(--space-8); }
+  .empty-state-title { margin: 0 0 var(--space-2); font-size: var(--text-16); font-weight: 600; color: var(--text); }
+  .empty-state-desc { margin: 0; font-size: var(--text-14); color: var(--text-muted); }
+  .drafts-list { margin-top: 0; }
+  .drafts-list .card { margin-top: var(--space-3); }
+  .drafts-list pre { white-space: pre-wrap; font-size: var(--text-14); background: var(--bg); padding: var(--space-3); border-radius: var(--radius-sm); margin: var(--space-2) 0; }
+</style>
+<script>
+  document.getElementById('load-drafts').addEventListener('click', async () => {
+    const res = await fetch('/drafts');
+    const list = await res.json();
+    const el = document.getElementById('drafts-list');
+    const emptyEl = document.getElementById('drafts-empty');
+    if (!list.length) {
+      el.innerHTML = '';
+      el.style.display = 'none';
+      emptyEl.style.display = 'block';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    el.style.display = 'block';
+    el.innerHTML = list.map(d => `
+      <div class="card">
+        <strong>#${d.id}</strong> ${d.type} — ${d.status}<br>
+        <pre>${d.content.slice(0, 300)}${d.content.length > 300 ? '...' : ''}</pre>
+        <button type="button" class="btn secondary" onclick="runQa(${d.id})">QA</button>
+        <button type="button" class="btn primary" onclick="approve(${d.id}, true)">Approve</button>
+        <button type="button" class="btn secondary" onclick="approve(${d.id}, false)">Reject</button>
+      </div>
+    `).join('');
+  });
+  async function runQa(id) {
+    const res = await fetch(`/drafts/${id}/qa`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ run_qa: true }) });
+    const data = await res.json();
+    alert(data.qa_result ? 'OK: ' + data.qa_result.ok + ', risks: ' + JSON.stringify(data.qa_result.risks) : JSON.stringify(data));
+  }
+  async function approve(id, approved) {
+    await fetch(`/drafts/${id}/approve`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ approved, note: '' }) });
+    alert(approved ? 'Approved' : 'Rejected');
+  }
+</script>
+{% endblock %}

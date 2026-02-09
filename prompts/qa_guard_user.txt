@@ -1,0 +1,11 @@
+Проверь текст перед публикацией/отправкой.
+
+Контекст (Sales Avatar / позиционирование): {context}
+
+Тип контента: {content_type} (post / comment / dm)
+
+Текст для проверки:
+{text}
+
+Верни ТОЛЬКО один JSON без markdown:
+{ "ok": true/false, "risks": { "hallucination": 0-100, "tone_drift": 0-100, "spam_pattern": 0-100, "aggressiveness": 0-100, "policy_risk": 0-100 }, "fixes": [], "rewritten_text": null или "текст" }

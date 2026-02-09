@@ -1,0 +1,15 @@
+Обогати карточку на основе ТОЛЬКО предоставленных данных. Не выдумывай.
+
+Входные данные (текст профиля/сайта/заметки):
+{raw_input}
+
+Тип сущности: {entity_type} (company или person)
+
+Верни JSON:
+- company (если entity_type=company): name, website_url, linkedin_url, industry, geo, size_range, description, tech_stack, notes
+- person (если entity_type=person): full_name, title, linkedin_url, company_name, geo, notes
+- hook_points: массив из 3–5 строк — точки зацепа для коммуникации, выведенные только из текста
+- unknown_fields: массив полей, по которым данных не было (напиши «неизвестно» в значении)
+- questions: массив уточняющих вопросов к пользователю, если чего-то не хватает
+
+Только валидный JSON.
