@@ -59,3 +59,19 @@
 2. Запусти `uvicorn app.main:app --reload --port 8000`. Таблицы уже есть в облаке; при необходимости пересоздать — выполни один раз `python -m app.db` с этим же `DATABASE_URL`.
 
 Локально можно по-прежнему использовать SQLite: не задавай `DATABASE_URL` или укажи `DATABASE_URL=sqlite+aiosqlite:///./lfas.db`.
+
+## 6. Перенос данных из локального SQLite в Supabase
+
+Если на проде (Render + Supabase) пустые разделы «Авторы», «Продукты», «Портрет клиента», «Сабреддиты» и т.д., можно один раз перенести данные из локальной БД в Supabase.
+
+1. Убедись, что локально есть файл `lfas.db` с нужными данными (в корне проекта).
+2. В `.env` **временно** задай строку подключения к **Supabase** (как в шаге 1), например:
+   ```bash
+   DATABASE_URL="postgresql://postgres.xxx:ПАРОЛЬ@aws-0-xxx.pooler.supabase.com:6543/postgres?sslmode=require"
+   ```
+3. Из **корня проекта** выполни:
+   ```bash
+   python -m scripts.migrate_local_to_supabase
+   ```
+4. Скрипт читает данные из `./lfas.db` (или из `LOCAL_DATABASE_URL`, если задан) и записывает их в БД из `DATABASE_URL` (Supabase). После этого обнови страницу настроек на проде — данные появятся.
+5. Для дальнейшей локальной разработки с SQLite можно снова убрать или изменить `DATABASE_URL` в `.env`.
