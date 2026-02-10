@@ -20,9 +20,21 @@
   .hero-screenshot img { width: 100%; height: 100%; object-fit: cover; }
   .hero-badges { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
   .hero-badge { font-size: var(--text-12); font-weight: 500; padding: 4px 10px; border-radius: var(--radius-pill); background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-muted); }
+  .hero-badge-btn { cursor: pointer; transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast); }
+  .hero-badge-btn:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+  .landing-screenshot-modal { position: fixed; inset: 0; z-index: 200; display: none; align-items: center; justify-content: center; padding: var(--space-6); background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+  .landing-screenshot-modal.is-open { display: flex; }
+  .landing-screenshot-modal-content { position: relative; max-width: 90vw; max-height: 90vh; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.25); background: var(--surface); }
+  .landing-screenshot-modal-content img { display: block; width: 100%; height: auto; max-height: 90vh; object-fit: contain; }
+  .landing-screenshot-modal-close { position: absolute; top: var(--space-2); right: var(--space-2); width: 40px; height: 40px; border: none; background: rgba(0,0,0,0.5); color: #fff; font-size: 1.5rem; line-height: 1; cursor: pointer; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; transition: background var(--motion-fast); }
+  .landing-screenshot-modal-close:hover { background: rgba(0,0,0,0.8); }
 
   .section { margin-bottom: var(--space-16); max-width: var(--content-read-max); }
   .section-wide { max-width: none; }
+  .section-fullwidth { max-width: none; }
+  .section-fullwidth .section-title,
+  .section-fullwidth .section-desc,
+  .section-fullwidth p { max-width: none; }
   .section-title { font-size: var(--text-24); font-weight: 700; letter-spacing: -0.02em; margin: 0 0 var(--space-4); color: var(--text); }
   .section-desc { font-size: var(--text-16); color: var(--text-muted); line-height: 1.65; margin: 0 0 var(--space-6); }
   .section p { margin: 0 0 var(--space-4); color: var(--text); font-size: var(--text-16); line-height: 1.65; }
@@ -108,22 +120,28 @@
   </div>
   <div class="hero-visual">
     <div class="hero-screenshot" aria-hidden="true">
-      <!-- Подставьте свой скрин: <img src="/static/landing-hero.png" alt="Лента и генерация комментария" style="width:100%;height:100%;object-fit:cover;"> -->
-      <span>Скрин интерфейса: лента постов и генерация комментария</span>
+      <img src="/static/landing-hero.png" alt="Лента постов и генерация комментария: Reddit-пост и блок «Переписать этот пост» с результатом" width="800" height="600" style="width:100%;height:100%;object-fit:cover;">
     </div>
     <div class="hero-badges">
-      <span class="hero-badge">Комментарии</span>
-      <span class="hero-badge">Новости</span>
-      <span class="hero-badge">Reddit</span>
+      <button type="button" class="hero-badge hero-badge-btn" id="hero-badge-comment" aria-label="Показать скриншот: генерация комментария">Комментарии</button>
+      <button type="button" class="hero-badge hero-badge-btn" id="hero-badge-news" aria-label="Показать скриншот: раздел Новости">Новости</button>
+      <button type="button" class="hero-badge hero-badge-btn" id="hero-badge-reddit" aria-label="Показать скриншот: раздел Reddit">Reddit</button>
       <span class="hero-badge">Воронка</span>
     </div>
   </div>
 </section>
 
-<section class="section section-wide" id="crisis">
+<div id="landing-screenshot-modal" class="landing-screenshot-modal" role="dialog" aria-modal="true" aria-label="Скриншот: панель генерации комментария" hidden>
+  <div class="landing-screenshot-modal-content">
+    <button type="button" class="landing-screenshot-modal-close" id="landing-screenshot-modal-close" aria-label="Закрыть">×</button>
+    <img src="/static/landing-comment.png" alt="Панель генерации комментария: пост, автор, цель, варианты длины и результат" id="landing-screenshot-modal-img">
+  </div>
+</div>
+
+<section class="section section-fullwidth" id="crisis">
   <h2 class="section-title">Почему важно быть в разговорах</h2>
-  <p class="section-desc" style="max-width: var(--content-read-max);">Люди выбирают подрядчиков по профилю, постам и комментариям. В LinkedIn это видно сразу. Органический охват падает, платный контент доминирует — но для B2B LinkedIn остаётся каналом доверия. Чтобы вас рекомендовали, нужно регулярно появляться в обсуждениях, которые ведут ваши лиды.</p>
-  <p style="max-width: var(--content-read-max); font-size: var(--text-14); color: var(--text-muted);">По нашим наблюдениям в проектах: LinkedIn часто становится главным источником B2B-лидов; тёплый контакт обычно закрывается заметно легче. Цифры по вашей нише покажем на демо.</p>
+  <p class="section-desc">Люди выбирают подрядчиков по профилю, постам и комментариям. В LinkedIn это видно сразу. Органический охват падает, платный контент доминирует — но для B2B LinkedIn остаётся каналом доверия. Чтобы вас рекомендовали, нужно регулярно появляться в обсуждениях, которые ведут ваши лиды.</p>
+  <p style="font-size: var(--text-14); color: var(--text-muted);">По нашим наблюдениям в проектах: LinkedIn часто становится главным источником B2B-лидов; тёплый контакт обычно закрывается заметно легче. Цифры по вашей нише покажем на демо.</p>
 </section>
 
 <section class="section section-wide" id="how">
@@ -173,7 +191,7 @@
   </div>
 </section>
 
-<section class="section" id="why">
+<section class="section section-fullwidth" id="why">
   <h2 class="section-title">Почему LinkedIn</h2>
   <p>Доверие к холодной рекламе падает. Покупатели смотрят посты, комментарии и профили перед выбором поставщика. В LinkedIn это видно сразу — там ваши клиенты принимают решения.</p>
 </section>
@@ -236,6 +254,53 @@
       }
     });
   });
+
+  var screenshotModal = document.getElementById('landing-screenshot-modal');
+  var screenshotModalImg = document.getElementById('landing-screenshot-modal-img');
+  var screenshotModalClose = document.getElementById('landing-screenshot-modal-close');
+  function openScreenshotModal(src, alt) {
+    if (screenshotModal && screenshotModalImg) {
+      screenshotModalImg.src = src;
+      screenshotModalImg.alt = alt || '';
+      screenshotModal.classList.add('is-open');
+      screenshotModal.removeAttribute('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+  }
+  var badgeComment = document.getElementById('hero-badge-comment');
+  if (badgeComment && screenshotModal) {
+    badgeComment.addEventListener('click', function() {
+      openScreenshotModal('/static/landing-comment.png', 'Панель генерации комментария: пост, автор, цель, варианты длины и результат');
+    });
+  }
+  var badgeNews = document.getElementById('hero-badge-news');
+  if (badgeNews && screenshotModal) {
+    badgeNews.addEventListener('click', function() {
+      openScreenshotModal('/static/landing-news.png', 'Раздел Новости: лента новостей, Score и кнопка «Сделать пост»');
+    });
+  }
+  var badgeReddit = document.getElementById('hero-badge-reddit');
+  if (badgeReddit && screenshotModal) {
+    badgeReddit.addEventListener('click', function() {
+      openScreenshotModal('/static/landing-reddit.png', 'Раздел Reddit: лента постов из сабреддитов, фильтры, статусы и кнопка «Сделать пост»');
+    });
+  }
+  function closeScreenshotModal() {
+    if (screenshotModal) {
+      screenshotModal.classList.remove('is-open');
+      screenshotModal.setAttribute('hidden', '');
+      document.body.style.overflow = '';
+    }
+  }
+  if (screenshotModalClose) screenshotModalClose.addEventListener('click', closeScreenshotModal);
+  if (screenshotModal) {
+    screenshotModal.addEventListener('click', function(e) {
+      if (e.target === screenshotModal) closeScreenshotModal();
+    });
+    screenshotModal.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') { closeScreenshotModal(); e.preventDefault(); }
+    });
+  }
 })();
 </script>
 {% endblock %}

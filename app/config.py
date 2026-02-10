@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:///./lfas.db"
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
+    openrouter_api_key: Optional[str] = None
     lfas_llm_provider: str = "openai"
     lfas_llm_model: str = "gpt-4o-mini"
     lfas_first_month_strict: int = 1
