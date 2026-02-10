@@ -18,8 +18,8 @@ class Settings(BaseSettings):
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
     openrouter_api_key: Optional[str] = None
-    lfas_llm_provider: str = "openai"
-    lfas_llm_model: str = "gpt-4o-mini"
+    lfas_llm_provider: str = "openrouter"
+    lfas_llm_model: str = "anthropic/claude-sonnet-4.5"
     lfas_first_month_strict: int = 1
     lfas_host: str = "0.0.0.0"
     lfas_port: int = 8000

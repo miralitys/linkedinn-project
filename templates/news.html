@@ -998,8 +998,16 @@
       if (ta) ta.value = 'Генерация…';
       updateNewsCharCount();
       fetch('/agents/news_post_agent/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ payload: payload }) })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
+        .then(function(r) { return r.text().then(function(t) { return { ok: r.ok, status: r.status, text: t }; }); })
+        .then(function(r) {
+          if (!r.ok) {
+            var errMsg = r.text ? (function() { try { var j = JSON.parse(r.text); return j.detail || j.message || r.text.slice(0, 300); } catch (_) { return r.text.slice(0, 300); } }()) : 'Ошибка сервера';
+            if (ta) ta.value = 'Ошибка сервера (' + r.status + '): ' + errMsg;
+            updateNewsCharCount();
+            return;
+          }
+          var data;
+          try { data = JSON.parse(r.text); } catch (_) { if (ta) ta.value = 'Ошибка: ответ не JSON.'; updateNewsCharCount(); return; }
           var postTextResult = data.result && data.result.post ? data.result.post : '';
           if (ta) ta.value = (postTextResult || '').trim() || 'Не удалось сгенерировать пост.';
           updateNewsCharCount();

@@ -67,14 +67,24 @@
   document.getElementById('gen-comment').addEventListener('click', async () => {
     const postText = document.getElementById('post-text').value;
     const goal = document.getElementById('goal').value;
-    const res = await fetch('/agents/comment_agent/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ payload: { post_text: postText, goal } }) });
-    const data = await res.json();
-    const comments = data.result?.comments || data.result || {};
+    const payload = { post_text: postText, goal };
     const container = document.getElementById('comment-result');
-    if (typeof comments !== 'object' || (!comments.short && !comments.medium && !comments.long)) {
-      container.innerHTML = '<p style="color: var(--text-secondary);">Нет вариантов. Ответ: ' + JSON.stringify(comments).slice(0, 200) + '…</p>';
-      return;
-    }
+    try {
+      const res = await fetch('/agents/comment_agent/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ payload }) });
+      const text = await res.text();
+      if (!res.ok) {
+        var errMsg = res.statusText;
+        if (text) { try { var errJson = JSON.parse(text); errMsg = errJson.detail || errJson.message || text.slice(0, 300); } catch (_) { errMsg = text.slice(0, 300); } }
+        container.innerHTML = '<p style="color: var(--text-secondary);">Ошибка сервера (' + res.status + '): ' + errMsg + '</p>';
+        return;
+      }
+      var data;
+      try { data = JSON.parse(text); } catch (_) { container.innerHTML = '<p style="color: var(--text-secondary);">Ошибка: ответ не JSON.</p>'; return; }
+      const comments = data.result?.comments || data.result || {};
+      if (typeof comments !== 'object' || (!comments.short && !comments.medium && !comments.long)) {
+        container.innerHTML = '<p style="color: var(--text-secondary);">Нет вариантов. Ответ: ' + JSON.stringify(comments).slice(0, 200) + '…</p>';
+        return;
+      }
     function escapeHtml(s) {
       const div = document.createElement('div');
       div.textContent = s;
@@ -103,6 +113,9 @@
         });
       });
     });
+    } catch (err) {
+      container.innerHTML = '<p style="color: var(--text-secondary);">Ошибка: ' + (err && err.message ? err.message : 'Не удалось подключиться.') + '</p>';
+    }
   });
 </script>
 {% endblock %}

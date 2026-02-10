@@ -22,6 +22,7 @@
   .hero-badge { font-size: var(--text-12); font-weight: 500; padding: 4px 10px; border-radius: var(--radius-pill); background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-muted); }
   .hero-badge-btn { cursor: pointer; transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast); }
   .hero-badge-btn:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+  .hero-badge-btn.active { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
   .landing-screenshot-modal { position: fixed; inset: 0; z-index: 200; display: none; align-items: center; justify-content: center; padding: var(--space-6); background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
   .landing-screenshot-modal.is-open { display: flex; }
   .landing-screenshot-modal-content { position: relative; max-width: 90vw; max-height: 90vh; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.25); background: var(--surface); }
@@ -120,7 +121,7 @@
   </div>
   <div class="hero-visual">
     <div class="hero-screenshot" aria-hidden="true">
-      <img src="/static/landing-hero.png" alt="Лента постов и генерация комментария: Reddit-пост и блок «Переписать этот пост» с результатом" width="800" height="600" style="width:100%;height:100%;object-fit:cover;">
+      <img id="hero-screenshot-img" src="/static/landing-hero.png" alt="Лента постов и генерация комментария: Reddit-пост и блок «Переписать этот пост» с результатом" width="800" height="600" style="width:100%;height:100%;object-fit:cover;">
     </div>
     <div class="hero-badges">
       <button type="button" class="hero-badge hero-badge-btn" id="hero-badge-comment" aria-label="Показать скриншот: генерация комментария">Комментарии</button>
@@ -255,6 +256,27 @@
     });
   });
 
+  var heroImg = document.getElementById('hero-screenshot-img');
+  var heroBadges = [document.getElementById('hero-badge-comment'), document.getElementById('hero-badge-news'), document.getElementById('hero-badge-reddit')];
+  var heroSlides = [
+    { src: '/static/landing-comment.png', alt: 'Панель генерации комментария: пост, автор, цель, варианты длины и результат' },
+    { src: '/static/landing-news.png', alt: 'Раздел Новости: лента новостей, Score и кнопка «Сделать пост»' },
+    { src: '/static/landing-reddit.png', alt: 'Раздел Reddit: лента постов из сабреддитов, фильтры, статусы и кнопка «Сделать пост»' }
+  ];
+  function setHeroSlide(index) {
+    if (!heroImg || index < 0 || index >= heroSlides.length) return;
+    heroImg.src = heroSlides[index].src;
+    heroImg.alt = heroSlides[index].alt;
+    heroBadges.forEach(function(b, i) {
+      if (b) b.classList.toggle('active', i === index);
+    });
+  }
+  heroBadges.forEach(function(badge, index) {
+    if (badge && heroImg) {
+      badge.addEventListener('click', function() { setHeroSlide(index); });
+    }
+  });
+
   var screenshotModal = document.getElementById('landing-screenshot-modal');
   var screenshotModalImg = document.getElementById('landing-screenshot-modal-img');
   var screenshotModalClose = document.getElementById('landing-screenshot-modal-close');
@@ -266,24 +288,6 @@
       screenshotModal.removeAttribute('hidden');
       document.body.style.overflow = 'hidden';
     }
-  }
-  var badgeComment = document.getElementById('hero-badge-comment');
-  if (badgeComment && screenshotModal) {
-    badgeComment.addEventListener('click', function() {
-      openScreenshotModal('/static/landing-comment.png', 'Панель генерации комментария: пост, автор, цель, варианты длины и результат');
-    });
-  }
-  var badgeNews = document.getElementById('hero-badge-news');
-  if (badgeNews && screenshotModal) {
-    badgeNews.addEventListener('click', function() {
-      openScreenshotModal('/static/landing-news.png', 'Раздел Новости: лента новостей, Score и кнопка «Сделать пост»');
-    });
-  }
-  var badgeReddit = document.getElementById('hero-badge-reddit');
-  if (badgeReddit && screenshotModal) {
-    badgeReddit.addEventListener('click', function() {
-      openScreenshotModal('/static/landing-reddit.png', 'Раздел Reddit: лента постов из сабреддитов, фильтры, статусы и кнопка «Сделать пост»');
-    });
   }
   function closeScreenshotModal() {
     if (screenshotModal) {

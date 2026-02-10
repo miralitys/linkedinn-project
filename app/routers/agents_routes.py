@@ -117,7 +117,12 @@ async def run_agent_endpoint(
             payload.setdefault("products", products_desc)
             payload.setdefault("icp", icp_desc)
 
-    result = await run_agent(agent_name, payload)
+    try:
+        result = await run_agent(agent_name, payload)
+    except Exception as e:
+        import logging
+        logging.exception("Agent %s failed: %s", agent_name, e)
+        raise HTTPException(status_code=500, detail=str(e))
     draft_id = None
 
     # Save as draft when content is produced

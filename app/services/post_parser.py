@@ -1,7 +1,7 @@
 # app/services/post_parser.py
 """
-Парсинг поста по прямой ссылке: Playwright открывает URL, скриншот карточки поста → GPT Vision → JSON.
-Требует: playwright, openai. Для доступа к постам LinkedIn нужна авторизация в браузере (см. user_data_dir).
+Парсинг поста по прямой ссылке: Playwright открывает URL, скриншот карточки поста → OpenAI Vision → JSON.
+Генерация постов и комментариев — через OpenRouter (Claude). Требует: playwright, openai.
 """
 import base64
 import json
@@ -199,10 +199,10 @@ async def parse_post_from_url(
     *,
     user_data_dir: Optional[str] = None,
     openai_api_key: Optional[str] = None,
-    openai_model: str = "gpt-4o-mini",
+    openai_model: str = "gpt-5.2",
 ) -> dict[str, Any]:
     """
-    Открывает url, снимает скриншот карточки поста, отправляет в GPT Vision, возвращает распознанный JSON.
+    Открывает url, снимает скриншот карточки поста, отправляет в OpenAI Vision, возвращает распознанный JSON.
     При ошибке возвращает {"error": "..."}.
     """
     screenshot_bytes, screenshot_error = await _screenshot_post_card(url, user_data_dir=user_data_dir)
@@ -212,7 +212,7 @@ async def parse_post_from_url(
     b64 = base64.standard_b64encode(screenshot_bytes).decode("ascii")
     api_key = openai_api_key or settings.openai_api_key
     if not api_key:
-        return {"error": "OPENAI_API_KEY не задан. Нужен для распознавания текста по скриншоту."}
+        return {"error": "OPENAI_API_KEY не задан. Нужен для распознавания текста по скриншоту (функция «Распознать по ссылке»)."}
 
     try:
         from openai import AsyncOpenAI

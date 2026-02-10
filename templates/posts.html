@@ -198,7 +198,7 @@
   @keyframes skeleton-shine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
   /* ——— Карточка поста (как news-card) ——— */
-  .post-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6); margin-bottom: var(--space-4); transition: box-shadow var(--motion-normal), border-color var(--motion-fast); box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; overflow: hidden; }
+  .post-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6); margin-bottom: var(--space-4); transition: box-shadow var(--motion-normal), border-color var(--motion-fast); box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; overflow: visible; }
   .post-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--primary) 0%, rgba(99,102,241,0.3) 100%); opacity: 0; transition: opacity var(--motion-fast); }
   .post-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 6px rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.35); }
   .post-card:hover::before { opacity: 1; }
@@ -445,6 +445,7 @@
               '<div class="post-card-menu-wrap">' +
                 '<button type="button" class="btn btn-ghost btn-sm btn-card-menu btn-icon" data-id="' + p.id + '" aria-label="Ещё" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg></button>' +
                 '<div class="post-card-menu-dropdown" role="menu">' +
+                  (p.comment_written ? '<button type="button" role="menuitem" class="post-card-menu-item btn-regenerate-comment" data-id="' + p.id + '">Перегенерировать</button>' : '') +
                   '<button type="button" role="menuitem" class="post-card-menu-item btn-delete" data-id="' + p.id + '">Удалить</button>' +
                 '</div>' +
               '</div>' +
@@ -456,7 +457,7 @@
       postsList.querySelectorAll('.post-card').forEach(card => {
         const id = parseInt(card.dataset.id, 10);
         card.addEventListener('click', (e) => {
-          if (e.target.closest('.btn-delete') || e.target.closest('.btn-generate-post') || e.target.closest('.btn-open-comment') || e.target.closest('.btn-open-draft') || e.target.closest('.post-card-open') || e.target.closest('.btn-card-menu') || e.target.closest('.post-card-menu-dropdown') || e.target.closest('.btn-expand-post')) return;
+          if (e.target.closest('.btn-delete') || e.target.closest('.btn-regenerate-comment') || e.target.closest('.btn-generate-post') || e.target.closest('.btn-open-comment') || e.target.closest('.btn-open-draft') || e.target.closest('.post-card-open') || e.target.closest('.btn-card-menu') || e.target.closest('.post-card-menu-dropdown') || e.target.closest('.btn-expand-post')) return;
           if (e.target.closest('.post-card-expand-btn') || e.target.closest('.post-card-title') || e.target.closest('.post-card-snippet') || e.target.closest('.post-card-body-full')) {
             e.preventDefault();
             const expandBtn = card.querySelector('.btn-expand-post');
@@ -495,6 +496,14 @@
           if (await confirmDeleteModal()) {
             deletePost(id).then(r => { if (r.ok) loadPosts(false); });
           }
+        });
+      });
+      postsList.querySelectorAll('.btn-regenerate-comment').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          document.querySelectorAll('.post-card-menu-wrap.is-open').forEach(w => w.classList.remove('is-open'));
+          openViewPostModal(parseInt(btn.dataset.id, 10), { focusGenerate: true });
         });
       });
       postsList.querySelectorAll('.btn-card-menu').forEach(btn => {
@@ -755,7 +764,7 @@
       if (markedMeta) markedMeta.style.display = p.comment_written ? 'inline' : 'none';
       if (undoBtn) undoBtn.style.display = p.comment_written ? 'inline' : 'none';
       requestAnimationFrame(() => {
-        if (opts.focusDraft) {
+        if (opts.focusDraft || opts.focusGenerate) {
           const panel = document.getElementById('view-post-drawer-panel');
           const generateBlock = panel && panel.querySelector('.view-post-generate-block');
           if (generateBlock) generateBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -795,7 +804,18 @@
     viewPostReplySingle.style.display = 'block';
     try {
       const res = await fetch('/agents/comment_agent/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ payload }) });
-      const data = await res.json();
+      const text = await res.text();
+      if (!res.ok) {
+        var errMsg = res.statusText;
+        if (text) { try { var errJson = JSON.parse(text); errMsg = errJson.detail || errJson.message || text.slice(0, 300); } catch (_) { errMsg = text.slice(0, 300); } }
+        viewPostReplySingle.innerHTML = '<p style="color: var(--danger, #c00); font-size: var(--text-14);">Ошибка сервера (' + res.status + '): ' + errMsg + '</p>';
+        return;
+      }
+      var data;
+      try { data = JSON.parse(text); } catch (_) {
+        viewPostReplySingle.innerHTML = '<p style="color: var(--text-muted); font-size: var(--text-14);">Ошибка: ответ не JSON.</p>';
+        return;
+      }
       const comments = data.result?.comments || data.result || {};
       if (typeof comments !== 'object' || (!comments.short && !comments.medium && !comments.long)) {
         viewPostReplySingle.innerHTML = '<p style="color: var(--text-muted); font-size: var(--text-14);">Нет вариантов. ' + (data.detail || JSON.stringify(comments).slice(0, 150)) + '…</p>';

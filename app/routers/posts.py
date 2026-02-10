@@ -297,7 +297,7 @@ async def parse_post_from_url_route(
 ):
     """
     Парсинг поста по URL. Если задан RAPIDAPI_KEY и URL — LinkedIn, сначала пробует RapidAPI (без Playwright).
-    Иначе: Playwright + GPT Vision.
+    Иначе: Playwright + OpenAI Vision.
     Если передан person_id — создаёт пост и возвращает его.
     """
     url = (body.url or "").strip()

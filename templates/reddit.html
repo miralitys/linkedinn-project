@@ -825,7 +825,22 @@
     updateRedditCharCount();
     try {
       const res = await fetch('/agents/news_post_agent/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ payload }) });
-      const data = await res.json();
+      const text = await res.text();
+      if (!res.ok) {
+        var errMsg = res.statusText;
+        if (text) {
+          try { var errJson = JSON.parse(text); errMsg = errJson.detail || errJson.message || text.slice(0, 300); } catch (_) { errMsg = text.slice(0, 300); }
+        }
+        if (ta) ta.value = 'Ошибка сервера (' + res.status + '): ' + errMsg;
+        updateRedditCharCount();
+        return;
+      }
+      var data;
+      try { data = JSON.parse(text); } catch (parseErr) {
+        if (ta) ta.value = 'Ошибка: ответ не JSON. ' + (text ? text.slice(0, 200) : '');
+        updateRedditCharCount();
+        return;
+      }
       const postResult = data.result && data.result.post ? data.result.post : '';
       if (ta) ta.value = (postResult || '').trim() || 'Не удалось сгенерировать пост.';
       updateRedditCharCount();

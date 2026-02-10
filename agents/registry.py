@@ -30,13 +30,20 @@ AGENTS = {
 }
 
 
-def get_agent(name: str):
+def get_agent(name: str, llm_client=None):
+    from agents.llm_client import get_llm_client
     cls = AGENTS.get(name)
     if cls is None:
         raise ValueError(f"Unknown agent: {name}. Available: {list(AGENTS)}")
+    if llm_client is not None:
+        return cls(llm_client=llm_client)
     return cls()
 
 
 async def run_agent(name: str, payload: dict[str, Any]) -> dict[str, Any]:
-    agent = get_agent(name)
+    from agents.llm_client import get_llm_client
+    payload = dict(payload)
+    llm_provider = payload.pop("llm_provider", None)
+    client = get_llm_client(provider=llm_provider) if llm_provider else None
+    agent = get_agent(name, llm_client=client)
     return await agent.run(payload)

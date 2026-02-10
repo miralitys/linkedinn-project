@@ -2,10 +2,13 @@
 """Abstract LLM client + OpenAI / OpenRouter adapters. Swappable via ENV (LFAS_LLM_PROVIDER, *_API_KEY)."""
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from typing import Any
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
@@ -55,7 +58,7 @@ class OpenAILLMClient(LLMClient):
 
 
 class OpenRouterLLMClient(LLMClient):
-    """OpenRouter (openrouter.ai) — один API для Claude, GPT и др. Модель задаётся как 'anthropic/claude-3.5-sonnet'."""
+    """OpenRouter (openrouter.ai) — Claude и др. Модель задаётся как 'anthropic/claude-sonnet-4.5'."""
 
     def __init__(self, api_key: str | None = None, model: str | None = None):
         self._api_key = api_key or settings.openrouter_api_key
@@ -78,6 +81,7 @@ class OpenRouterLLMClient(LLMClient):
             api_key=self._api_key,
         )
         m = model or self._model
+        logger.info("OpenRouter request: model=%s", m)
         resp = await client.chat.completions.create(
             model=m,
             messages=messages,
@@ -89,14 +93,11 @@ class OpenRouterLLMClient(LLMClient):
         return (resp.choices[0].message.content or "").strip()
 
 
-def get_llm_client() -> LLMClient:
-    provider = (settings.lfas_llm_provider or "openai").lower()
-    if provider == "openai":
-        if not settings.openai_api_key:
-            raise ValueError("OPENAI_API_KEY not set")
-        return OpenAILLMClient()
-    if provider == "openrouter":
+def get_llm_client(provider: str | None = None) -> LLMClient:
+    """Возвращает клиент LLM. Временно только OpenRouter (Claude)."""
+    p = (provider or settings.lfas_llm_provider or "openrouter").strip().lower()
+    if p == "openrouter":
         if not settings.openrouter_api_key:
             raise ValueError("OPENROUTER_API_KEY not set")
         return OpenRouterLLMClient()
-    raise ValueError(f"Unknown LLM provider: {provider}. Use openai or openrouter.")
+    raise ValueError(f"Unknown LLM provider: {p}. Use openrouter.")
