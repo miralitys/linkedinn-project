@@ -356,7 +356,7 @@
 </style>
 <script>
 (function() {
-  const DISPLAY_TZ = {{ display_timezone|tojson }};
+  const DISPLAY_TZ = {{ display_timezone|tojson|safe }};
   function formatDate(d) {
     if (!d) return '—';
     const s = typeof d === 'string' ? d : (d.toISOString && d.toISOString());
@@ -401,6 +401,7 @@
   const subredditAutocomplete = document.getElementById('reddit-subreddit-autocomplete');
   const subredditTags = document.getElementById('reddit-subreddit-tags');
   const scoreFilterSelect = document.getElementById('reddit-score-filter');
+  redditLoading.style.display = 'block';
 
   const REDDIT_STATUS_LABELS = { new: 'Новый', in_progress: 'В работе', done: 'Готово', hidden: 'Скрыт' };
 
@@ -536,9 +537,10 @@
     if (periodSelect.value) params.set('period', periodSelect.value);
     selectedSubreddits.forEach(function(s) { params.append('subreddit', s); });
     fetch('/reddit/posts?' + params).then(r => {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
+      if (!r.ok) throw new Error(r.status === 401 ? 'Требуется вход. Войдите снова.' : 'Ошибка загрузки (HTTP ' + r.status + ')');
       return r.json();
     }).then(list => {
+      if (!Array.isArray(list)) throw new Error('Неверный ответ сервера');
       redditLoading.style.display = 'none';
       const scoreRange = (scoreFilterSelect && scoreFilterSelect.value) ? scoreFilterSelect.value : '';
       const filteredList = !scoreRange ? list : list.filter(function(p) {
@@ -661,6 +663,7 @@
       });
     }).catch((err) => {
       redditLoading.style.display = 'none';
+      redditEmpty.style.display = 'none';
       const errEl = document.getElementById('reddit-error');
       errEl.style.display = 'block';
       const detailEl = document.getElementById('reddit-error-detail');

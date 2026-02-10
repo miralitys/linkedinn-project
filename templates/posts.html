@@ -316,6 +316,7 @@
   const postsEmpty = document.getElementById('posts-empty');
   const periodSelect = document.getElementById('posts-period');
   const sortSelect = document.getElementById('posts-sort');
+  postsLoading.style.display = 'block';
   const modal = document.getElementById('post-modal');
   const postForm = document.getElementById('post-form');
   const postPersonSelect = document.getElementById('post-person-id');
@@ -328,7 +329,7 @@
     return div.innerHTML;
   }
 
-  const DISPLAY_TZ = {{ display_timezone|tojson }};
+  const DISPLAY_TZ = {{ display_timezone|tojson|safe }};
   function formatDate(d) {
     if (!d) return '—';
     const s = typeof d === 'string' ? d : (d.toISOString && d.toISOString());
@@ -383,7 +384,11 @@
     if (period) params.set('period', period);
     params.set('sort', sort);
     params.set('archived', 'false');
-    fetch('/posts?' + params).then(r => r.json()).then(posts => {
+    fetch('/posts?' + params).then(r => {
+      if (!r.ok) throw new Error(r.status === 401 ? 'Требуется вход. Войдите снова.' : 'Ошибка загрузки');
+      return r.json();
+    }).then(posts => {
+      if (!Array.isArray(posts)) throw new Error('Неверный ответ сервера');
       if (doSyncIfEmpty && (!posts || !posts.length)) {
         Promise.all([
           fetch('/posts/sync?source=rss', { method: 'POST' }).then(r => r.json()),
@@ -517,9 +522,13 @@
           else if (btn) btn.setAttribute('aria-expanded', 'false');
         });
       });
-    }).catch(() => {
+    }).catch((err) => {
       postsLoading.style.display = 'none';
-      document.getElementById('posts-error').style.display = 'block';
+      postsEmpty.style.display = 'none';
+      const errBlock = document.getElementById('posts-error');
+      errBlock.style.display = 'block';
+      const errText = errBlock.querySelector('.error-state-text');
+      if (errText && err && err.message) errText.textContent = err.message;
     });
   }
   periodSelect.addEventListener('change', () => loadPosts(false));
