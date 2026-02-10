@@ -67,37 +67,49 @@ def _has_generated_post(rv: any) -> bool:
 
 
 def _reddit_post_to_read(p: RedditPost) -> RedditPostRead:
-    rv_raw = getattr(p, "reply_variants", None)
-    rv = rv_raw if isinstance(rv_raw, dict) else (json.loads(rv_raw) if isinstance(rv_raw, str) else None)
-    if rv is not None and not isinstance(rv, dict):
-        rv = None
-    status_val = getattr(p, "status", None) or "new"
-    if status_val not in ("new", "in_progress", "done", "hidden"):
-        status_val = "new"
-    # Если есть сгенерированный текст поста — считаем «В работе», даже если в БД было «новый»
-    if status_val == "new" and _has_generated_post(rv_raw):
-        status_val = "in_progress"
-    return RedditPostRead(
-        id=p.id,
-        subreddit=p.subreddit,
-        reddit_id=p.reddit_id,
-        title=p.title,
-        content=p.content,
-        post_url=p.post_url,
-        posted_at=p.posted_at,
-        author=p.author,
-        score=p.score,
-        num_comments=p.num_comments,
-        person_id=p.person_id,
-        person_name=p.person.full_name if p.person else None,
-        reply_variants=rv,
-        comment_written=getattr(p, "comment_written", False) or False,
-        relevance_score=getattr(p, "relevance_score", None),
-        relevance_flag=getattr(p, "relevance_flag", None),
-        relevance_reason=getattr(p, "relevance_reason", None),
-        status=status_val,
-        created_at=p.created_at,
-    )
+    try:
+        rv_raw = getattr(p, "reply_variants", None)
+        rv = rv_raw if isinstance(rv_raw, dict) else (json.loads(rv_raw) if isinstance(rv_raw, str) else None)
+        if rv is not None and not isinstance(rv, dict):
+            rv = None
+        status_val = getattr(p, "status", None) or "new"
+        if status_val not in ("new", "in_progress", "done", "hidden"):
+            status_val = "new"
+        if status_val == "new" and _has_generated_post(rv_raw):
+            status_val = "in_progress"
+        person_name = None
+        posted_at = getattr(p, "posted_at", None)
+        created_at = getattr(p, "created_at", None)
+        if posted_at is None and created_at is not None:
+            posted_at = created_at
+        elif posted_at is None:
+            posted_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        if created_at is None:
+            created_at = posted_at
+        return RedditPostRead(
+            id=p.id,
+            subreddit=p.subreddit or "",
+            reddit_id=p.reddit_id or "",
+            title=p.title or "",
+            content=getattr(p, "content", None),
+            post_url=getattr(p, "post_url", None),
+            posted_at=posted_at,
+            author=getattr(p, "author", None),
+            score=getattr(p, "score", None),
+            num_comments=getattr(p, "num_comments", None),
+            person_id=getattr(p, "person_id", None),
+            person_name=person_name,
+            reply_variants=rv,
+            comment_written=getattr(p, "comment_written", False) or False,
+            relevance_score=getattr(p, "relevance_score", None),
+            relevance_flag=getattr(p, "relevance_flag", None),
+            relevance_reason=getattr(p, "relevance_reason", None),
+            status=status_val,
+            created_at=created_at,
+        )
+    except Exception as e:
+        logger.exception("_reddit_post_to_read failed for post id=%s: %s", getattr(p, "id", None), e)
+        raise
 
 
 @router.get("/posts", response_model=list[RedditPostRead])
@@ -109,7 +121,7 @@ async def list_reddit_posts(
     session: AsyncSession = Depends(get_session),
 ):
     try:
-        q = select(RedditPost).options(selectinload(RedditPost.person))
+        q = select(RedditPost)
         if subreddit:
             subs = [s.strip().lower() for s in subreddit if s and s.strip()]
             if subs:
