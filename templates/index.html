@@ -3,20 +3,29 @@
 
 {% block content %}
 <style>
+  .hero { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-10); align-items: center; margin-bottom: var(--space-16); }
+  .hero-text { max-width: var(--content-read-max); }
   .hero-label { font-size: var(--text-12); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: var(--space-2); }
-  .hero h1 { font-size: clamp(1.75rem, 5vw, var(--text-40)); font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; margin: 0 0 var(--space-4); color: var(--text); }
-  .hero h1 .sub { font-size: 0.85em; color: var(--text-muted); font-weight: 600; }
-  .hero-desc { font-size: var(--text-18); color: var(--text-muted); line-height: 1.6; margin: 0 0 var(--space-6); max-width: 36rem; }
-  .hero-cta { display: inline-block; background: var(--primary); color: white; font-weight: 500; padding: 0.75rem 1.5rem; border-radius: var(--radius-pill); margin-bottom: var(--space-4); transition: background var(--motion-fast); }
+  .hero h1 { font-size: clamp(1.5rem, 4vw, var(--text-32)); font-weight: 700; line-height: 1.25; letter-spacing: -0.02em; margin: 0 0 var(--space-4); color: var(--text); }
+  .hero-desc { font-size: var(--text-16); color: var(--text-muted); line-height: 1.65; margin: 0 0 var(--space-6); }
+  .hero-cta-row { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-6); }
+  .hero-cta { display: inline-block; background: var(--primary); color: white; font-weight: 500; padding: 0.75rem 1.5rem; border-radius: var(--radius-pill); transition: background var(--motion-fast); }
   .hero-cta:hover { background: var(--primary-hover); color: white; text-decoration: none; }
-  .hero-bullets { display: flex; flex-wrap: wrap; gap: var(--space-4); font-size: var(--text-14); color: var(--text-muted); }
+  .hero-cta-secondary { display: inline-block; background: transparent; color: var(--text); font-weight: 500; padding: 0.75rem 1.5rem; border-radius: var(--radius-pill); border: 1px solid var(--border); transition: border-color var(--motion-fast), color var(--motion-fast); }
+  .hero-cta-secondary:hover { border-color: var(--primary); color: var(--primary); text-decoration: none; }
+  .hero-bullets { display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--text-14); color: var(--text-muted); }
   .hero-bullets span { display: flex; align-items: center; gap: var(--space-2); }
-  .hero-bullets span::before { content: ''; width: 4px; height: 4px; background: var(--text-muted); border-radius: 50%; }
+  .hero-bullets span::before { content: ''; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; flex-shrink: 0; }
+  .hero-screenshot { border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; background: var(--surface-alt); aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: var(--text-14); }
+  .hero-screenshot img { width: 100%; height: 100%; object-fit: cover; }
+  .hero-badges { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+  .hero-badge { font-size: var(--text-12); font-weight: 500; padding: 4px 10px; border-radius: var(--radius-pill); background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-muted); }
 
-  .section { margin-bottom: var(--space-16); }
+  .section { margin-bottom: var(--space-16); max-width: var(--content-read-max); }
+  .section-wide { max-width: none; }
   .section-title { font-size: var(--text-24); font-weight: 700; letter-spacing: -0.02em; margin: 0 0 var(--space-4); color: var(--text); }
-  .section-desc { font-size: var(--text-16); color: var(--text-muted); line-height: 1.6; margin: 0 0 var(--space-6); }
-  .section p { margin: 0 0 var(--space-4); color: var(--text); font-size: var(--text-16); line-height: 1.6; }
+  .section-desc { font-size: var(--text-16); color: var(--text-muted); line-height: 1.65; margin: 0 0 var(--space-6); }
+  .section p { margin: 0 0 var(--space-4); color: var(--text); font-size: var(--text-16); line-height: 1.65; }
   .section p:last-child { margin-bottom: 0; }
 
   .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin: var(--space-6) 0; }
@@ -46,139 +55,187 @@
   .cta-card .btn { display: inline-block; background: var(--primary); color: white; font-weight: 500; padding: 0.75rem 1.5rem; border-radius: var(--radius-pill); margin-top: var(--space-2); }
   .cta-card .btn:hover { background: var(--primary-hover); color: white; text-decoration: none; }
 
+  .how-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin: var(--space-6) 0; }
+  .how-step { max-width: 100%; }
+  .how-step-num { font-size: var(--text-12); font-weight: 600; color: var(--accent); margin-bottom: var(--space-2); }
+  .how-step h3 { font-size: var(--text-18); font-weight: 600; margin: 0 0 var(--space-2); color: var(--text); }
+  .how-step p { font-size: var(--text-14); color: var(--text-muted); line-height: 1.6; margin: 0 0 var(--space-3); }
+  .how-step-screenshot { height: 120px; border-radius: var(--radius); background: var(--surface-alt); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: var(--text-12); color: var(--text-muted); }
+
+  .fit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); margin: var(--space-6) 0; }
+  .fit-card { padding: var(--space-4); border-radius: var(--radius); border: 1px solid var(--border); }
+  .fit-card h3 { font-size: var(--text-16); font-weight: 600; margin: 0 0 var(--space-3); color: var(--text); }
+  .fit-card ul { margin: 0; padding-left: 1.2em; font-size: var(--text-14); color: var(--text-muted); line-height: 1.65; }
+
+  .faq-accordion { margin: 0; padding: 0; list-style: none; }
+  .faq-accordion li { border-bottom: 1px solid var(--border); }
+  .faq-accordion button { width: 100%; padding: var(--space-4) 0; text-align: left; font-size: var(--text-16); font-weight: 600; color: var(--text); background: none; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
+  .faq-accordion button:hover { color: var(--accent); }
+  .faq-accordion button::after { content: '+'; font-size: 1.2em; color: var(--text-muted); flex-shrink: 0; }
+  .faq-accordion li.is-open button::after { content: '−'; }
+  .faq-accordion .faq-answer { padding: 0 var(--space-4) var(--space-4) 0; font-size: var(--text-16); color: var(--text-muted); line-height: 1.65; display: none; }
+  .faq-accordion li.is-open .faq-answer { display: block; }
+
+  .cta-card .cta-sub { font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-2); }
+  .cta-card .btn-row { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-4); }
+  .cta-card .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .cta-card .btn-secondary:hover { border-color: var(--primary); color: var(--primary); background: transparent; text-decoration: none; }
+
   @media (max-width: 768px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-text { max-width: none; }
     .stats-grid { grid-template-columns: 1fr; }
     .stats-two { grid-template-columns: 1fr; }
+    .how-steps { grid-template-columns: 1fr; }
+    .fit-grid { grid-template-columns: 1fr; }
   }
 </style>
 
-<section class="hero section">
-  <p class="hero-label">MyVOICE's</p>
-  <h1>Попадайте в ленту лидов и в рекомендации через LinkedIn</h1>
-  <p class="hero-desc">ИИ и поисковики учитывают LinkedIn при ответах. MyVOICE's помогает вести воронку в LinkedIn: посты контактов, новости, Reddit — единый слой данных и агенты для комментариев и касаний.</p>
-  <a href="/ui/posts" class="hero-cta">Открыть приложение</a>
-  <div class="hero-bullets">
-    <span>Без обязательств</span>
-    <span>Демо за 30 минут</span>
-    <span>Персональная стратегия</span>
+<section class="hero">
+  <div class="hero-text">
+    <p class="hero-label">MyVOICE's</p>
+    <h1>Вас начинают узнавать в LinkedIn, потому что вы регулярно появляетесь в правильных обсуждениях</h1>
+    <p class="hero-desc">MyVOICE's собирает ленту постов, новости и Reddit в одном месте и помогает быстро писать нормальные комментарии и посты в вашем стиле.</p>
+    <div class="hero-cta-row">
+      <a href="/#book" class="hero-cta">Посмотреть демо</a>
+      <a href="/ui/posts" class="hero-cta-secondary">Открыть приложение</a>
+    </div>
+    <div class="hero-bullets">
+      <span>Лента постов контактов и лидеров мнений</span>
+      <span>Комменты и посты за 2 минуты, без «продажного» тона</span>
+      <span>Воронка касаний, чтобы доводить до созвона</span>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-screenshot" aria-hidden="true">
+      <!-- Подставьте свой скрин: <img src="/static/landing-hero.png" alt="Лента и генерация комментария" style="width:100%;height:100%;object-fit:cover;"> -->
+      <span>Скрин интерфейса: лента постов и генерация комментария</span>
+    </div>
+    <div class="hero-badges">
+      <span class="hero-badge">Комментарии</span>
+      <span class="hero-badge">Новости</span>
+      <span class="hero-badge">Reddit</span>
+      <span class="hero-badge">Воронка</span>
+    </div>
   </div>
 </section>
 
-<section class="section" id="crisis">
-  <h2 class="section-title">Кризис видимости уже здесь</h2>
-  <p>Органический охват в соцсетях падает. Алгоритмы отдают приоритет платному контенту и личным связям. Где тогда искать лиды?</p>
-  <p><strong>LinkedIn.</strong> Для B2B LinkedIn остаётся каналом доверия: 80%+ лидов в B2B так или иначе связаны с LinkedIn. Когда ИИ рекомендуют решения, они смотрят на профили, посты и рекомендации в профессиональной ленте. Чтобы вас рекомендовали — нужно быть в разговорах.</p>
+<section class="section section-wide" id="crisis">
+  <h2 class="section-title">Почему важно быть в разговорах</h2>
+  <p class="section-desc" style="max-width: var(--content-read-max);">Люди выбирают подрядчиков по профилю, постам и комментариям. В LinkedIn это видно сразу. Органический охват падает, платный контент доминирует — но для B2B LinkedIn остаётся каналом доверия. Чтобы вас рекомендовали, нужно регулярно появляться в обсуждениях, которые ведут ваши лиды.</p>
+  <p style="max-width: var(--content-read-max); font-size: var(--text-14); color: var(--text-muted);">По нашим наблюдениям в проектах: LinkedIn часто становится главным источником B2B-лидов; тёплый контакт обычно закрывается заметно легче. Цифры по вашей нише покажем на демо.</p>
 </section>
 
-<section class="section">
-  <h2 class="section-title">Мы проанализировали воронки по отраслям — вот что видно по LinkedIn:</h2>
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="num">80%+</div>
-      <div class="label">B2B-лидов так или иначе связаны с LinkedIn</div>
+<section class="section section-wide" id="how">
+  <h2 class="section-title">Как это работает</h2>
+  <p class="section-desc" style="max-width: var(--content-read-max);">Три шага от источников до созвона.</p>
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="how-step-num">Шаг 1</div>
+      <h3>Подключаем источники</h3>
+      <p>Контакты, лидеры мнений (KOL), темы, сабреддиты, новости — всё в одном месте.</p>
+      <div class="how-step-screenshot">Скрин: источники</div>
     </div>
-    <div class="stat-card">
-      <div class="num">3×</div>
-      <div class="label">конверсия в сделку при тёплом контакте через LinkedIn</div>
+    <div class="how-step">
+      <div class="how-step-num">Шаг 2</div>
+      <h3>Лента и черновики</h3>
+      <p>Получаете единую ленту и черновики комментариев и постов в вашем стиле.</p>
+      <div class="how-step-screenshot">Скрин: лента</div>
     </div>
-    <div class="stat-card">
-      <div class="num">#1</div>
-      <div class="label">канал для генерации лидов в B2B по опросам</div>
+    <div class="how-step">
+      <div class="how-step-num">Шаг 3</div>
+      <h3>Ведёте касания до созвона</h3>
+      <p>Воронка по статусам: от нового контакта до звонка. Черновики касаний и напоминания.</p>
+      <div class="how-step-screenshot">Скрин: воронка</div>
     </div>
   </div>
-  <a href="/#features" class="arrow">Как мы помогаем выигрывать в LinkedIn →</a>
 </section>
 
-<section class="section" id="features">
-  <h2 class="section-title">Как MyVOICE's помогает выигрывать в LinkedIn</h2>
-  <p class="section-desc">Мы собрали единый data layer и агентов: лента постов ваших контактов, новости, Reddit — и генерация комментариев и касаний в вашем тоне. Чтобы вы появлялись в нужных разговорах и вели воронку к квалифицированным лидам.</p>
-  <ul class="features-list">
+<section class="section section-wide" id="features">
+  <h2 class="section-title">Кому подходит и кому нет</h2>
+  <div class="fit-grid">
+    <div class="fit-card">
+      <h3>Подходит</h3>
+      <ul>
+        <li>B2B и длинный цикл сделки</li>
+        <li>Нужна экспертность и доверие в нише</li>
+        <li>Есть 2–4 часа в неделю на контент и касания</li>
+      </ul>
+    </div>
+    <div class="fit-card">
+      <h3>Не подходит</h3>
+      <ul>
+        <li>Нужны лиды «за 3 дня» без вложений</li>
+        <li>Нет времени вообще на участие в обсуждениях</li>
+        <li>B2C массовый рынок без фокуса на экспертизе</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="why">
+  <h2 class="section-title">Почему LinkedIn</h2>
+  <p>Доверие к холодной рекламе падает. Покупатели смотрят посты, комментарии и профили перед выбором поставщика. В LinkedIn это видно сразу — там ваши клиенты принимают решения.</p>
+</section>
+
+<section class="section section-wide" id="faq">
+  <h2 class="section-title">Частые вопросы</h2>
+  <ul class="faq-accordion" role="list">
     <li>
-      <h3>Лента постов контактов</h3>
-      <p>Отслеживайте посты ваших контактов и лидеров мнений. Получайте уведомления о новых постах и генерируйте релевантные комментарии в вашем голосе.</p>
+      <button type="button" aria-expanded="false" aria-controls="faq-1" id="faq-q1">Увижу ли я такой же рост, как в кейсах?</button>
+      <div class="faq-answer" id="faq-1" role="region" aria-labelledby="faq-q1">Результаты зависят от рынка, конкуренции и того, насколько вы регулярно участвуете в разговорах. Мы даём систему и агентов; консистентность и ценность контента решают больше всего.</div>
     </li>
     <li>
-      <h3>Генерация ответов и постов</h3>
-      <p>ИИ пишет комментарии под постами и автономные посты по новостям и Reddit. Без спама и продажного тона — только полезный контент в стиле вашего бренда.</p>
+      <button type="button" aria-expanded="false" aria-controls="faq-2" id="faq-q2">Сколько времени нужно, чтобы увидеть эффект?</button>
+      <div class="faq-answer" id="faq-2" role="region" aria-labelledby="faq-q2">При регулярной работе с лентой, комментариями и воронкой первые тёплые отклики часто появляются в течение нескольких недель. Устойчивый поток лидов — вопрос нескольких месяцев системной работы.</div>
     </li>
     <li>
-      <h3>Новости и Reddit</h3>
-      <p>Загрузка новостей и постов из сабреддитов в единый слой. Черновики постов для LinkedIn на основе трендов и обсуждений, которые уже читает ваша аудитория.</p>
+      <button type="button" aria-expanded="false" aria-controls="faq-3" id="faq-q3">Нужно ли комментировать каждый пост?</button>
+      <div class="faq-answer" id="faq-3" role="region" aria-labelledby="faq-q3">Нет. Достаточно 3–5 качественных комментариев или постов в неделю в релевантных темах. Важны полезность и искренность, а не объём.</div>
     </li>
     <li>
-      <h3>Лидеры мнений и компании</h3>
-      <p>Отмечайте KOL среди контактов, ведите компании и контакты в них. Фокус на тех, кто влияет на решения в вашей нише.</p>
+      <button type="button" aria-expanded="false" aria-controls="faq-4" id="faq-q4">Подойдёт ли это для узкой ниши?</button>
+      <div class="faq-answer" id="faq-4" role="region" aria-labelledby="faq-q4">Узкая ниша часто плюс: меньше шума, проще выделиться. Если ваша аудитория есть в LinkedIn и читает определённых авторов — воронка и мониторинг лидеров мнений работают эффективнее.</div>
     </li>
     <li>
-      <h3>Воронка и касания</h3>
-      <p>Единая воронка статусов: от нового контакта до звонка. Агенты предлагают черновики касаний и двигают контакты по этапам на основе логов — без выдуманных фактов и с QA-проверкой тона.</p>
+      <button type="button" aria-expanded="false" aria-controls="faq-5" id="faq-q5">Сколько времени это занимает в неделю?</button>
+      <div class="faq-answer" id="faq-5" role="region" aria-labelledby="faq-q5">Клиенты обычно тратят 2–4 часа в неделю: просмотр очереди дня, правка черновиков от агентов, публикация и логирование касаний. Мониторинг и генерация черновиков автоматизированы.</div>
+    </li>
+    <li>
+      <button type="button" aria-expanded="false" aria-controls="faq-6" id="faq-q6">Можно ли обойтись без вашего инструмента?</button>
+      <div class="faq-answer" id="faq-6" role="region" aria-labelledby="faq-q6">Да. Но инструмент экономит время: лента постов и новостей в одном месте, готовые черновики комментариев и постов, воронка и напоминания. Вы масштабируете подход без рутины.</div>
     </li>
   </ul>
 </section>
 
-<section class="section" id="why">
-  <h2 class="section-title">Почему LinkedIn? Потому что B2B доверяет ему</h2>
-  <p>Доверие к холодной рекламе падает. Покупатели ищут рекомендации от коллег и экспертов. LinkedIn — то место, где они смотрят посты, комментарии и профили перед выбором поставщика. И это видно по цифрам:</p>
-  <div class="stats-two">
-    <div class="stat-card">
-      <div class="num">90%</div>
-      <div class="label">B2B-маркетологов используют LinkedIn для распространения контента</div>
-    </div>
-    <div class="stat-card">
-      <div class="num">62%</div>
-      <div class="label">говорят, что LinkedIn даёт лучшие лиды по сравнению с другими каналами</div>
-    </div>
-  </div>
-  <p>Быть в LinkedIn — уже не опция, а необходимость. Там ваши клиенты принимают решения.</p>
-</section>
-
-<section class="section" id="case">
-  <h2 class="section-title">Кейс — системная воронка в LinkedIn</h2>
-  <p>Типичный сценарий: продукт для B2B, узкая ниша. До внедрения воронки — редкие холодные касания, низкий отклик. После настройки MyVOICE's: мониторинг постов контактов и KOL, комментарии в тоне бренда, посты по новостям и Reddit, последовательные касания по воронке.</p>
-  <p>За несколько месяцев доля тёплых лидов из LinkedIn растёт, время от первого касания до звонка сокращается. Результаты зависят от ниши, конкуренции и регулярности — мы даём инструмент и стратегию, вы ведёте контент и контакты.</p>
-</section>
-
-<section class="section" id="faq">
-  <h2 class="section-title">Частые вопросы</h2>
-  <dl class="faq-list">
-    <div>
-      <dt>Увижу ли я такой же рост, как в кейсе?</dt>
-      <dd>Результаты зависят от рынка, конкуренции и того, насколько вы регулярно участвуете в разговорах. Мы даём систему и агентов; консистентность и ценность контента решают больше всего.</dd>
-    </div>
-    <div>
-      <dt>Сколько времени нужно, чтобы увидеть эффект?</dt>
-      <dd>При регулярной работе с лентой, комментариями и воронкой первые тёплые отклики часто появляются в течение нескольких недель. Устойчивый поток лидов — вопрос нескольких месяцев системной работы.</dd>
-    </div>
-    <div>
-      <dt>Нужно ли комментировать каждый пост?</dt>
-      <dd>Нет. Достаточно 3–5 качественных комментариев или постов в неделю в релевантных темах. Важны полезность и искренность, а не объём.</dd>
-    </div>
-    <div>
-      <dt>Подойдёт ли это для узкой ниши?</dt>
-      <dd>Узкая ниша часто плюс: меньше шума, проще выделиться. Если ваша аудитория есть в LinkedIn и читает определённых авторов — воронка и мониторинг KOL работают эффективнее.</dd>
-    </div>
-    <div>
-      <dt>Сколько времени это занимает в неделю?</dt>
-      <dd>Клиенты обычно тратят 2–4 часа в неделю: просмотр очереди дня, правка черновиков от агентов, публикация и логирование касаний. Мониторинг и генерация черновиков автоматизированы.</dd>
-    </div>
-    <div>
-      <dt>Можно ли обойтись без вашего инструмента?</dt>
-      <dd>Да. Но инструмент экономит время: лента постов и новостей в одном месте, готовые черновики комментариев и постов, воронка и напоминания. Вы масштабируете подход без рутины.</dd>
-    </div>
-  </dl>
-</section>
-
-<section class="section" id="book">
+<section class="section section-wide" id="book">
   <div class="cta-card">
-    <h2>Заказать звонок</h2>
-    <p>Мы разберём ваши ключевые темы, покажем живую ленту и черновики от агентов и набросаем план первых касаний. Ожидайте 30 минут и конкретный план, который можно обсудить с командой.</p>
-    <a href="mailto:hello@myvoices.app?subject=Запрос на демо MyVOICE's" class="btn">Написать нам</a>
+    <h2>Записаться на демо (30 минут)</h2>
+    <p>Покажем ленту, черновики и план касаний под вашу нишу.</p>
+    <div class="cta-sub">Без обязательств. Конкретный план, который можно обсудить с командой.</div>
+    <div class="btn-row">
+      <a href="mailto:hello@myvoices.app?subject=Запись на демо MyVOICE's (30 мин)" class="btn hero-cta">Записаться на демо</a>
+      <a href="mailto:hello@myvoices.app?subject=Запись демо MyVOICE's" class="btn btn-secondary hero-cta-secondary">Попросить запись демо</a>
+    </div>
   </div>
 </section>
 
-<section class="section">
-  <h2 class="section-title">Демо в записи</h2>
-  <p class="section-desc">Предпочитаете асинхронно? Опишите в письме приоритетные темы и запросите запись демо — пришлём без лишних звонков.</p>
-  <p style="color: var(--text-muted); font-size: var(--text-14);">Без спама. Только способ системно участвовать в разговорах, которые уже ведут ваши лиды в LinkedIn.</p>
-</section>
+<script>
+(function() {
+  document.querySelectorAll('.faq-accordion button').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var li = btn.closest('li');
+      var isOpen = li.classList.contains('is-open');
+      document.querySelectorAll('.faq-accordion li.is-open').forEach(function(o) {
+        o.classList.remove('is-open');
+        o.querySelector('button').setAttribute('aria-expanded', 'false');
+      });
+      if (!isOpen) {
+        li.classList.add('is-open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+})();
+</script>
 {% endblock %}

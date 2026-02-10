@@ -18,15 +18,20 @@
       --text: #0f172a;
       --text-muted: #64748b;
       --border: #e2e8f0;
-      --primary: #0f172a;
-      --primary-hover: #1e293b;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-soft: rgba(99, 102, 241, 0.12);
       --accent: #6366f1;
       --accent-hover: #4f46e5;
       --accent-soft: rgba(99, 102, 241, 0.12);
+      --success: #059669;
+      --success-soft: #d1fae5;
+      --focus-ring: 0 0 0 3px rgba(99, 102, 241, 0.35);
       --elevation-1: 0 1px 2px rgba(0,0,0,0.04);
       --elevation-2: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
       --motion-fast: 0.15s ease;
-      --content-max: 720px;
+      --layout-max: 1200px;
+      --content-read-max: 52ch;
     }
     * { box-sizing: border-box; }
     body {
@@ -47,7 +52,7 @@
       align-items: center;
       justify-content: space-between;
       padding: var(--space-4) var(--space-8);
-      max-width: 1200px;
+      max-width: var(--layout-max);
       margin: 0 auto;
       border-bottom: 1px solid var(--border);
     }
@@ -97,13 +102,13 @@
     .landing-cta:hover { background: var(--primary-hover); color: white; text-decoration: none; }
 
     .landing-main {
-      max-width: var(--content-max);
+      max-width: var(--layout-max);
       margin: 0 auto;
-      padding: var(--space-12) var(--space-6) var(--space-16);
+      padding: var(--space-12) var(--space-8) var(--space-16);
     }
 
     .landing-footer {
-      max-width: 1200px;
+      max-width: var(--layout-max);
       margin: 0 auto;
       padding: var(--space-8) var(--space-8);
       border-top: 1px solid var(--border);
@@ -133,11 +138,11 @@
       <span>MyVOICE's</span>
     </a>
     <nav class="landing-nav">
-      <a href="/#features">Возможности</a>
+      <a href="/#how">Как работает</a>
+      <a href="/#features">Кому подходит</a>
       <a href="/#faq">Вопросы</a>
       <a href="/ui/posts">Приложение</a>
-      <a href="/#book">Заказать звонок</a>
-      <a href="/ui/posts" class="landing-cta">Открыть приложение</a>
+      <a href="/#book" class="landing-cta">Посмотреть демо</a>
     </nav>
   </header>
 
