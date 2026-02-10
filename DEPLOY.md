@@ -51,7 +51,49 @@
 - Для LinkedIn OAuth в настройках приложения LinkedIn укажи Redirect URL: `https://твой-сервис.onrender.com/linkedin/oauth/callback`.
 - Playwright и «Распознать по ссылке» на бесплатном Render могут быть недоступны (нет браузера). Остальной функционал (новости, Reddit, посты, агенты, настройки) работает с Supabase.
 
-## 5. Локальная разработка с облачной БД
+## 5. Подключение своего домена (myvoices.ai)
+
+Чтобы проект открывался по адресу **https://myvoices.ai**:
+
+### 5.1. Render.com — добавить домен
+
+1. Зайди в [Render Dashboard](https://dashboard.render.com/) → выбери свой Web Service (например `myvoices`).
+2. Вкладка **Settings** → блок **Custom Domains** → **Add Custom Domain**.
+3. Введи `myvoices.ai` и при необходимости `www.myvoices.ai`. Render покажет, какие DNS-записи нужны.
+
+### 5.2. DNS у регистратора домена
+
+В панели управления доменом (где купил myvoices.ai) создай записи, как просит Render:
+
+- **Для корня myvoices.ai (apex):**
+  - если провайдер поддерживает **ANAME/ALIAS** — укажи цель: `myvoices.onrender.com` (или твой сервис);
+  - иначе создай **A-запись** на IP: `216.24.57.1`;
+  - если домен на **Cloudflare** — используй **CNAME** на `myvoices.onrender.com` (CNAME flattening).
+- **Для www.myvoices.ai:** тип **CNAME**, цель — `myvoices.onrender.com` (или твой *.onrender.com).
+
+Сохрани изменения; распространение DNS может занять от нескольких минут до часа. В Render статус домена станет «Verified», когда записи подтянутся. Render автоматически выдаёт SSL (HTTPS) для кастомного домена.
+
+### 5.3. Переменные окружения на Render
+
+В **Environment** сервиса задай redirect для своего домена (без слэша в конце):
+
+| Key | Value |
+|-----|--------|
+| `LINKEDIN_REDIRECT_URI` | `https://myvoices.ai/linkedin/oauth/callback` |
+
+Если используешь Google OAuth, добавь в Google Cloud Console redirect: `https://myvoices.ai/auth/google/callback` и при необходимости `GOOGLE_REDIRECT_URI=https://myvoices.ai/auth/google/callback`.
+
+После сохранения переменных Render перезапустит сервис.
+
+### 5.4. LinkedIn Developer Portal
+
+1. Зайди в [LinkedIn Developers](https://www.linkedin.com/developers/) → своё приложение.
+2. **Auth** → **Authorized redirect URLs** → добавь: `https://myvoices.ai/linkedin/oauth/callback` (можно оставить и старый URL Render для переходного периода).
+3. Сохрани.
+
+После этого вход через LinkedIn и приложение будут работать по **https://myvoices.ai**.
+
+## 6. Локальная разработка с облачной БД
 
 Чтобы локально подключаться к Supabase:
 
@@ -60,7 +102,7 @@
 
 Локально можно по-прежнему использовать SQLite: не задавай `DATABASE_URL` или укажи `DATABASE_URL=sqlite+aiosqlite:///./lfas.db`.
 
-## 6. Перенос данных из локального SQLite в Supabase
+## 7. Перенос данных из локального SQLite в Supabase
 
 Если на проде (Render + Supabase) пустые разделы «Авторы», «Продукты», «Портрет клиента», «Сабреддиты» и т.д., можно один раз перенести данные из локальной БД в Supabase.
 

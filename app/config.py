@@ -27,6 +27,14 @@ class Settings(BaseSettings):
     linkedin_client_secret: Optional[str] = None
     linkedin_redirect_uri: Optional[str] = None
     session_secret: Optional[str] = None  # для SessionMiddleware (OAuth state)
+    # Вход по email и паролю (один пользователь из .env). Включено только если заданы оба значения.
+    auth_enabled: bool = True
+    auth_admin_email: Optional[str] = None  # логин (email)
+    auth_admin_password: Optional[str] = None  # пароль
+    # Вход через Google (OAuth 2.0). В Google Cloud Console: APIs & Services → Credentials → OAuth 2.0 Client ID (Web application), Redirect URI: https://your-domain/auth/google/callback
+    google_client_id: Optional[str] = None
+    google_client_secret: Optional[str] = None
+    google_redirect_uri: Optional[str] = None  # если пусто — строится из запроса (хост + /auth/google/callback)
     playwright_user_data_dir: Optional[str] = None  # путь к профилю Chromium с залогиненным LinkedIn
 
     # RapidAPI — Fresh LinkedIn Profile Data

@@ -13,6 +13,7 @@ from app.config import settings
 from app.db import init_db
 from app.routers import (
     agents_routes,
+    auth,
     companies,
     people,
     linkedin_oauth,
@@ -84,8 +85,32 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="MyVOICE's", description="LinkedIn Funnel Agent System", lifespan=lifespan)
-app.add_middleware(SessionMiddleware, secret_key=settings.session_secret or "lfas-change-me-in-production")
 
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Ловим любую необработанную ошибку и показываем понятную страницу вместо Internal Server Error."""
+    logging.exception("Unhandled error for %s: %s", request.url.path, exc)
+    return HTMLResponse(
+        '<html><body style="font-family:sans-serif;padding:2rem;max-width:600px;margin:0 auto;">'
+        "<h1>Ошибка сервера</h1>"
+        "<p>Что-то пошло не так. Попробуйте <a href=\"/logout\">выйти</a> и войти снова, или вернуться на <a href=\"/\">главную</a>.</p>"
+        "<p style=\"color:#666;font-size:0.9rem;\">Подробности в логах сервера (терминал, где запущен uvicorn).</p>"
+        "</body></html>",
+        status_code=500,
+    )
+
+
+# Порядок важен: последний add_middleware = первый по цепочке запроса. SessionMiddleware должен быть ближе к app, чтобы session была доступна в AuthMiddleware.
+from app.middleware.auth import AuthMiddleware
+app.add_middleware(AuthMiddleware)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.session_secret or "lfas-change-me-in-production",
+    max_age=30 * 24 * 3600,
+)
+
+app.include_router(auth.router)
 app.include_router(setup.router)
 app.include_router(companies.router)
 app.include_router(people.router)
@@ -107,9 +132,11 @@ async def root(request: Request):
 
 # Mount UI templates and static if present
 try:
+    import json
     from fastapi.templating import Jinja2Templates
 
     templates = Jinja2Templates(directory=str(settings.base_dir / "templates"))
+    templates.env.filters["tojson"] = lambda x: json.dumps(x, ensure_ascii=False)
     static_dir = settings.base_dir / "static"
     if static_dir.exists():
         app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
@@ -138,7 +165,17 @@ try:
 
     @app.get("/ui/posts", response_class=HTMLResponse)
     async def ui_posts(request: Request):
-        return templates.TemplateResponse(request, "posts.html", {"display_timezone": settings.display_timezone})
+        try:
+            tz = getattr(settings, "display_timezone", None) or "UTC"
+            return templates.TemplateResponse(request, "posts.html", {"display_timezone": tz})
+        except Exception as e:
+            logging.exception("Error rendering /ui/posts: %s", e)
+            return HTMLResponse(
+                f'<html><body style="font-family:sans-serif;padding:2rem;max-width:600px;margin:0 auto;">'
+                f'<h1>Ошибка загрузки</h1><p>Не удалось открыть страницу. Попробуйте <a href="/logout">выйти</a> и войти снова, или вернуться на <a href="/">главную</a>.</p>'
+                f'<p style="color:#666;font-size:0.9rem;">В логах сервера есть подробности.</p></body></html>',
+                status_code=500,
+            )
 
     @app.get("/ui/reddit", response_class=HTMLResponse)
     async def ui_reddit(request: Request):
