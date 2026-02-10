@@ -33,8 +33,13 @@ async_session_maker = async_sessionmaker(
 )
 
 
+def _is_postgres() -> bool:
+    url = (settings.database_url or "").lower()
+    return "postgresql" in url or "postgres" in url
+
+
 async def init_db() -> None:
-    """Create all tables and add new columns for existing SQLite DBs."""
+    """Create all tables and add new columns for existing DBs (SQLite and Postgres)."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         if settings.database_url.startswith("sqlite"):
@@ -70,6 +75,18 @@ async def init_db() -> None:
                 await conn.execute(text("ALTER TABLE reddit_posts ADD COLUMN status VARCHAR(32) DEFAULT 'new'"))
             except Exception:
                 pass
+        elif _is_postgres():
+            # Добавляем колонки в reddit_posts на проде (Supabase), если их ещё нет
+            for sql in (
+                "ALTER TABLE reddit_posts ADD COLUMN IF NOT EXISTS relevance_score INTEGER",
+                "ALTER TABLE reddit_posts ADD COLUMN IF NOT EXISTS relevance_flag VARCHAR(8)",
+                "ALTER TABLE reddit_posts ADD COLUMN IF NOT EXISTS relevance_reason VARCHAR(256)",
+                "ALTER TABLE reddit_posts ADD COLUMN IF NOT EXISTS status VARCHAR(32) DEFAULT 'new'",
+            ):
+                try:
+                    await conn.execute(text(sql))
+                except Exception:
+                    pass
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
