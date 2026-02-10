@@ -3,7 +3,7 @@ import asyncio
 import json
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
@@ -22,8 +22,55 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/reddit", tags=["reddit"])
 
 
+def _reply_variants_post(rv: any) -> str:
+    """Извлечь текст сгенерированного поста из reply_variants (dict или JSON-строка)."""
+    if rv is None:
+        return ""
+    if isinstance(rv, dict):
+        return (rv.get("post") or "").strip()
+    if isinstance(rv, str):
+        try:
+            data = json.loads(rv)
+            return (data.get("post") or "").strip() if isinstance(data, dict) else ""
+        except (json.JSONDecodeError, TypeError):
+            return ""
+    return ""
+
+
+def _has_generated_post(rv: any) -> bool:
+    """Есть ли в reply_variants непустой сгенерированный текст (ключ post или любой непустой текст)."""
+    if rv is None:
+        return False
+    text = _reply_variants_post(rv)
+    if text:
+        return True
+    if isinstance(rv, dict):
+        for v in rv.values():
+            if isinstance(v, str) and v.strip():
+                return True
+    if isinstance(rv, str):
+        try:
+            data = json.loads(rv)
+            if isinstance(data, dict):
+                for v in data.values():
+                    if isinstance(v, str) and v.strip():
+                        return True
+        except (json.JSONDecodeError, TypeError):
+            pass
+    return False
+
+
 def _reddit_post_to_read(p: RedditPost) -> RedditPostRead:
-    rv = p.reply_variants if isinstance(p.reply_variants, dict) else None
+    rv_raw = getattr(p, "reply_variants", None)
+    rv = rv_raw if isinstance(rv_raw, dict) else (json.loads(rv_raw) if isinstance(rv_raw, str) else None)
+    if rv is not None and not isinstance(rv, dict):
+        rv = None
+    status_val = getattr(p, "status", None) or "new"
+    if status_val not in ("new", "in_progress", "done", "hidden"):
+        status_val = "new"
+    # Если есть сгенерированный текст поста — считаем «В работе», даже если в БД было «новый»
+    if status_val == "new" and _has_generated_post(rv_raw):
+        status_val = "in_progress"
     return RedditPostRead(
         id=p.id,
         subreddit=p.subreddit,
@@ -42,21 +89,27 @@ def _reddit_post_to_read(p: RedditPost) -> RedditPostRead:
         relevance_score=getattr(p, "relevance_score", None),
         relevance_flag=getattr(p, "relevance_flag", None),
         relevance_reason=getattr(p, "relevance_reason", None),
+        status=status_val,
         created_at=p.created_at,
     )
 
 
 @router.get("/posts", response_model=list[RedditPostRead])
 async def list_reddit_posts(
-    subreddit: Optional[str] = Query(None, description="Фильтр по сабреддиту"),
+    subreddit: Optional[List[str]] = Query(None, alias="subreddit", description="Фильтр по сабреддитам (можно несколько)"),
     period: Optional[str] = Query(None, description="all|week|month"),
     sort: str = Query("desc", description="desc|asc"),
+    status_filter: Optional[str] = Query(None, alias="status", description="new|in_progress|done|hidden"),
     session: AsyncSession = Depends(get_session),
 ):
     try:
         q = select(RedditPost).options(selectinload(RedditPost.person))
         if subreddit:
-            q = q.where(RedditPost.subreddit == subreddit.strip().lower())
+            subs = [s.strip().lower() for s in subreddit if s and s.strip()]
+            if subs:
+                q = q.where(RedditPost.subreddit.in_(subs))
+        if status_filter and status_filter in ("new", "in_progress", "done", "hidden"):
+            q = q.where(RedditPost.status == status_filter)
         if period == "week":
             since = datetime.utcnow() - timedelta(days=7)
             q = q.where(RedditPost.posted_at >= since)
@@ -67,6 +120,11 @@ async def list_reddit_posts(
         q = q.order_by(order)
         r = await session.execute(q)
         posts = list(r.scalars().all())
+        for p in posts:
+            if (p.status or "new") == "new" and _has_generated_post(p.reply_variants):
+                p.status = "in_progress"
+        if posts:
+            await session.commit()
         return [_reddit_post_to_read(p) for p in posts]
     except Exception as e:
         import logging

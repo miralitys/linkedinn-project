@@ -7,22 +7,25 @@
     <h1 class="news-page-title">Reddit</h1>
     <button type="button" id="reddit-refresh-btn" class="btn primary btn-icon-text news-refresh-btn" aria-label="Обновить" title="Обновить"><span aria-hidden="true">↻</span> Обновить</button>
   </div>
-  <p class="news-header-desc">Посты из сабреддитов. Список сабреддитов настраивается в <a href="/ui/setup">Settings</a>. Выберите сабреддит ниже и нажмите на него — посты подгрузятся. Открывайте пост и переписывайте его в пост для LinkedIn от выбранного автора.</p>
-  <div id="reddit-saved-wrap" class="reddit-saved-row" style="display: none;">
-    <span class="news-toolbar-label">Сохранённые сабреддиты:</span>
-    <div id="reddit-saved-list" class="reddit-saved-list"></div>
-  </div>
-  <div class="news-toolbar-row">
-    <div class="news-toolbar-field">
-      <label class="news-toolbar-label" for="reddit-subreddit-filter">Сабреддит</label>
-      <input type="text" id="reddit-subreddit-filter" class="news-toolbar-select" placeholder="Все" aria-label="Сабреддит" style="min-width: 140px;">
+  <p class="news-header-desc">Посты из сабреддитов. Список сабреддитов настраивается в <a href="/ui/setup">Settings</a>. Выберите сабреддит ниже или найдите в поиске. Открывайте пост и переписывайте его в пост для LinkedIn.</p>
+  <div class="news-toolbar-row news-toolbar-row-reddit">
+    <div class="reddit-subreddit-block">
+      <label class="news-toolbar-label" for="reddit-subreddit-search">Сабреддит</label>
+      <div class="reddit-subreddit-search-wrap">
+        <input type="text" id="reddit-subreddit-search" class="reddit-subreddit-search" placeholder="выбор нескольких" aria-label="Выбор сабреддитов" autocomplete="off" aria-autocomplete="list" aria-expanded="false" aria-controls="reddit-subreddit-autocomplete">
+        <span class="reddit-subreddit-search-chevron" aria-hidden="true">▼</span>
+        <div id="reddit-subreddit-autocomplete" class="reddit-subreddit-autocomplete" role="listbox" aria-hidden="true"></div>
+      </div>
+      <div id="reddit-subreddit-tags" class="reddit-subreddit-tags"></div>
     </div>
     <div class="news-toolbar-field">
-      <label class="news-toolbar-label" for="reddit-period">Период</label>
-      <select id="reddit-period" class="news-toolbar-select" aria-label="Период">
-        <option value="">Все время</option>
-        <option value="week">Неделя</option>
-        <option value="month">Месяц</option>
+      <label class="news-toolbar-label" for="reddit-score-filter">Score</label>
+      <select id="reddit-score-filter" class="news-toolbar-select" aria-label="Фильтр по релевантности">
+        <option value="">Все</option>
+        <option value="blue">Синий (81+)</option>
+        <option value="green">Зелёный (61–80)</option>
+        <option value="yellow">Жёлтый (31–60)</option>
+        <option value="red">Красный (0–30)</option>
       </select>
     </div>
     <div class="news-toolbar-field">
@@ -33,13 +36,11 @@
       </select>
     </div>
     <div class="news-toolbar-field">
-      <label class="news-toolbar-label" for="reddit-score-filter">Score</label>
-      <select id="reddit-score-filter" class="news-toolbar-select" aria-label="Фильтр по релевантности">
-        <option value="">Все</option>
-        <option value="blue">Синий (81+)</option>
-        <option value="green">Зелёный (61–80)</option>
-        <option value="yellow">Жёлтый (31–60)</option>
-        <option value="red">Красный (0–30)</option>
+      <label class="news-toolbar-label" for="reddit-period">Период</label>
+      <select id="reddit-period" class="news-toolbar-select" aria-label="Период">
+        <option value="">Все время</option>
+        <option value="week">Неделя</option>
+        <option value="month">Месяц</option>
       </select>
     </div>
   </div>
@@ -138,6 +139,9 @@
   .news-page-title { font-size: 1.25rem; font-weight: 700; margin: 0; color: var(--text); letter-spacing: -0.02em; }
   .news-header-desc { margin: 0 0 var(--space-4); font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; max-width: 42rem; }
   .news-toolbar-row { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+  .news-toolbar-row-reddit { align-items: flex-start; }
+  .news-toolbar-row-reddit .news-toolbar-field { gap: var(--space-2); }
+  .news-toolbar-row-reddit .reddit-subreddit-block { gap: var(--space-2); }
   .news-toolbar-field { display: flex; flex-direction: column; gap: var(--space-1); }
   .news-toolbar-label { font-size: var(--text-12); font-weight: 500; color: var(--text-muted); margin: 0; text-transform: uppercase; letter-spacing: 0.04em; }
   .news-toolbar-select { min-width: 160px; height: 2.25rem; padding: 0 var(--space-3); font-size: var(--text-14); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); box-sizing: border-box; }
@@ -155,26 +159,32 @@
   .news-card-title { font-size: 0.9375rem; font-weight: 600; margin: 0 0 var(--space-2); line-height: 1.4; color: var(--text); }
   .news-card-title a { color: inherit; text-decoration: none; }
   .news-card-title a:hover { color: var(--primary); }
-  .news-card-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
-  .news-card-meta { font-size: var(--text-12); }
-  .news-card-meta-author { font-weight: 600; color: var(--text); }
-  .news-card-meta-date { font-weight: 400; color: var(--text-muted); }
-  .news-card-source-wrap { font-size: var(--text-12); color: var(--text-muted); }
-  .news-card-source { font-size: inherit; color: inherit; }
-  .news-card-source a { color: var(--primary); font-weight: 500; }
-  .news-card-source a:hover { text-decoration: underline; }
-  .news-card-summary { font-size: var(--text-12); line-height: 1.55; color: var(--text); margin: 0 0 var(--space-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .news-card-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
-  .news-card-read-more { font-size: var(--text-14); color: var(--primary); background: none; border: none; cursor: pointer; padding: 0; font-weight: 500; }
-  .news-card-read-more:hover { text-decoration: underline; }
-  .news-card-read-more:focus-visible { outline: none; border-radius: var(--radius-sm); box-shadow: var(--focus-ring); }
-  .news-card-actions { display: flex; align-items: center; gap: var(--space-2); }
-  .news-card-stats { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border); font-size: var(--text-12); color: var(--text-muted); }
+  .news-card-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
+  .news-card-meta { font-size: var(--text-12); color: var(--text-muted); }
+  .news-card-meta a { color: inherit; text-decoration: none; }
+  .news-card-meta a:hover { color: var(--primary); }
+  .news-card-open-reddit { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-12); color: var(--text-muted); text-decoration: none; padding: 2px 6px; border-radius: var(--radius-sm); transition: color var(--motion-fast), background var(--motion-fast); }
+  .news-card-open-reddit:hover { color: var(--primary); background: var(--bg); text-decoration: none; }
+  .news-card-open-reddit:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .news-card-body { margin-bottom: var(--space-3); }
+  .news-card-title { font-size: 0.9375rem; font-weight: 600; margin: 0 0 var(--space-2); line-height: 1.4; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .news-card-title a { color: inherit; text-decoration: none; }
+  .news-card-title a:hover { color: var(--primary); }
+  .news-card-summary { font-size: var(--text-14); line-height: 1.5; color: var(--text); margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .news-card-footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+  .news-card-footer-left { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-12); color: var(--text-muted); }
+  .news-card-footer-left button { background: none; border: none; padding: 0; font-size: inherit; color: var(--primary); cursor: pointer; font-weight: 500; }
+  .news-card-footer-left button:hover { text-decoration: underline; }
+  .news-card-footer-left button:focus-visible { outline: none; border-radius: var(--radius-sm); box-shadow: var(--focus-ring); }
+  .news-card-actions { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+  .news-card-actions .news-card-score,
+  .news-card-actions .news-card-score-loading { margin-right: 0; }
   .news-card-link-icon { flex-shrink: 0; color: var(--text-muted); }
   .news-card-link-icon:hover { color: var(--primary); }
   .news-card-link-corner { flex-shrink: 0; min-width: 28px; min-height: 28px; padding: 0; border: none; background: transparent; color: var(--text-muted); border-radius: 0; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; transition: color var(--motion-fast); font-size: 1.1rem; line-height: 1; }
   .news-card-link-corner:hover { background: transparent; color: var(--primary); text-decoration: none; }
   .news-card-link-corner:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .news-card-top-right-wrap { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
   .news-empty-state, .news-error-state { text-align: center; padding: var(--space-10); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
   .news-empty-title, .news-error-text { margin: 0 0 var(--space-2); font-weight: 600; font-size: var(--text-16); color: var(--text); }
   .news-empty-desc, .news-error-detail { margin: 0 0 var(--space-4); color: var(--text-muted); font-size: var(--text-14); line-height: 1.5; }
@@ -206,10 +216,24 @@
   .news-view-body { padding: var(--space-6); font-size: var(--text-16); line-height: 1.7; color: var(--text); }
   .news-view-body p { margin: 0 0 var(--space-4); }
   .news-view-body p:last-child { margin-bottom: 0; }
-  .reddit-saved-row { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-4); flex-wrap: wrap; }
-  .reddit-saved-list { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-  .reddit-saved-chip { font-size: var(--text-12); padding: 4px 10px; border-radius: var(--radius-sm); background: var(--bg); border: 1px solid var(--border); color: var(--text); cursor: pointer; font-weight: 500; }
-  .reddit-saved-chip:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+  .reddit-subreddit-block { display: flex; flex-direction: column; gap: var(--space-2); min-width: 200px; flex: 1; max-width: 280px; }
+  .reddit-subreddit-search-wrap { position: relative; display: flex; align-items: center; }
+  .reddit-subreddit-search { width: 100%; height: 2.25rem; padding: 0 var(--space-3); padding-right: 2rem; font-size: var(--text-14); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); box-sizing: border-box; }
+  .reddit-subreddit-search:focus { outline: none; border-color: var(--primary); box-shadow: var(--focus-ring); }
+  .reddit-subreddit-search::placeholder { color: var(--text-muted); }
+  .reddit-subreddit-search-chevron { position: absolute; right: var(--space-2); top: 50%; transform: translateY(-50%); font-size: 0.65rem; color: var(--text-muted); pointer-events: none; }
+  .reddit-subreddit-search-wrap:has(.reddit-subreddit-autocomplete.is-open) .reddit-subreddit-search-chevron { transform: translateY(-50%) rotate(180deg); }
+  .reddit-subreddit-autocomplete { position: absolute; top: 100%; left: 0; right: 0; margin-top: 2px; z-index: 50; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height: 200px; overflow-y: auto; display: none; }
+  .reddit-subreddit-autocomplete.is-open { display: block; }
+  .reddit-subreddit-autocomplete [role="option"] { padding: 8px 12px; font-size: var(--text-14); cursor: pointer; color: var(--text); display: flex; align-items: center; gap: var(--space-2); }
+  .reddit-subreddit-autocomplete [role="option"]:hover, .reddit-subreddit-autocomplete [role="option"][aria-selected="true"] { background: var(--bg); }
+  .reddit-subreddit-autocomplete [role="option"].reddit-ac-no-results { color: var(--text-muted); cursor: default; }
+  .reddit-subreddit-autocomplete [role="option"] .reddit-ac-checkbox { width: 1rem; height: 1rem; flex-shrink: 0; accent-color: var(--primary); cursor: pointer; pointer-events: none; }
+  .reddit-subreddit-autocomplete [role="option"] .reddit-ac-label { flex: 1; }
+  .reddit-subreddit-tags { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-1); }
+  .reddit-subreddit-tag { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-12); line-height: 1.25; padding: 2px 8px; border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--primary); font-weight: 500; }
+  .reddit-subreddit-tag button { padding: 0; width: 14px; height: 14px; border: none; background: transparent; color: inherit; cursor: pointer; border-radius: 2px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; line-height: 0; flex-shrink: 0; opacity: 0.8; }
+  .reddit-subreddit-tag button:hover { opacity: 1; background: rgba(0,0,0,0.1); }
   .view-post-rewrite-block { flex-shrink: 0; margin: var(--space-3) var(--space-4) var(--space-4); padding: var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
   .view-post-rewrite-header { margin-bottom: var(--space-2); padding-bottom: var(--space-2); border-bottom: 1px solid var(--border); }
   .view-post-rewrite-title { margin: 0 0 var(--space-1); font-size: var(--text-14); font-weight: 600; color: var(--text); }
@@ -319,6 +343,16 @@
     outline: none;
     box-shadow: var(--focus-ring);
   }
+  .reddit-status-badge { font-size: 0.6875rem; font-weight: 500; padding: 2px 6px; border-radius: 4px; line-height: 1.3; cursor: pointer; position: relative; }
+  .reddit-status-badge.status-new { background: var(--bg); color: var(--text-muted); }
+  .reddit-status-badge.status-in_progress { background: rgba(59, 130, 246, 0.15); color: #2563eb; }
+  .reddit-status-badge.status-done { background: var(--success-soft); color: var(--success); }
+  .reddit-status-badge.status-hidden { background: #f1f5f9; color: #64748b; }
+  .reddit-status-dropdown { position: absolute; top: 100%; left: 0; margin-top: 2px; z-index: 20; min-width: 120px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 4px 0; display: none; }
+  .reddit-status-dropdown.is-open { display: block; }
+  .reddit-status-dropdown button { display: block; width: 100%; padding: 6px 10px; text-align: left; font-size: var(--text-12); background: none; border: none; cursor: pointer; color: var(--text); }
+  .reddit-status-dropdown button:hover { background: var(--bg); }
+  .reddit-status-wrap { position: relative; display: inline-block; }
 </style>
 <script>
 (function() {
@@ -334,6 +368,24 @@
     const h = parts.find(p => p.type === 'hour').value, min = parts.find(p => p.type === 'minute').value, s2 = parts.find(p => p.type === 'second').value;
     return y + '-' + m + '-' + day + ' ' + h + ':' + min + ':' + s2;
   }
+  function relativeTime(d) {
+    if (!d) return '—';
+    const s = typeof d === 'string' ? d : (d.toISOString && d.toISOString());
+    const dt = new Date(s && !/Z|[+-]\d{2}:?\d{2}$/.test(s) ? s.replace(/\.\d{3}$/, '') + 'Z' : s);
+    if (isNaN(dt.getTime())) return '—';
+    const now = new Date();
+    const sec = Math.floor((now - dt) / 1000);
+    if (sec < 60) return 'только что';
+    const min = Math.floor(sec / 60);
+    if (min < 60) return min === 1 ? '1 мин назад' : min + ' мин назад';
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return hr === 1 ? '1 час назад' : hr < 5 ? hr + ' часа назад' : hr + ' часов назад';
+    const day = Math.floor(hr / 24);
+    if (day === 1) return 'вчера';
+    if (day < 7) return day + ' дн. назад';
+    if (day < 30) return Math.floor(day / 7) === 1 ? 'неделю назад' : Math.floor(day / 7) + ' нед. назад';
+    return formatDate(d);
+  }
   function escapeHtml(s) {
     if (s == null || s === undefined) return '';
     const div = document.createElement('div');
@@ -345,33 +397,130 @@
   const redditEmpty = document.getElementById('reddit-empty');
   const periodSelect = document.getElementById('reddit-period');
   const sortSelect = document.getElementById('reddit-sort');
-  const subredditFilter = document.getElementById('reddit-subreddit-filter');
+  const subredditSearch = document.getElementById('reddit-subreddit-search');
+  const subredditAutocomplete = document.getElementById('reddit-subreddit-autocomplete');
+  const subredditTags = document.getElementById('reddit-subreddit-tags');
   const scoreFilterSelect = document.getElementById('reddit-score-filter');
-  const savedWrap = document.getElementById('reddit-saved-wrap');
-  const savedList = document.getElementById('reddit-saved-list');
+
+  const REDDIT_STATUS_LABELS = { new: 'Новый', in_progress: 'В работе', done: 'Готово', hidden: 'Скрыт' };
+
+  let savedSubredditNames = [];
+  let selectedSubreddits = [];
+  let autocompleteHighlightIndex = -1;
+
+  function addSubreddit(name) {
+    const n = (name || '').trim().toLowerCase();
+    if (!n || selectedSubreddits.indexOf(n) >= 0) return;
+    selectedSubreddits.push(n);
+    renderSubredditTags();
+    loadRedditPosts();
+  }
+  function removeSubreddit(name) {
+    const n = (name || '').trim().toLowerCase();
+    selectedSubreddits = selectedSubreddits.filter(s => s !== n);
+    renderSubredditTags();
+    loadRedditPosts();
+  }
+  function renderSubredditTags() {
+    if (!subredditTags) return;
+    subredditTags.innerHTML = selectedSubreddits.map(function(n) {
+      return '<span class="reddit-subreddit-tag">r/' + escapeHtml(n) + '<button type="button" aria-label="Убрать r/' + escapeHtml(n) + '" data-name="' + escapeHtml(n) + '">×</button></span>';
+    }).join('');
+    subredditTags.querySelectorAll('.reddit-subreddit-tag button').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        removeSubreddit(btn.dataset.name);
+      });
+    });
+  }
 
   function loadSavedSubreddits() {
     fetch('/reddit/subreddits').then(r => r.json()).then(names => {
-      if (!names || !names.length) {
-        savedWrap.style.display = 'none';
-        return;
-      }
-      savedWrap.style.display = 'flex';
-      savedList.innerHTML = names.map(function(name) {
-        return '<button type="button" class="reddit-saved-chip" data-name="' + escapeHtml(name) + '" aria-label="Выбрать r/' + escapeHtml(name) + '">r/' + escapeHtml(name) + '</button>';
+      savedSubredditNames = Array.isArray(names) ? names : [];
+    }).catch(function() { savedSubredditNames = []; });
+  }
+
+  function toggleSubreddit(name) {
+    const n = (name || '').trim().toLowerCase();
+    if (!n) return;
+    if (selectedSubreddits.indexOf(n) >= 0) {
+      removeSubreddit(n);
+    } else {
+      addSubreddit(n);
+    }
+  }
+  function showAutocomplete(query) {
+    if (!subredditAutocomplete) return;
+    const q = (query || '').trim().toLowerCase();
+    const matches = q ? savedSubredditNames.filter(function(n) { return n.toLowerCase().indexOf(q) >= 0; }) : savedSubredditNames.slice();
+    if (!matches.length) {
+      subredditAutocomplete.innerHTML = '<div role="option" class="reddit-ac-no-results" aria-selected="false">Нет совпадений</div>';
+    } else {
+      subredditAutocomplete.innerHTML = matches.slice(0, 15).map(function(name) {
+        var checked = selectedSubreddits.indexOf(name.toLowerCase()) >= 0;
+        return '<div role="option" data-name="' + escapeHtml(name) + '" tabindex="-1" aria-checked="' + (checked ? 'true' : 'false') + '">' +
+          '<input type="checkbox" class="reddit-ac-checkbox" ' + (checked ? 'checked' : '') + ' aria-hidden="true" tabindex="-1">' +
+          '<span class="reddit-ac-label">r/' + escapeHtml(name) + '</span></div>';
       }).join('');
-      savedList.querySelectorAll('.reddit-saved-chip').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          var name = btn.dataset.name || '';
-          subredditFilter.value = name;
-          redditLoading.style.display = 'block';
-          fetch('/reddit/sync?subreddit=' + encodeURIComponent(name) + '&limit=25', { method: 'POST' })
-            .then(function(r) { return r.json(); })
-            .then(function() { loadRedditPosts(); loadSavedSubreddits(); })
-            .catch(function() { loadRedditPosts(); });
+      subredditAutocomplete.querySelectorAll('[role="option"]:not(.reddit-ac-no-results)').forEach(function(opt, i) {
+        opt.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleSubreddit(opt.dataset.name);
+          showAutocomplete(subredditSearch.value);
         });
       });
-    }).catch(function() { savedWrap.style.display = 'none'; });
+    }
+    subredditAutocomplete.classList.add('is-open');
+    subredditAutocomplete.setAttribute('aria-hidden', 'false');
+    autocompleteHighlightIndex = matches.length ? 0 : -1;
+    updateAutocompleteHighlight();
+  }
+  function closeAutocomplete() {
+    if (subredditAutocomplete) {
+      subredditAutocomplete.classList.remove('is-open');
+      subredditAutocomplete.setAttribute('aria-hidden', 'true');
+      autocompleteHighlightIndex = -1;
+    }
+  }
+  function updateAutocompleteHighlight() {
+    if (!subredditAutocomplete) return;
+    const opts = subredditAutocomplete.querySelectorAll('[role="option"]:not(.reddit-ac-no-results)');
+    opts.forEach(function(o, i) { o.setAttribute('aria-selected', i === autocompleteHighlightIndex ? 'true' : 'false'); });
+    if (autocompleteHighlightIndex >= 0 && opts[autocompleteHighlightIndex]) opts[autocompleteHighlightIndex].scrollIntoView({ block: 'nearest' });
+  }
+
+  if (subredditSearch && subredditAutocomplete) {
+    subredditSearch.addEventListener('input', function() {
+      showAutocomplete(subredditSearch.value);
+    });
+    subredditSearch.addEventListener('focus', function() {
+      if (subredditSearch.value.trim() || savedSubredditNames.length) showAutocomplete(subredditSearch.value);
+    });
+    subredditSearch.addEventListener('keydown', function(e) {
+      const opts = subredditAutocomplete.querySelectorAll('[role="option"]:not(.reddit-ac-no-results)');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        autocompleteHighlightIndex = opts.length ? (autocompleteHighlightIndex + 1) % opts.length : -1;
+        updateAutocompleteHighlight();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        autocompleteHighlightIndex = opts.length ? (autocompleteHighlightIndex <= 0 ? opts.length - 1 : autocompleteHighlightIndex - 1) : -1;
+        updateAutocompleteHighlight();
+      } else if (e.key === 'Enter' && autocompleteHighlightIndex >= 0 && opts[autocompleteHighlightIndex]) {
+        e.preventDefault();
+        toggleSubreddit(opts[autocompleteHighlightIndex].dataset.name);
+        showAutocomplete(subredditSearch.value);
+      } else if (e.key === 'Escape') {
+        closeAutocomplete();
+        subredditSearch.blur();
+      }
+    });
+    document.addEventListener('click', function(e) {
+      if (!subredditAutocomplete || !subredditAutocomplete.classList.contains('is-open')) return;
+      var wrap = subredditSearch && subredditSearch.closest('.reddit-subreddit-search-wrap');
+      if (wrap && wrap.contains(e.target)) return;
+      closeAutocomplete();
+    });
   }
 
   function loadRedditPosts() {
@@ -381,7 +530,7 @@
     const params = new URLSearchParams();
     params.set('sort', sortSelect.value || 'desc');
     if (periodSelect.value) params.set('period', periodSelect.value);
-    if (subredditFilter.value.trim()) params.set('subreddit', subredditFilter.value.trim());
+    selectedSubreddits.forEach(function(s) { params.append('subreddit', s); });
     fetch('/reddit/posts?' + params).then(r => r.json()).then(list => {
       redditLoading.style.display = 'none';
       const scoreRange = (scoreFilterSelect && scoreFilterSelect.value) ? scoreFilterSelect.value : '';
@@ -401,39 +550,51 @@
       }
       redditEmpty.style.display = 'none';
       redditList.innerHTML = filteredList.map((p, idx) => {
-        const authorName = (p.author ? 'u/' + p.author : 'Reddit') + (p.subreddit ? ' · r/' + p.subreddit : '');
-        const dateStr = formatDate(p.posted_at);
-        const sourceText = (p.title || p.content || '').trim() || 'Без заголовка';
+        const author = (p.author || '').trim() || 'unknown';
+        const subName = (p.subreddit || '').trim() || '';
+        const metaParts = ['u/' + escapeHtml(author)];
+        if (subName) metaParts.push('r/' + escapeHtml(subName));
+        metaParts.push(relativeTime(p.posted_at));
+        const metaStr = metaParts.join(' · ');
+        var statusVal = (p.status && REDDIT_STATUS_LABELS[p.status]) ? p.status : 'new';
+        if (statusVal === 'new' && p.reply_variants && typeof p.reply_variants.post === 'string' && p.reply_variants.post.trim()) statusVal = 'in_progress';
+        const statusLabel = REDDIT_STATUS_LABELS[statusVal] || 'Новый';
         const relevanceScore = p.relevance_score !== undefined && p.relevance_score !== null ? p.relevance_score : null;
         const scoreColorClass = relevanceScore !== null ? getScoreColorClass(relevanceScore) : '';
-        const scoreHtml = relevanceScore !== null 
-          ? `<span class="news-card-score ${scoreColorClass}" data-score="${relevanceScore}" title="Релевантность: ${relevanceScore}/100">Score: ${relevanceScore}</span>`
-          : `<span class="news-card-score-loading" data-post-id="${p.id}" data-index="${idx}">—</span>`;
-        const words = sourceText.split(/\s+/).filter(Boolean);
-        const title = escapeHtml(words.slice(0, 4).join(' ') + (words.length > 4 ? '…' : ''));
+        const scoreHtml = relevanceScore !== null
+          ? '<span class="news-card-score ' + scoreColorClass + '" data-score="' + relevanceScore + '" title="Релевантность: ' + relevanceScore + '/100">' + relevanceScore + '</span>'
+          : '<span class="news-card-score-loading" data-post-id="' + p.id + '" data-index="' + idx + '">—</span>';
+        const titleText = (p.title || (p.content || '').trim() || 'Без заголовка').trim();
+        const title = escapeHtml(titleText);
         const content = (p.content || '').trim();
         const sentences = content ? content.split(/(?<=[.!?])\s+/).filter(Boolean) : [];
-        const desc = sentences.length ? sentences.slice(0, 3).join(' ') + (sentences.length > 3 ? '…' : '') : '';
-        const sourceName = p.subreddit ? 'r/' + p.subreddit : 'Reddit';
-        const sourceHtml = '<span class="news-card-source">Источник: <a href="' + (p.post_url ? escapeHtml(p.post_url) : '#') + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">' + escapeHtml(sourceName) + '</a></span>';
-        const linkIcon = p.post_url ? '<a href="' + escapeHtml(p.post_url) + '" target="_blank" rel="noopener" class="news-card-link-corner" title="Открыть в Reddit" aria-label="Открыть в Reddit" onclick="event.stopPropagation()"><span aria-hidden="true">↗</span></a>' : '';
+        const desc = sentences.length ? escapeHtml(sentences.slice(0, 3).join(' ') + (sentences.length > 3 ? '…' : '')) : '';
+        const upvotes = p.score != null ? p.score : '—';
+        const comments = p.num_comments != null ? p.num_comments : '—';
+        const openRedditLink = p.post_url ? '<a href="' + escapeHtml(p.post_url) + '" target="_blank" rel="noopener" class="news-card-open-reddit" title="Открыть на Reddit" aria-label="Открыть на Reddit" onclick="event.stopPropagation()">Открыть на Reddit <span aria-hidden="true">↗</span></a>' : '';
+        const statusOpts = ['new','in_progress','done','hidden'].map(s => '<button type="button" class="reddit-status-opt" data-status="' + s + '">' + (REDDIT_STATUS_LABELS[s] || s) + '</button>').join('');
+        const statusBadge = '<div class="reddit-status-wrap"><button type="button" class="reddit-status-badge status-' + statusVal + '" data-id="' + p.id + '" data-status="' + statusVal + '" aria-haspopup="true" aria-expanded="false" onclick="event.stopPropagation()">' + statusLabel + '</button><div class="reddit-status-dropdown" role="menu">' + statusOpts + '</div></div>';
         return '<article class="news-card" data-id="' + p.id + '" role="button" tabindex="0">' +
           '<div class="news-card-top">' +
-            '<div style="display: flex; align-items: center; gap: var(--space-2); flex: 1; min-width: 0;">' +
-              '<span class="news-card-meta"><span class="news-card-meta-author">' + escapeHtml(authorName) + '</span><span class="news-card-meta-date"> · ' + escapeHtml(dateStr) + '</span></span>' +
-              scoreHtml +
-            '</div>' +
-            linkIcon +
+            '<span class="news-card-meta">' + metaStr + '</span>' +
+            '<div class="news-card-top-right-wrap">' + openRedditLink + '</div>' +
           '</div>' +
-          '<h2 class="news-card-title">' + title + '</h2>' +
-          (desc ? '<p class="news-card-summary">' + escapeHtml(desc) + '</p>' : '') +
+          '<div class="news-card-body">' +
+            '<h2 class="news-card-title">' + title + '</h2>' +
+            (desc ? '<p class="news-card-summary">' + desc + '</p>' : '') +
+          '</div>' +
           '<div class="news-card-footer">' +
-            '<button type="button" class="news-card-read-more btn-reddit-read-full" data-id="' + p.id + '" onclick="event.stopPropagation()">Читать полностью</button>' +
+            '<div class="news-card-footer-left">' +
+              '<span aria-hidden="true">▲ ' + upvotes + '</span>' +
+              '<span aria-hidden="true">💬 ' + comments + '</span>' +
+              '<button type="button" class="news-card-read-more btn-reddit-read-full" data-id="' + p.id + '" onclick="event.stopPropagation()">Развернуть</button>' +
+            '</div>' +
             '<div class="news-card-actions">' +
-              '<button type="button" class="btn primary btn-sm btn-generate-post" data-id="' + p.id + '" onclick="event.stopPropagation()">Переписать в пост</button>' +
+              statusBadge +
+              scoreHtml +
+              '<button type="button" class="btn primary btn-sm btn-generate-post" data-id="' + p.id + '" onclick="event.stopPropagation()">Сделать пост</button>' +
             '</div>' +
           '</div>' +
-          '<div class="news-card-stats">' + sourceHtml + '</div>' +
         '</article>';
       }).join('');
       redditLoading.style.display = 'none';
@@ -442,15 +603,48 @@
       redditList.querySelectorAll('.news-card').forEach(card => {
         const id = parseInt(card.dataset.id, 10);
         card.addEventListener('click', (e) => {
-          if (e.target.closest('.btn-generate-post') || e.target.closest('a') || e.target.closest('.news-card-read-more') || e.target.closest('.news-card-footer')) return;
+          if (e.target.closest('.btn-generate-post') || e.target.closest('a') || e.target.closest('.news-card-read-more') || e.target.closest('.news-card-footer') || e.target.closest('.reddit-status-wrap')) return;
           openViewRedditModal(id);
         });
         card.addEventListener('keydown', (e) => {
           if (e.key !== 'Enter' && e.key !== ' ') return;
-          if (e.target.closest('.btn-generate-post') || e.target.closest('a') || e.target.closest('.news-card-read-more') || e.target.closest('.news-card-footer')) return;
+          if (e.target.closest('.btn-generate-post') || e.target.closest('a') || e.target.closest('.news-card-read-more') || e.target.closest('.news-card-footer') || e.target.closest('.reddit-status-wrap')) return;
           e.preventDefault();
           openViewRedditModal(id);
         });
+      });
+      redditList.querySelectorAll('.reddit-status-badge').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const wrap = btn.closest('.reddit-status-wrap');
+          const dd = wrap && wrap.querySelector('.reddit-status-dropdown');
+          const isOpen = dd && dd.classList.contains('is-open');
+          document.querySelectorAll('.reddit-status-dropdown.is-open').forEach(d => d.classList.remove('is-open'));
+          if (dd && !isOpen) { dd.classList.add('is-open'); btn.setAttribute('aria-expanded', 'true'); }
+          else if (btn) btn.setAttribute('aria-expanded', 'false');
+        });
+      });
+      redditList.querySelectorAll('.reddit-status-opt').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const wrap = opt.closest('.reddit-status-wrap');
+          const postId = wrap && wrap.querySelector('.reddit-status-badge') && wrap.querySelector('.reddit-status-badge').dataset.id;
+          const newStatus = opt.dataset.status;
+          if (!postId || !newStatus) return;
+          wrap.querySelector('.reddit-status-dropdown').classList.remove('is-open');
+          fetch('/reddit/posts/' + postId, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: newStatus }) })
+            .then(r => r.json())
+            .then(() => {
+              const badge = wrap.querySelector('.reddit-status-badge');
+              badge.dataset.status = newStatus;
+              badge.className = 'reddit-status-badge status-' + newStatus;
+              badge.textContent = REDDIT_STATUS_LABELS[newStatus] || newStatus;
+            })
+            .catch(() => {});
+        });
+      });
+      document.addEventListener('click', () => {
+        document.querySelectorAll('.reddit-status-dropdown.is-open').forEach(d => d.classList.remove('is-open'));
       });
       redditList.querySelectorAll('.btn-reddit-read-full').forEach(btn => {
         btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openViewRedditModal(parseInt(btn.dataset.id, 10)); });
@@ -494,6 +688,20 @@
     viewModal.removeAttribute('aria-hidden');
     currentViewId = id;
     fetch('/reddit/posts/' + id).then(r => r.json()).then(p => {
+      if (p.status === 'new') {
+        fetch('/reddit/posts/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'in_progress' }) })
+          .then(r => r.json())
+          .then(() => {
+            const card = document.querySelector('.news-card[data-id="' + id + '"]');
+            const badge = card && card.querySelector('.reddit-status-badge');
+            if (badge) {
+              badge.dataset.status = 'in_progress';
+              badge.className = 'reddit-status-badge status-in_progress';
+              badge.textContent = 'В работе';
+            }
+          })
+          .catch(() => {});
+      }
       currentViewContent = p.content || '';
       currentViewUrl = p.post_url || '#';
       document.getElementById('view-reddit-modal-title').textContent = p.title || 'Пост';
@@ -615,7 +823,18 @@
       if (ta) ta.value = (postResult || '').trim() || 'Не удалось сгенерировать пост.';
       updateRedditCharCount();
       if (currentViewId != null && postResult) {
-        fetch('/reddit/posts/' + currentViewId, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reply_variants: { post: postResult.trim() } }) }).catch(() => {});
+        fetch('/reddit/posts/' + currentViewId, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reply_variants: { post: postResult.trim() }, status: 'in_progress' }) })
+          .then(r => r.json())
+          .then(() => {
+            const card = document.querySelector('.news-card[data-id="' + currentViewId + '"]');
+            const badge = card && card.querySelector('.reddit-status-badge');
+            if (badge) {
+              badge.dataset.status = 'in_progress';
+              badge.className = 'reddit-status-badge status-in_progress';
+              badge.textContent = 'В работе';
+            }
+          })
+          .catch(() => {});
       }
     } catch (err) {
       if (ta) ta.value = 'Ошибка: ' + (err && err.message ? err.message : 'Не удалось подключиться к серверу.');
@@ -669,8 +888,6 @@
   document.getElementById('reddit-error-retry').addEventListener('click', () => loadRedditPosts());
   periodSelect.addEventListener('change', () => loadRedditPosts());
   sortSelect.addEventListener('change', () => loadRedditPosts());
-  subredditFilter.addEventListener('change', () => loadRedditPosts());
-  subredditFilter.addEventListener('keyup', (e) => { if (e.key === 'Enter') loadRedditPosts(); });
   if (scoreFilterSelect) scoreFilterSelect.addEventListener('change', () => loadRedditPosts());
 
   loadSavedSubreddits();

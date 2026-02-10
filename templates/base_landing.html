@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}MyVOICE's — Видимость в LinkedIn{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px; --space-16: 64px;
+      --radius-sm: 8px; --radius: 12px; --radius-lg: 16px; --radius-pill: 999px;
+      --text-12: 0.75rem; --text-14: 0.875rem; --text-16: 1rem; --text-18: 1.125rem; --text-20: 1.25rem; --text-24: 1.5rem; --text-32: 2rem; --text-40: 2.5rem;
+      --bg: #ffffff;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #0f172a;
+      --primary-hover: #1e293b;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-soft: rgba(99, 102, 241, 0.12);
+      --elevation-1: 0 1px 2px rgba(0,0,0,0.04);
+      --elevation-2: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+      --motion-fast: 0.15s ease;
+      --content-max: 720px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      line-height: 1.6;
+      min-height: 100vh;
+      font-size: var(--text-16);
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .landing-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-4) var(--space-8);
+      max-width: 1200px;
+      margin: 0 auto;
+      border-bottom: 1px solid var(--border);
+    }
+    .landing-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      font-size: var(--text-18);
+      color: var(--text);
+      text-decoration: none;
+    }
+    .landing-logo:hover { text-decoration: none; color: var(--text); }
+    .landing-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent) 0%, #818cf8 100%);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .landing-nav {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+    .landing-nav a {
+      color: var(--text-muted);
+      font-size: var(--text-14);
+      font-weight: 500;
+    }
+    .landing-nav a:hover { color: var(--text); text-decoration: none; }
+    .landing-cta {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      font-weight: 500;
+      font-size: var(--text-14);
+      padding: 0.5rem 1.25rem;
+      border-radius: var(--radius-pill);
+      transition: background var(--motion-fast);
+    }
+    .landing-cta:hover { background: var(--primary-hover); color: white; text-decoration: none; }
+
+    .landing-main {
+      max-width: var(--content-max);
+      margin: 0 auto;
+      padding: var(--space-12) var(--space-6) var(--space-16);
+    }
+
+    .landing-footer {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-8);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: var(--text-14);
+      color: var(--text-muted);
+    }
+    .landing-footer a { color: var(--text-muted); }
+    .landing-footer a:hover { color: var(--text); text-decoration: none; }
+    .landing-footer-nav { display: flex; gap: var(--space-6); }
+
+    @media (max-width: 768px) {
+      .landing-header { padding: var(--space-3) var(--space-4); flex-wrap: wrap; gap: var(--space-3); }
+      .landing-nav { gap: var(--space-4); }
+      .landing-main { padding: var(--space-8) var(--space-4); }
+      .landing-footer { flex-direction: column; gap: var(--space-3); text-align: center; }
+    }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="landing-header">
+    <a href="/" class="landing-logo">
+      <span class="landing-logo-icon">V</span>
+      <span>MyVOICE's</span>
+    </a>
+    <nav class="landing-nav">
+      <a href="/#features">Возможности</a>
+      <a href="/#faq">Вопросы</a>
+      <a href="/ui/posts">Приложение</a>
+      <a href="/#book">Заказать звонок</a>
+      <a href="/ui/posts" class="landing-cta">Открыть приложение</a>
+    </nav>
+  </header>
+
+  <main class="landing-main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="landing-footer">
+    <span>© 2026 MyVOICE's</span>
+    <div class="landing-footer-nav">
+      <a href="/">Главная</a>
+      <a href="/#features">Возможности</a>
+      <a href="/ui/posts">Приложение</a>
+    </div>
+  </footer>
+</body>
+</html>

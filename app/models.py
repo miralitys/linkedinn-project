@@ -201,6 +201,13 @@ class ContactPost(Base):
     person: Mapped["Person"] = relationship("Person", back_populates="posts")
 
 
+class RedditPostStatus(str, PyEnum):
+    NEW = "new"
+    IN_PROGRESS = "in_progress"
+    DONE = "done"
+    HIDDEN = "hidden"
+
+
 class RedditPost(Base):
     """Пост из сабреддита: данные из r/{subreddit}, логика как у постов (просмотр, комментарий, удаление)."""
     __tablename__ = "reddit_posts"
@@ -222,6 +229,7 @@ class RedditPost(Base):
     relevance_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # релевантность 0-100
     relevance_flag: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)  # YES/NO
     relevance_reason: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)  # причина оценки
+    status: Mapped[str] = mapped_column(String(32), default=RedditPostStatus.NEW.value, nullable=False)  # new, in_progress, done, hidden
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     person: Mapped[Optional["Person"]] = relationship("Person", backref="reddit_posts")

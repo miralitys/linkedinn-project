@@ -213,15 +213,25 @@
   .post-card-badges { display: flex; gap: var(--space-1); flex-wrap: wrap; align-items: center; }
   .post-card-badges .post-badge { font-size: 0.6875rem; font-weight: 500; padding: 1px 6px; border-radius: 4px; line-height: 1.3; background: var(--bg); color: var(--text-muted); }
   .post-card-badges .post-badge.archived { background: var(--bg); color: var(--text-muted); }
-  .post-card-badges .post-badge.comment-written { background: var(--success-soft); color: var(--success); }
+  .post-card-badges .post-badge.comment-none { background: var(--bg); color: var(--text-muted); }
+  .post-card-badges .post-badge.comment-draft { background: rgba(59, 130, 246, 0.15); color: #2563eb; }
+  .post-card-badges .post-badge.comment-sent { background: var(--success-soft); color: var(--success); }
   .post-card-title { font-size: 0.9375rem; font-weight: 600; margin: 0 0 var(--space-2); color: var(--text); line-height: 1.4; }
   .post-card-title:hover { color: var(--primary); }
   .post-card-snippet { font-size: var(--text-12); line-height: 1.55; color: var(--text); margin: 0 0 var(--space-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .post-card-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
-  .post-card-read-more { font-size: var(--text-14); color: var(--primary); background: none; border: none; cursor: pointer; padding: 0; font-weight: 500; }
-  .post-card-read-more:hover { text-decoration: underline; }
-  .post-card-read-more:focus-visible { outline: none; border-radius: var(--radius-sm); box-shadow: var(--focus-ring); }
+  .post-card.is-expanded .post-card-snippet { display: none; }
+  .post-card-body-full { font-size: var(--text-12); line-height: 1.55; color: var(--text); margin: 0 0 var(--space-2); white-space: pre-wrap; word-break: break-word; display: none; }
+  .post-card.is-expanded .post-card-body-full { display: block; }
+  .post-card-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-2); }
+  .post-card-footer-left { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; font-size: var(--text-12); color: var(--text-muted); }
+  .post-card-footer-meta { white-space: nowrap; }
+  .post-card-footer-sep { color: var(--text-muted); user-select: none; }
+  .post-card-expand-btn { font-size: var(--text-12); color: var(--primary); background: none; border: none; cursor: pointer; padding: 0; font-weight: 500; }
+  .post-card-expand-btn:hover { text-decoration: underline; }
+  .post-card-expand-btn:focus-visible { outline: none; border-radius: var(--radius-sm); box-shadow: var(--focus-ring); }
   .post-card-actions { display: flex; align-items: center; gap: var(--space-2); }
+  .post-card-tags-row { margin-top: var(--space-2); font-size: var(--text-12); color: var(--text-muted); }
+  .post-card-tags-row .post-card-tags { margin: 0; }
   .post-card-actions .btn-icon { min-width: 44px; min-height: 44px; padding: 0; border: none; background: var(--bg); color: var(--text-muted); border-radius: var(--radius-sm); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
   .post-card-actions .btn-icon:hover { background: var(--primary-soft); color: var(--primary); }
   .post-card-actions .btn-icon:focus-visible { outline: none; box-shadow: var(--focus-ring); }
@@ -233,8 +243,6 @@
   .post-card-menu-item { display: block; width: 100%; padding: var(--space-2) var(--space-3); text-align: left; font-size: var(--text-13); color: var(--text); background: none; border: none; border-radius: var(--radius-sm); cursor: pointer; }
   .post-card-menu-item:hover { background: var(--bg-soft); }
   .post-card-menu-item.btn-delete:hover { color: var(--danger); }
-  .post-card-stats { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border); font-size: var(--text-12); color: var(--text-muted); }
-  .post-card-stats-meta { margin-right: var(--space-3); }
   .post-card-tags { color: var(--text-muted); }
 
   .empty-state-card, .error-state-card { text-align: center; padding: var(--space-10); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
@@ -396,7 +404,10 @@
         const dateStr = formatDate(p.posted_at);
         const badges = [];
         if (p.archived) badges.push('<span class="post-badge archived">Архив</span>');
-        if (p.comment_written) badges.push('<span class="post-badge comment-written">Комментарий написан</span>');
+        const hasDraft = p.reply_variants && typeof p.reply_variants === 'object' && (p.reply_variants.short || p.reply_variants.medium || p.reply_variants.long);
+        if (p.comment_written) badges.push('<span class="post-badge comment-sent">Комментарий отправлен</span>');
+        else if (hasDraft) badges.push('<span class="post-badge comment-draft">Черновик готов</span>');
+        else badges.push('<span class="post-badge comment-none">Нет комментария</span>');
         const sourceText = (p.title || p.content || '').trim() || 'Без заголовка';
         const words = sourceText.split(/\s+/).filter(Boolean);
         const title = escapeHtml(words.slice(0, 4).join(' ') + (words.length > 4 ? '…' : ''));
@@ -412,19 +423,25 @@
         const tagsStr = Array.isArray(p.tags) ? p.tags.join(', ') : (p.tags || '');
         const openIcon = '<span aria-hidden="true">↗</span>';
         return '<article class="post-card" data-id="' + p.id + '">' +
-          (p.post_url && !p.comment_written ? '<a href="' + escapeHtml(p.post_url) + '" target="_blank" rel="noopener" class="post-card-open post-card-link-corner" aria-label="Открыть в LinkedIn" title="Открыть в LinkedIn">' + openIcon + '</a>' : '') +
+          (p.post_url ? '<a href="' + escapeHtml(p.post_url) + '" target="_blank" rel="noopener" class="post-card-open post-card-link-corner" aria-label="Открыть в LinkedIn" title="Открыть в LinkedIn">' + openIcon + '</a>' : '') +
           '<div class="post-card-top">' +
             '<span class="post-card-meta"><span class="post-card-meta-author">' + authorName + '</span><span class="post-card-meta-date"> · ' + dateStr + '</span></span>' +
             '<span class="post-card-badges">' + badges.join('') + '</span>' +
           '</div>' +
           '<h2 class="post-card-title">' + title + '</h2>' +
-          (description ? '<p class="post-card-snippet">' + escapeHtml(description) + '</p>' : '') +
+          (content ? '<p class="post-card-snippet">' + escapeHtml(description || content) + '</p>' : '') +
+          (content ? '<div class="post-card-body-full" aria-hidden="true">' + escapeHtml(content) + '</div>' : '') +
           '<div class="post-card-footer">' +
-            '<button type="button" class="post-card-read-more btn-view-full" data-id="' + p.id + '">Читать полностью</button>' +
+            '<div class="post-card-footer-left">' +
+              (metaStr ? '<span class="post-card-footer-meta">' + metaStr + '</span>' : '') +
+              (content ? (metaStr ? '<span class="post-card-footer-sep" aria-hidden="true">·</span>' : '') + '<button type="button" class="post-card-expand-btn btn-expand-post" data-id="' + p.id + '" aria-expanded="false">Развернуть</button>' : '') +
+            '</div>' +
             '<div class="post-card-actions">' +
-              (p.comment_written && p.post_url
-                ? '<button type="button" class="btn primary btn-sm btn-open-comment" data-id="' + p.id + '" data-post-url="' + escapeHtml(p.post_url) + '">Открыть комментарий</button>'
-                : '<button type="button" class="btn primary btn-sm btn-generate-post" data-id="' + p.id + '">Сгенерировать комментарий</button>') +
+              (p.comment_written
+                ? '<button type="button" class="btn primary btn-sm btn-open-comment" data-id="' + p.id + '" data-post-url="' + (p.post_url ? escapeHtml(p.post_url) : '') + '">Открыть комментарий</button>'
+                : hasDraft
+                  ? '<button type="button" class="btn primary btn-sm btn-open-draft" data-id="' + p.id + '">Открыть черновик</button>'
+                  : '<button type="button" class="btn primary btn-sm btn-generate-post" data-id="' + p.id + '">Сгенерировать комментарий</button>') +
               '<div class="post-card-menu-wrap">' +
                 '<button type="button" class="btn btn-ghost btn-sm btn-card-menu btn-icon" data-id="' + p.id + '" aria-label="Ещё" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg></button>' +
                 '<div class="post-card-menu-dropdown" role="menu">' +
@@ -433,24 +450,30 @@
               '</div>' +
             '</div>' +
           '</div>' +
-          (metaStr || tagsStr ? '<div class="post-card-stats">' + (metaStr ? '<span class="post-card-stats-meta">' + metaStr + '</span>' : '') + (tagsStr ? '<span class="post-card-tags">' + escapeHtml(tagsStr) + '</span>' : '') + '</div>' : '') +
+          (tagsStr ? '<div class="post-card-tags-row"><span class="post-card-tags">' + escapeHtml(tagsStr) + '</span></div>' : '') +
         '</article>';
       }).join('');
       postsList.querySelectorAll('.post-card').forEach(card => {
         const id = parseInt(card.dataset.id, 10);
         card.addEventListener('click', (e) => {
-          if (e.target.closest('.btn-delete') || e.target.closest('.btn-generate-post') || e.target.closest('.btn-open-comment') || e.target.closest('.post-card-open') || e.target.closest('.btn-card-menu') || e.target.closest('.post-card-menu-dropdown')) return;
-          if (e.target.closest('.post-card-read-more') || e.target.closest('.post-card-title') || e.target.closest('.post-card-snippet') || e.target.closest('.post-card-meta')) {
+          if (e.target.closest('.btn-delete') || e.target.closest('.btn-generate-post') || e.target.closest('.btn-open-comment') || e.target.closest('.btn-open-draft') || e.target.closest('.post-card-open') || e.target.closest('.btn-card-menu') || e.target.closest('.post-card-menu-dropdown') || e.target.closest('.btn-expand-post')) return;
+          if (e.target.closest('.post-card-expand-btn') || e.target.closest('.post-card-title') || e.target.closest('.post-card-snippet') || e.target.closest('.post-card-body-full')) {
             e.preventDefault();
-            openViewPostModal(id);
+            const expandBtn = card.querySelector('.btn-expand-post');
+            if (expandBtn) toggleCardExpand(card, expandBtn);
           }
         });
       });
-      postsList.querySelectorAll('.btn-view-full').forEach(btn => {
-        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openViewPostModal(parseInt(btn.dataset.id, 10)); });
+      postsList.querySelectorAll('.btn-expand-post').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const card = btn.closest('.post-card');
+          if (card) toggleCardExpand(card, btn);
+        });
       });
       postsList.querySelectorAll('.btn-generate-post').forEach(btn => {
-        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openViewPostModal(parseInt(btn.dataset.id, 10), { focusGenerate: true }); });
+        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openViewPostModal(parseInt(btn.dataset.id, 10)); });
       });
       postsList.querySelectorAll('.btn-open-comment').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -459,6 +482,9 @@
           const url = btn.getAttribute('data-post-url');
           if (url) window.open(url, '_blank', 'noopener');
         });
+      });
+      postsList.querySelectorAll('.btn-open-draft').forEach(btn => {
+        btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openViewPostModal(parseInt(btn.dataset.id, 10), { focusDraft: true }); });
       });
       postsList.querySelectorAll('.btn-delete').forEach(btn => {
         btn.addEventListener('click', async (e) => {
@@ -675,6 +701,14 @@
       if (showingAllVariants) attachCopyHandlers(viewPostReplyAll);
     }
   }
+  function toggleCardExpand(card, expandBtn) {
+    const expanded = card.classList.toggle('is-expanded');
+    expandBtn.setAttribute('aria-expanded', expanded);
+    expandBtn.textContent = expanded ? 'Свернуть' : 'Развернуть';
+    if (!expanded) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
   function openViewPostModal(id, opts) {
     opts = opts || {};
     viewPostRestoreFocus = document.activeElement;
@@ -721,9 +755,15 @@
       if (markedMeta) markedMeta.style.display = p.comment_written ? 'inline' : 'none';
       if (undoBtn) undoBtn.style.display = p.comment_written ? 'inline' : 'none';
       requestAnimationFrame(() => {
-        const firstFocusable = getDrawerFocusables()[0];
-        if (firstFocusable) firstFocusable.focus();
-        if (opts.focusGenerate && viewPostGenerateReply) viewPostGenerateReply.focus();
+        if (opts.focusDraft) {
+          const panel = document.getElementById('view-post-drawer-panel');
+          const generateBlock = panel && panel.querySelector('.view-post-generate-block');
+          if (generateBlock) generateBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (viewPostGenerateReply) viewPostGenerateReply.focus();
+        } else {
+          const firstFocusable = getDrawerFocusables()[0];
+          if (firstFocusable) firstFocusable.focus();
+        }
       });
     }).catch(() => { currentViewPostId = null; closeViewPostDrawer(); });
   }

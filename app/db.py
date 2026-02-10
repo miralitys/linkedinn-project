@@ -66,6 +66,10 @@ async def init_db() -> None:
                 await conn.execute(text("ALTER TABLE reddit_posts ADD COLUMN relevance_reason VARCHAR(256)"))
             except Exception:
                 pass
+            try:
+                await conn.execute(text("ALTER TABLE reddit_posts ADD COLUMN status VARCHAR(32) DEFAULT 'new'"))
+            except Exception:
+                pass
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:

@@ -96,11 +96,14 @@ app.include_router(reddit.router)
 app.include_router(news.router)
 app.include_router(linkedin_oauth.router)
 
+# Главная страница (лендинг) — всегда регистрируем, без зависимости от try ниже
+from fastapi.templating import Jinja2Templates as _Jinja2Templates
+_landing_templates = _Jinja2Templates(directory=str(settings.base_dir / "templates"))
 
-@app.get("/")
-async def root():
-    return {"app": "MyVOICE's", "docs": "/docs", "ui": "/ui"}
-
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    """Главная страница — лендинг."""
+    return _landing_templates.TemplateResponse(request, "index.html")
 
 # Mount UI templates and static if present
 try:
@@ -111,9 +114,10 @@ try:
     if static_dir.exists():
         app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
-    @app.get("/ui")
-    async def ui_redirect():
-        return RedirectResponse(url="/ui/posts", status_code=302)
+    @app.get("/ui", response_class=HTMLResponse)
+    async def ui_landing(request: Request):
+        """Главная страница — лендинг. Приложение: /ui/posts"""
+        return templates.TemplateResponse(request, "index.html")
 
     @app.get("/ui/setup", response_class=HTMLResponse)
     async def ui_setup(request: Request):

@@ -259,6 +259,7 @@ class RedditPostUpdate(BaseModel):
     person_id: Optional[int] = None
     reply_variants: Optional[Dict[str, str]] = None
     comment_written: Optional[bool] = None
+    status: Optional[str] = None  # new, in_progress, done, hidden
 
 
 class SavedSubredditAdd(BaseModel):
@@ -283,6 +284,7 @@ class RedditPostRead(BaseModel):
     relevance_score: Optional[int] = None
     relevance_flag: Optional[str] = None
     relevance_reason: Optional[str] = None
+    status: str = "new"  # new, in_progress, done, hidden
     created_at: datetime
 
     class Config:
