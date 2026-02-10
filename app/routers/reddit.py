@@ -24,40 +24,46 @@ router = APIRouter(prefix="/reddit", tags=["reddit"])
 
 def _reply_variants_post(rv: any) -> str:
     """Извлечь текст сгенерированного поста из reply_variants (dict или JSON-строка)."""
-    if rv is None:
-        return ""
-    if isinstance(rv, dict):
-        return (rv.get("post") or "").strip()
-    if isinstance(rv, str):
-        try:
-            data = json.loads(rv)
-            return (data.get("post") or "").strip() if isinstance(data, dict) else ""
-        except (json.JSONDecodeError, TypeError):
+    try:
+        if rv is None:
             return ""
-    return ""
+        if isinstance(rv, dict):
+            return (rv.get("post") or "").strip()
+        if isinstance(rv, str):
+            try:
+                data = json.loads(rv)
+                return (data.get("post") or "").strip() if isinstance(data, dict) else ""
+            except (json.JSONDecodeError, TypeError):
+                return ""
+        return ""
+    except Exception:
+        return ""
 
 
 def _has_generated_post(rv: any) -> bool:
     """Есть ли в reply_variants непустой сгенерированный текст (ключ post или любой непустой текст)."""
-    if rv is None:
+    try:
+        if rv is None:
+            return False
+        text = _reply_variants_post(rv)
+        if text:
+            return True
+        if isinstance(rv, dict):
+            for v in rv.values():
+                if isinstance(v, str) and v.strip():
+                    return True
+        if isinstance(rv, str):
+            try:
+                data = json.loads(rv)
+                if isinstance(data, dict):
+                    for v in data.values():
+                        if isinstance(v, str) and v.strip():
+                            return True
+            except (json.JSONDecodeError, TypeError):
+                pass
         return False
-    text = _reply_variants_post(rv)
-    if text:
-        return True
-    if isinstance(rv, dict):
-        for v in rv.values():
-            if isinstance(v, str) and v.strip():
-                return True
-    if isinstance(rv, str):
-        try:
-            data = json.loads(rv)
-            if isinstance(data, dict):
-                for v in data.values():
-                    if isinstance(v, str) and v.strip():
-                        return True
-        except (json.JSONDecodeError, TypeError):
-            pass
-    return False
+    except Exception:
+        return False
 
 
 def _reddit_post_to_read(p: RedditPost) -> RedditPostRead:
@@ -120,11 +126,6 @@ async def list_reddit_posts(
         q = q.order_by(order)
         r = await session.execute(q)
         posts = list(r.scalars().all())
-        for p in posts:
-            if (p.status or "new") == "new" and _has_generated_post(p.reply_variants):
-                p.status = "in_progress"
-        if posts:
-            await session.commit()
         return [_reddit_post_to_read(p) for p in posts]
     except Exception as e:
         import logging

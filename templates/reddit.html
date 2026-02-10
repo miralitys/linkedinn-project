@@ -55,7 +55,7 @@
   <div id="reddit-list"></div>
   <div id="reddit-empty" class="news-empty-state" style="display: none;">
     <p class="news-empty-title">Нет постов</p>
-    <p class="news-empty-desc">Добавьте сабреддиты в <a href="/ui/setup">Settings</a>, затем нажмите на сабреддит выше — посты подгрузятся.</p>
+    <p class="news-empty-desc" id="reddit-empty-desc">Добавьте сабреддиты в <a href="/ui/setup">Settings</a>, затем нажмите «Обновить» — посты подгрузятся. Можно выбрать сабреддит в фильтре выше.</p>
     <button type="button" id="reddit-empty-retry" class="btn primary">Обновить</button>
   </div>
   <div id="reddit-error" class="news-error-state" style="display: none;">
@@ -436,6 +436,10 @@
   function loadSavedSubreddits() {
     fetch('/reddit/subreddits').then(r => r.json()).then(names => {
       savedSubredditNames = Array.isArray(names) ? names : [];
+      var emptyDesc = document.getElementById('reddit-empty-desc');
+      if (emptyDesc && savedSubredditNames.length === 0) {
+        emptyDesc.innerHTML = 'Сначала добавьте сабреддиты в <a href="/ui/setup">Settings</a>, затем нажмите «Обновить».';
+      }
     }).catch(function() { savedSubredditNames = []; });
   }
 
@@ -531,7 +535,10 @@
     params.set('sort', sortSelect.value || 'desc');
     if (periodSelect.value) params.set('period', periodSelect.value);
     selectedSubreddits.forEach(function(s) { params.append('subreddit', s); });
-    fetch('/reddit/posts?' + params).then(r => r.json()).then(list => {
+    fetch('/reddit/posts?' + params).then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(list => {
       redditLoading.style.display = 'none';
       const scoreRange = (scoreFilterSelect && scoreFilterSelect.value) ? scoreFilterSelect.value : '';
       const filteredList = !scoreRange ? list : list.filter(function(p) {
@@ -874,15 +881,30 @@
 
   document.getElementById('reddit-refresh-btn').addEventListener('click', function() {
     const btn = document.getElementById('reddit-refresh-btn');
+    const origText = btn.textContent;
     btn.disabled = true;
-    fetch('/reddit/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+    btn.textContent = 'Обновление…';
+    var refreshAbort = new AbortController();
+    var refreshTimeout = setTimeout(function() { refreshAbort.abort(); }, 90000);
+    fetch('/reddit/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: refreshAbort.signal })
       .then(function(r) { return r.json().catch(function() { return {}; }); })
-      .then(function() {
+      .then(function(data) {
+        clearTimeout(refreshTimeout);
         loadRedditPosts();
-        if (typeof window.toast === 'function') window.toast('Посты обновлены');
+        if (typeof window.toast === 'function') {
+          var subCount = (data && data.subreddits != null) ? data.subreddits : -1;
+          var added = (data && data.added != null) ? data.added : -1;
+          if (subCount === 0) window.toast('Сначала добавьте сабреддиты в Настройках (Settings)');
+          else if (added !== -1) window.toast(added > 0 ? 'Добавлено постов: ' + added : 'Посты обновлены');
+          else window.toast('Посты обновлены');
+        }
       })
-      .catch(function() { loadRedditPosts(); })
-      .finally(function() { btn.disabled = false; });
+      .catch(function(err) {
+        clearTimeout(refreshTimeout);
+        loadRedditPosts();
+        if (typeof window.toast === 'function') window.toast('Не удалось обновить посты. Проверьте интернет или попробуйте позже.');
+      })
+      .finally(function() { btn.disabled = false; btn.textContent = origText; });
   });
   document.getElementById('reddit-empty-retry').addEventListener('click', () => loadRedditPosts());
   document.getElementById('reddit-error-retry').addEventListener('click', () => loadRedditPosts());
