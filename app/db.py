@@ -97,6 +97,29 @@ async def init_db() -> None:
                 await conn.execute(text("ALTER TABLE users ADD COLUMN approval_status VARCHAR(16) DEFAULT 'approved'"))
             except Exception:
                 pass
+            # Multi-tenant: user_id для companies, people, segments, reddit_posts, saved_subreddits, sales_avatar, offers, lead_magnets
+            for table in ("companies", "people", "segments", "reddit_posts", "saved_subreddits", "sales_avatar", "offers", "lead_magnets"):
+                try:
+                    await conn.execute(text(f"ALTER TABLE {table} ADD COLUMN user_id INTEGER"))
+                except Exception:
+                    pass
+            # Миграция: назначить user_id=1 существующим записям
+            for table in ("companies", "people", "segments", "reddit_posts", "saved_subreddits", "sales_avatar", "offers", "lead_magnets"):
+                try:
+                    await conn.execute(text(f"UPDATE {table} SET user_id = 1 WHERE user_id IS NULL"))
+                except Exception:
+                    pass
+            # KnowledgeBase: ключи legacy -> key:1 для user_id=1
+            try:
+                await conn.execute(text("""
+                    UPDATE knowledge_base SET key = key || ':1'
+                    WHERE key NOT LIKE '%:%' AND key IN (
+                        'setup_authors','authors','setup_products','products',
+                        'setup_icp_raw','setup_tone','setup_goals','saved_subreddits'
+                    )
+                """))
+            except Exception:
+                pass
         elif _is_postgres():
             # Добавляем колонки в reddit_posts на проде (Supabase), если их ещё нет
             for sql in (
@@ -105,11 +128,49 @@ async def init_db() -> None:
                 "ALTER TABLE reddit_posts ADD COLUMN IF NOT EXISTS relevance_reason VARCHAR(256)",
                 "ALTER TABLE reddit_posts ADD COLUMN IF NOT EXISTS status VARCHAR(32) DEFAULT 'new'",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS approval_status VARCHAR(16) DEFAULT 'approved'",
+                "ALTER TABLE companies ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
+                "ALTER TABLE people ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
+                "ALTER TABLE segments ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
+                "ALTER TABLE reddit_posts ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
+                "ALTER TABLE saved_subreddits ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
+                "ALTER TABLE sales_avatar ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
+                "ALTER TABLE offers ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
+                "ALTER TABLE lead_magnets ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
             ):
                 try:
                     await conn.execute(text(sql))
                 except Exception:
                     pass
+            # Миграция: назначить user_id=1 существующим записям
+            for table in ("companies", "people", "segments", "reddit_posts", "saved_subreddits", "sales_avatar", "offers", "lead_magnets"):
+                try:
+                    await conn.execute(text(f"UPDATE {table} SET user_id = 1 WHERE user_id IS NULL"))
+                except Exception:
+                    pass
+            # RedditPost: сменить unique constraint на (subreddit, reddit_id, user_id)
+            try:
+                await conn.execute(text("ALTER TABLE reddit_posts DROP CONSTRAINT IF EXISTS uq_reddit_posts_subreddit_reddit_id"))
+                await conn.execute(text("ALTER TABLE reddit_posts ADD CONSTRAINT uq_reddit_posts_subreddit_reddit_id_user UNIQUE (subreddit, reddit_id, user_id)"))
+            except Exception:
+                pass
+            # SavedSubreddit: сменить unique на (name, user_id)
+            try:
+                await conn.execute(text("ALTER TABLE saved_subreddits DROP CONSTRAINT IF EXISTS saved_subreddits_name_key"))
+                await conn.execute(text("ALTER TABLE saved_subreddits DROP CONSTRAINT IF EXISTS uq_saved_subreddits_name_user"))
+                await conn.execute(text("ALTER TABLE saved_subreddits ADD CONSTRAINT uq_saved_subreddits_name_user UNIQUE (name, user_id)"))
+            except Exception:
+                pass
+            # KnowledgeBase: ключи legacy -> key:1 для user_id=1
+            try:
+                await conn.execute(text("""
+                    UPDATE knowledge_base SET key = key || ':1'
+                    WHERE key NOT LIKE '%:%' AND key IN (
+                        'setup_authors','authors','setup_products','products',
+                        'setup_icp_raw','setup_tone','setup_goals','saved_subreddits'
+                    )
+                """))
+            except Exception:
+                pass
             # Создаём таблицу users, если её нет (Postgres)
             # Используем Base.metadata.create_all для Postgres (уже вызывается выше)
             # Дополнительно проверяем существование через try/except

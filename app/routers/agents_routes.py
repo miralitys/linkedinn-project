@@ -5,7 +5,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
+from app.deps import get_current_user_id
 from app.models import Draft, DraftStatus, DraftType, KnowledgeBase, SalesAvatar
+from app.routers.setup import _kb_key
 from app.schemas import AgentRunPayload, AgentRunResponse
 from agents.registry import AGENTS, run_agent
 
@@ -32,6 +34,7 @@ async def run_agent_endpoint(
     agent_name: str,
     body: AgentRunPayload,
     session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
 ):
     if agent_name not in AGENTS:
         raise HTTPException(404, f"Unknown agent: {agent_name}")
@@ -39,7 +42,7 @@ async def run_agent_endpoint(
 
     # Inject shared memory (Sales Avatar) when needed
     if agent_name in ("content_agent", "comment_agent", "news_post_agent", "outreach_sequencer", "qa_guard"):
-        r = await session.execute(select(SalesAvatar).limit(1))
+        r = await session.execute(select(SalesAvatar).where(SalesAvatar.user_id == user_id).limit(1))
         avatar = r.scalar_one_or_none()
         if avatar and "sales_avatar" not in payload and "context" not in payload:
             payload.setdefault("sales_avatar", _avatar_to_str(avatar))
@@ -47,8 +50,6 @@ async def run_agent_endpoint(
     
     # Inject setup data (authors, products, ICP) for scoring_agent
     if agent_name == "scoring_agent":
-        # Получаем данные из setup напрямую
-        from app.models import KnowledgeBase
         draft_data = {}
         key_sets = {
             "authors": ["setup_authors", "authors"],
@@ -57,7 +58,8 @@ async def run_agent_endpoint(
         }
         for section, keys in key_sets.items():
             row = None
-            for key in keys:
+            for base_key in keys:
+                key = _kb_key(base_key, user_id)
                 r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key))
                 row = r.scalar_one_or_none()
                 if row and row.value:

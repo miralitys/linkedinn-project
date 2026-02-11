@@ -132,6 +132,7 @@ class Company(Base):
     __tablename__ = "companies"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)  # владелец (multi-tenant)
     name: Mapped[str] = mapped_column(String(512), nullable=False)
     website_url: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
     linkedin_url: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
@@ -151,6 +152,7 @@ class Segment(Base):
     __tablename__ = "segments"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)  # владелец (multi-tenant)
     name: Mapped[str] = mapped_column(String(256), nullable=False)
     rules: Mapped[Optional[dict]] = mapped_column(JsonAsText, nullable=True)
     priority: Mapped[int] = mapped_column(Integer, default=0)
@@ -165,6 +167,7 @@ class Person(Base):
     __tablename__ = "people"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)  # владелец (multi-tenant)
     company_id: Mapped[Optional[int]] = mapped_column(ForeignKey("companies.id"), nullable=True)
     full_name: Mapped[str] = mapped_column(String(256), nullable=False)
     title: Mapped[Optional[str]] = mapped_column(String(256), nullable=True)
@@ -184,8 +187,8 @@ class Person(Base):
 
     company: Mapped[Optional["Company"]] = relationship("Company", back_populates="people")
     segment: Mapped[Optional["Segment"]] = relationship("Segment", back_populates="people")
-    touches: Mapped[list["Touch"]] = relationship("Touch", back_populates="person", order_by="Touch.created_at")
-    posts: Mapped[list["ContactPost"]] = relationship("ContactPost", back_populates="person", order_by="ContactPost.posted_at")
+    touches: Mapped[list["Touch"]] = relationship("Touch", back_populates="person", order_by="Touch.created_at", cascade="all, delete-orphan")
+    posts: Mapped[list["ContactPost"]] = relationship("ContactPost", back_populates="person", order_by="ContactPost.posted_at", cascade="all, delete-orphan")
 
 
 class KOL(Base):
@@ -247,9 +250,10 @@ class RedditPostStatus(str, PyEnum):
 class RedditPost(Base):
     """Пост из сабреддита: данные из r/{subreddit}, логика как у постов (просмотр, комментарий, удаление)."""
     __tablename__ = "reddit_posts"
-    __table_args__ = (UniqueConstraint("subreddit", "reddit_id", name="uq_reddit_posts_subreddit_reddit_id"),)
+    __table_args__ = (UniqueConstraint("subreddit", "reddit_id", "user_id", name="uq_reddit_posts_subreddit_reddit_id_user"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)  # владелец (multi-tenant)
     subreddit: Mapped[str] = mapped_column(String(128), nullable=False)
     reddit_id: Mapped[str] = mapped_column(String(64), nullable=False)  # id поста на Reddit (для дедупа)
     title: Mapped[str] = mapped_column(String(512), nullable=False)
@@ -274,9 +278,11 @@ class RedditPost(Base):
 class SavedSubreddit(Base):
     """Сохранённый сабреддит: список всегда отображается в UI."""
     __tablename__ = "saved_subreddits"
+    __table_args__ = (UniqueConstraint("name", "user_id", name="uq_saved_subreddits_name_user"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)  # имя без r/
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)  # владелец (multi-tenant)
+    name: Mapped[str] = mapped_column(String(128), nullable=False)  # имя без r/
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -304,6 +310,7 @@ class SalesAvatar(Base):
     __tablename__ = "sales_avatar"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)  # владелец (multi-tenant)
     name: Mapped[str] = mapped_column(String(256), nullable=False)
     positioning: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     tone_guidelines: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -317,6 +324,7 @@ class Offer(Base):
     __tablename__ = "offers"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)  # владелец (multi-tenant)
     name: Mapped[str] = mapped_column(String(256), nullable=False)
     target_segment_id: Mapped[Optional[int]] = mapped_column(ForeignKey("segments.id"), nullable=True)
     promise: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -330,6 +338,7 @@ class LeadMagnet(Base):
     __tablename__ = "lead_magnets"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)  # владелец (multi-tenant)
     title: Mapped[str] = mapped_column(String(512), nullable=False)
     format: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)  # pdf/doc/checklist/template
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)

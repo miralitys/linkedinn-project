@@ -3,13 +3,12 @@ import json
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fastapi import HTTPException
-
 from app.db import get_session
+from app.deps import get_current_user_id
 from app.models import KnowledgeBase, LeadMagnet, Offer, SalesAvatar, Segment
 from app.schemas import (
     LeadMagnetRead,
@@ -26,7 +25,12 @@ router = APIRouter(prefix="/setup", tags=["setup"])
 SETUP_KEYS = {"authors": "setup_authors", "products": "setup_products", "icp": "setup_icp_raw", "tone": "setup_tone", "goals": "setup_goals"}
 
 
-async def get_setup_for_scoring(session: AsyncSession) -> dict:
+def _kb_key(base_key: str, user_id: int) -> str:
+    """Ключ KnowledgeBase с user_id (multi-tenant)."""
+    return f"{base_key}:{user_id}"
+
+
+async def get_setup_for_scoring(session: AsyncSession, user_id: int) -> dict:
     """Возвращает контекст для агента скоринга: author, products, icp (строки)."""
     key_sets = {
         "authors": ["setup_authors", "authors"],
@@ -36,7 +40,8 @@ async def get_setup_for_scoring(session: AsyncSession) -> dict:
     draft = {}
     for section, keys in key_sets.items():
         row = None
-        for key in keys:
+        for base_key in keys:
+            key = _kb_key(base_key, user_id)
             r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key))
             row = r.scalar_one_or_none()
             if row and row.value:
@@ -79,38 +84,94 @@ async def get_setup_for_scoring(session: AsyncSession) -> dict:
     return {"author": author_desc, "products": products_desc, "icp": icp_desc}
 
 
+@router.get("/onboarding-status")
+async def get_onboarding_status(
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
+    """Проверка минимальных данных: автор, компания, контакт. Для показа onboarding wizard."""
+    from app.models import Company, Person
+    # Автор: из KnowledgeBase setup_authors
+    key_authors = _kb_key("setup_authors", user_id)
+    r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key_authors))
+    row = r.scalar_one_or_none()
+    authors = []
+    if row and row.value:
+        try:
+            authors = json.loads(row.value)
+            if not isinstance(authors, list):
+                authors = []
+        except Exception:
+            pass
+    has_author = len(authors) >= 1
+    # Компания
+    r = await session.execute(select(Company).where(Company.user_id == user_id))
+    companies = list(r.scalars().all())
+    has_company = len(companies) >= 1
+    # Контакт
+    r = await session.execute(select(Person).where(Person.user_id == user_id))
+    people = list(r.scalars().all())
+    has_contact = len(people) >= 1
+    return {
+        "has_author": has_author,
+        "has_company": has_company,
+        "has_contact": has_contact,
+        "complete": has_author and has_company and has_contact,
+    }
+
+
 @router.get("/avatar", response_model=Optional[SalesAvatarRead])
-async def get_avatar(session: AsyncSession = Depends(get_session)):
+async def get_avatar(
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     """Return latest Sales Avatar (from last «Create skeleton»)."""
-    r = await session.execute(select(SalesAvatar).order_by(SalesAvatar.id.desc()).limit(1))
+    r = await session.execute(
+        select(SalesAvatar).where(SalesAvatar.user_id == user_id).order_by(SalesAvatar.id.desc()).limit(1)
+    )
     return r.scalar_one_or_none()
 
 
 @router.get("/segments", response_model=list[SegmentRead])
-async def list_segments(session: AsyncSession = Depends(get_session)):
+async def list_segments(
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     """Return all segments."""
-    r = await session.execute(select(Segment).order_by(Segment.priority.desc(), Segment.id))
+    r = await session.execute(
+        select(Segment).where(Segment.user_id == user_id).order_by(Segment.priority.desc(), Segment.id)
+    )
     return list(r.scalars().all())
 
 
 @router.get("/offers", response_model=list[OfferRead])
-async def list_offers(session: AsyncSession = Depends(get_session)):
+async def list_offers(
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     """Return all offers."""
-    r = await session.execute(select(Offer).order_by(Offer.id))
+    r = await session.execute(select(Offer).where(Offer.user_id == user_id).order_by(Offer.id))
     return list(r.scalars().all())
 
 
 @router.get("/lead-magnets", response_model=list[LeadMagnetRead])
-async def list_lead_magnets(session: AsyncSession = Depends(get_session)):
+async def list_lead_magnets(
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     """Return all lead magnets."""
-    r = await session.execute(select(LeadMagnet).order_by(LeadMagnet.id))
+    r = await session.execute(select(LeadMagnet).where(LeadMagnet.user_id == user_id).order_by(LeadMagnet.id))
     return list(r.scalars().all())
 
 
 @router.get("/draft/debug")
-async def get_setup_draft_debug(session: AsyncSession = Depends(get_session)):
+async def get_setup_draft_debug(
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     """Проверка: есть ли в БД записи авторов и продуктов (для отладки)."""
-    async def _count(key: str) -> int:
+    async def _count(base_key: str) -> int:
+        key = _kb_key(base_key, user_id)
         r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key))
         row = r.scalar_one_or_none()
         if not row or not row.value:
@@ -130,7 +191,10 @@ async def get_setup_draft_debug(session: AsyncSession = Depends(get_session)):
 
 
 @router.get("/draft")
-async def get_setup_draft(session: AsyncSession = Depends(get_session)):
+async def get_setup_draft(
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     """Return saved draft for each section (authors, products, icp_raw, tone, goals)."""
     result = {}
     # authors: try setup_authors, then legacy "authors"
@@ -143,7 +207,8 @@ async def get_setup_draft(session: AsyncSession = Depends(get_session)):
     }
     for section, keys in key_sets.items():
         row = None
-        for key in keys:
+        for base_key in keys:
+            key = _kb_key(base_key, user_id)
             r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key))
             row = r.scalar_one_or_none()
             if row and row.value:
@@ -186,8 +251,9 @@ async def get_setup_draft(session: AsyncSession = Depends(get_session)):
 SUBREDDITS_KEY = "saved_subreddits"
 
 
-async def _get_subreddits_list(session: AsyncSession) -> list:
-    r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == SUBREDDITS_KEY))
+async def _get_subreddits_list(session: AsyncSession, user_id: int) -> list:
+    key = _kb_key(SUBREDDITS_KEY, user_id)
+    r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key))
     row = r.scalar_one_or_none()
     if not row or not row.value:
         return []
@@ -198,61 +264,75 @@ async def _get_subreddits_list(session: AsyncSession) -> list:
         return []
 
 
-async def _save_subreddits_list(session: AsyncSession, names: list) -> None:
-    r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == SUBREDDITS_KEY))
+async def _save_subreddits_list(session: AsyncSession, user_id: int, names: list) -> None:
+    key = _kb_key(SUBREDDITS_KEY, user_id)
+    r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key))
     row = r.scalar_one_or_none()
     value = json.dumps(names)
     if row:
         row.value = value
     else:
-        session.add(KnowledgeBase(key=SUBREDDITS_KEY, value=value))
+        session.add(KnowledgeBase(key=key, value=value))
     await session.commit()
 
 
 @router.get("/subreddits")
-async def list_setup_subreddits(session: AsyncSession = Depends(get_session)):
+async def list_setup_subreddits(
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     """Список сохранённых сабреддитов (из KnowledgeBase)."""
-    names = await _get_subreddits_list(session)
+    names = await _get_subreddits_list(session, user_id)
     return sorted(set(names))
 
 
 @router.post("/subreddits")
-async def add_setup_subreddit(body: dict, session: AsyncSession = Depends(get_session)):
+async def add_setup_subreddit(
+    body: dict,
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     """Добавить сабреддит. Body: {"name": "python"}."""
     raw = (body.get("name") or "").strip().lower().replace("/r/", "").split("/")[0]
     if not raw:
         raise HTTPException(400, "Укажите имя сабреддита")
-    names = await _get_subreddits_list(session)
+    names = await _get_subreddits_list(session, user_id)
     if raw in names:
         return {"ok": True, "name": raw, "message": "Уже в списке"}
     names.append(raw)
-    await _save_subreddits_list(session, sorted(set(names)))
+    await _save_subreddits_list(session, user_id, sorted(set(names)))
     return {"ok": True, "name": raw}
 
 
 @router.delete("/subreddits/{name:path}", status_code=204)
-async def remove_setup_subreddit(name: str, session: AsyncSession = Depends(get_session)):
+async def remove_setup_subreddit(
+    name: str,
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     """Удалить сабреддит из списка."""
     sub = (name or "").strip().lower().replace("/r/", "").split("/")[0]
     if not sub:
         raise HTTPException(400, "Укажите имя сабреддита")
-    names = await _get_subreddits_list(session)
+    names = await _get_subreddits_list(session, user_id)
     if sub not in names:
         raise HTTPException(404, "Сабреддит не найден в списке")
     names = [n for n in names if n != sub]
-    await _save_subreddits_list(session, names)
+    await _save_subreddits_list(session, user_id, names)
 
 
 @router.post("/section")
 async def save_setup_section(
     body: SetupSectionSave,
     session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
 ):
     """Save one section (products, icp, tone, goals) to draft."""
     try:
         if body.section not in SETUP_KEYS:
             return {"ok": False, "error": "Unknown section"}
-        key = SETUP_KEYS[body.section]
+        base_key = SETUP_KEYS[body.section]
+        key = _kb_key(base_key, user_id)
         if body.section == "authors":
             value = json.dumps(body.value) if body.value is not None else "[]"
         elif body.section == "products":
@@ -319,6 +399,7 @@ def _safe_int(v, default: int = 0) -> int:
 async def setup_wizard(
     body: SetupWizardInput,
     session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
 ):
     """Onboarding: product, ICP, tone, goals -> SetupAgent -> create SalesAvatar, Segments, Offers, LeadMagnets."""
     try:
@@ -343,6 +424,7 @@ async def setup_wizard(
         # Persist — Sales Avatar (single)
         av = data.get("sales_avatar") or {}
         avatar = SalesAvatar(
+            user_id=user_id,
             name=str(av.get("name") or "Default")[:256],
             positioning=av.get("positioning"),
             tone_guidelines=av.get("tone_guidelines"),
@@ -356,6 +438,7 @@ async def setup_wizard(
 
         for seg in data.get("segments") or []:
             s = Segment(
+                user_id=user_id,
                 name=str(seg.get("name") or "Segment")[:256],
                 rules=_ensure_dict(seg.get("rules")),
                 priority=_safe_int(seg.get("priority"), 0),
@@ -368,6 +451,7 @@ async def setup_wizard(
 
         for off in data.get("offers") or []:
             o = Offer(
+                user_id=user_id,
                 name=str(off.get("name") or "Offer")[:256],
                 promise=_ensure_str(off.get("promise")),
                 proof_points=_ensure_str(off.get("proof_points")),
@@ -378,6 +462,7 @@ async def setup_wizard(
             session.add(o)
         for lm in data.get("lead_magnets") or []:
             l = LeadMagnet(
+                user_id=user_id,
                 title=str(lm.get("title") or "Lead Magnet")[:512],
                 format=lm.get("format"),
                 description=_ensure_str(lm.get("description")),

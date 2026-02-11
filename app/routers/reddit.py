@@ -11,8 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db import get_session, session_scope
+from app.deps import get_current_user_id
 from app.models import KnowledgeBase, Person, RedditPost, SavedSubreddit
-from app.routers.setup import get_setup_for_scoring
+from app.routers.setup import _kb_key, get_setup_for_scoring
 from app.schemas import RedditPostCreate, RedditPostRead, RedditPostUpdate, SavedSubredditAdd
 from app.services.reddit_feed import fetch_subreddit_posts
 from agents.registry import run_agent
@@ -119,9 +120,10 @@ async def list_reddit_posts(
     sort: str = Query("desc", description="desc|asc"),
     status_filter: Optional[str] = Query(None, alias="status", description="new|in_progress|done|hidden"),
     session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
 ):
     try:
-        q = select(RedditPost)
+        q = select(RedditPost).where(RedditPost.user_id == user_id)
         if subreddit:
             subs = [s.strip().lower() for s in subreddit if s and s.strip()]
             if subs:
@@ -145,19 +147,22 @@ async def list_reddit_posts(
         raise HTTPException(status_code=500, detail=f"Failed to load posts: {str(e)}")
 
 
-async def _sync_one_subreddit(session: AsyncSession, subreddit: str, limit: int = 25, sort: str = "hot") -> int:
+async def _sync_one_subreddit(session: AsyncSession, subreddit: str, user_id: int, limit: int = 25, sort: str = "hot") -> int:
     """Загрузить посты из r/{subreddit} и добавить новые в БД. Возвращает количество добавленных."""
     items = await fetch_subreddit_posts(subreddit, limit=limit, sort=sort)
     if not items:
         return 0
     sub = items[0]["subreddit"]
-    r = await session.execute(select(RedditPost.reddit_id).where(RedditPost.subreddit == sub))
+    r = await session.execute(
+        select(RedditPost.reddit_id).where(RedditPost.subreddit == sub, RedditPost.user_id == user_id)
+    )
     existing = {row[0] for row in r.fetchall()}
     added = 0
     for it in items:
         if it["reddit_id"] in existing:
             continue
         post = RedditPost(
+            user_id=user_id,
             subreddit=it["subreddit"],
             reddit_id=it["reddit_id"],
             title=it["title"],
@@ -173,9 +178,11 @@ async def _sync_one_subreddit(session: AsyncSession, subreddit: str, limit: int 
         added += 1
     # Сохраняем сабреддит в список (игнорируем дубликаты)
     try:
-        r = await session.execute(select(SavedSubreddit.id).where(SavedSubreddit.name == sub).limit(1))
+        r = await session.execute(
+            select(SavedSubreddit.id).where(SavedSubreddit.name == sub, SavedSubreddit.user_id == user_id).limit(1)
+        )
         if r.scalar_one_or_none() is None:
-            session.add(SavedSubreddit(name=sub))
+            session.add(SavedSubreddit(user_id=user_id, name=sub))
     except Exception:
         pass
     return added
@@ -187,9 +194,10 @@ async def sync_subreddit(
     limit: int = Query(25, ge=1, le=100),
     sort: str = Query("hot", description="hot|new|top|rising"),
     session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
 ):
     """Загрузить посты из r/{subreddit} и добавить новые в БД."""
-    added = await _sync_one_subreddit(session, subreddit, limit=limit, sort=sort)
+    added = await _sync_one_subreddit(session, subreddit, user_id, limit=limit, sort=sort)
     await session.commit()
     return {"synced": added, "subreddit": subreddit.strip().lower()}
 
@@ -198,7 +206,6 @@ async def _run_scoring_for_pending_reddit() -> None:
     """Фоновая задача: проставить score всем постам Reddit, у которых relevance_score ещё не задан."""
     async with session_scope() as session:
         try:
-            setup = await get_setup_for_scoring(session)
             r = await session.execute(
                 select(RedditPost).where(RedditPost.relevance_score.is_(None)).order_by(RedditPost.id.asc())
             )
@@ -207,6 +214,8 @@ async def _run_scoring_for_pending_reddit() -> None:
                 return
             logger.info("Scoring %d pending reddit posts", len(pending))
             for post in pending:
+                uid = post.user_id or 1
+                setup = await get_setup_for_scoring(session, uid)
                 try:
                     payload = {
                         "title": post.title or "",
@@ -227,13 +236,16 @@ async def _run_scoring_for_pending_reddit() -> None:
 
 
 @router.post("/refresh")
-async def refresh_reddit(session: AsyncSession = Depends(get_session)):
+async def refresh_reddit(
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     """Обновить посты по всем сохранённым сабреддитам: подгрузить новые в БД. По новым запускается скоринг."""
-    subreddits = await _get_saved_subreddit_names(session)
+    subreddits = await _get_saved_subreddit_names(session, user_id)
     total_added = 0
     for sub in subreddits or []:
         try:
-            total_added += await _sync_one_subreddit(session, sub, limit=50, sort="new")
+            total_added += await _sync_one_subreddit(session, sub, user_id, limit=50, sort="new")
         except Exception:
             pass
     await session.commit()
@@ -243,22 +255,27 @@ async def refresh_reddit(session: AsyncSession = Depends(get_session)):
 
 async def run_reddit_sync_all() -> None:
     """Фоновая задача: синхрон по всем сохранённым сабреддитам (раз в час). По новым постам запускается скоринг."""
+    from app.models import User
     async with session_scope() as session:
         try:
-            subreddits = await _get_saved_subreddit_names(session)
-            for sub in subreddits or []:
-                try:
-                    await _sync_one_subreddit(session, sub, limit=50, sort="new")
-                except Exception:
-                    pass
+            r = await session.execute(select(User.id))
+            user_ids = [row[0] for row in r.fetchall()]
+            for uid in user_ids:
+                subreddits = await _get_saved_subreddit_names(session, uid)
+                for sub in subreddits or []:
+                    try:
+                        await _sync_one_subreddit(session, sub, uid, limit=50, sort="new")
+                    except Exception:
+                        pass
         except Exception as e:
             logger.exception("Scheduled reddit sync failed: %s", e)
     asyncio.create_task(_run_scoring_for_pending_reddit())
 
 
-async def _get_saved_subreddit_names(session: AsyncSession) -> list:
+async def _get_saved_subreddit_names(session: AsyncSession, user_id: int) -> list:
     """Список имён сабреддитов: из KnowledgeBase (Settings) или из таблицы SavedSubreddit."""
-    r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == "saved_subreddits"))
+    key = _kb_key("saved_subreddits", user_id)
+    r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key))
     row = r.scalar_one_or_none()
     if row and row.value:
         try:
@@ -267,37 +284,54 @@ async def _get_saved_subreddit_names(session: AsyncSession) -> list:
                 return sorted(set(data))
         except Exception:
             pass
-    r = await session.execute(select(SavedSubreddit.name).order_by(SavedSubreddit.name))
+    r = await session.execute(
+        select(SavedSubreddit.name).where(SavedSubreddit.user_id == user_id).order_by(SavedSubreddit.name)
+    )
     return [row[0] for row in r.fetchall()]
 
 
 @router.get("/subreddits")
-async def list_saved_subreddits(session: AsyncSession = Depends(get_session)):
+async def list_saved_subreddits(
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     """Список сабреддитов: из KnowledgeBase (Settings) или из таблицы SavedSubreddit."""
-    return await _get_saved_subreddit_names(session)
+    return await _get_saved_subreddit_names(session, user_id)
 
 
 @router.post("/subreddits/add")
-async def add_saved_subreddit(body: SavedSubredditAdd, session: AsyncSession = Depends(get_session)):
+async def add_saved_subreddit(
+    body: SavedSubredditAdd,
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     """Добавить сабреддит в список (из раздела Settings)."""
     sub = (body.name or "").strip().lower().replace("/r/", "").split("/")[0]
     if not sub:
         raise HTTPException(400, "Укажите имя сабреддита")
-    r = await session.execute(select(SavedSubreddit.id).where(SavedSubreddit.name == sub).limit(1))
+    r = await session.execute(
+        select(SavedSubreddit.id).where(SavedSubreddit.name == sub, SavedSubreddit.user_id == user_id).limit(1)
+    )
     if r.scalar_one_or_none() is not None:
         return {"ok": True, "name": sub, "message": "Уже в списке"}
-    session.add(SavedSubreddit(name=sub))
+    session.add(SavedSubreddit(user_id=user_id, name=sub))
     await session.commit()
     return {"ok": True, "name": sub}
 
 
 @router.delete("/subreddits/{name:path}", status_code=204)
-async def remove_saved_subreddit(name: str, session: AsyncSession = Depends(get_session)):
+async def remove_saved_subreddit(
+    name: str,
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     """Удалить сабреддит из списка (посты из БД не удаляются)."""
     sub = (name or "").strip().lower().replace("/r/", "").split("/")[0]
     if not sub:
         raise HTTPException(400, "Укажите имя сабреддита")
-    r = await session.execute(select(SavedSubreddit).where(SavedSubreddit.name == sub))
+    r = await session.execute(
+        select(SavedSubreddit).where(SavedSubreddit.name == sub, SavedSubreddit.user_id == user_id)
+    )
     row = r.scalar_one_or_none()
     if not row:
         raise HTTPException(404, "Сабреддит не найден в списке")
@@ -310,12 +344,15 @@ async def save_reddit_post_score(
     post_id: int,
     body: dict,
     session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
 ):
     """Сохранить оценку релевантности для Reddit поста."""
     try:
         r = await session.execute(select(RedditPost).where(RedditPost.id == post_id))
         post = r.scalar_one_or_none()
         if not post:
+            raise HTTPException(404, "Пост не найден")
+        if post.user_id is not None and post.user_id != user_id:
             raise HTTPException(404, "Пост не найден")
 
         score = body.get("score")
@@ -340,22 +377,35 @@ async def save_reddit_post_score(
 
 
 @router.get("/posts/{id}", response_model=RedditPostRead)
-async def get_reddit_post(id: int, session: AsyncSession = Depends(get_session)):
+async def get_reddit_post(
+    id: int,
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     q = select(RedditPost).options(selectinload(RedditPost.person)).where(RedditPost.id == id)
     r = await session.execute(q)
     post = r.scalar_one_or_none()
     if not post:
+        raise HTTPException(404, "Пост не найден")
+    if post.user_id is not None and post.user_id != user_id:
         raise HTTPException(404, "Post not found")
     return _reddit_post_to_read(post)
 
 
 @router.patch("/posts/{id}", response_model=RedditPostRead)
-async def update_reddit_post(id: int, body: RedditPostUpdate, session: AsyncSession = Depends(get_session)):
+async def update_reddit_post(
+    id: int,
+    body: RedditPostUpdate,
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     q = select(RedditPost).options(selectinload(RedditPost.person)).where(RedditPost.id == id)
     r = await session.execute(q)
     post = r.scalar_one_or_none()
     if not post:
-        raise HTTPException(404, "Post not found")
+        raise HTTPException(404, "Пост не найден")
+    if post.user_id is not None and post.user_id != user_id:
+        raise HTTPException(404, "Пост не найден")
     for k, v in body.model_dump(exclude_unset=True).items():
         setattr(post, k, v)
     await session.commit()
@@ -364,9 +414,15 @@ async def update_reddit_post(id: int, body: RedditPostUpdate, session: AsyncSess
 
 
 @router.delete("/posts/{id}", status_code=204)
-async def delete_reddit_post(id: int, session: AsyncSession = Depends(get_session)):
+async def delete_reddit_post(
+    id: int,
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     post = await session.get(RedditPost, id)
     if not post:
-        raise HTTPException(404, "Post not found")
+        raise HTTPException(404, "Пост не найден")
+    if post.user_id is not None and post.user_id != user_id:
+        raise HTTPException(404, "Пост не найден")
     await session.delete(post)
     await session.commit()

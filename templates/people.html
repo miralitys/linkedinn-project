@@ -176,7 +176,7 @@
   .people-table-main .linkedin-link:focus-visible { outline: none; box-shadow: var(--focus-ring); }
   .people-table-main .row-actions { display: flex; align-items: center; gap: var(--space-1); }
   .people-table-main .kebab-wrap { position: relative; }
-  .people-table-main .kebab-menu { position: absolute; right: 0; top: 100%; margin-top: var(--space-1); min-width: 160px; z-index: 10; list-style: none; margin: 0; padding: var(--space-1); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--elevation-2); }
+  .people-table-main .kebab-menu { position: absolute; right: 0; top: 100%; margin-top: var(--space-1); min-width: 160px; z-index: 1100; list-style: none; margin: 0; padding: var(--space-1); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--elevation-2); }
   .people-table-main .kebab-menu[hidden] { display: none !important; }
   .people-table-main .kebab-item { display: block; width: 100%; padding: var(--space-2) var(--space-3); text-align: left; font-size: var(--text-14); background: none; border: none; cursor: pointer; border-radius: var(--radius-sm); color: var(--text); }
   .people-table-main .kebab-item.danger { color: var(--danger); }
@@ -375,8 +375,9 @@
   document.addEventListener('click', (e) => {
     if (e.target.closest && e.target.closest('.kebab-wrap')) return;
     if (e.target.closest && e.target.closest('.contact-drawer-kebab-wrap')) return;
+    if (e.target.closest && e.target.closest('.kebab-menu')) return;
     if (!peopleListWrap) return;
-    peopleListWrap.querySelectorAll('.kebab-menu').forEach(m => { m.hidden = true; });
+    peopleListWrap.querySelectorAll('.kebab-menu').forEach(m => { m.hidden = true; m.style.position = ''; m.style.left = ''; m.style.top = ''; });
     peopleListWrap.querySelectorAll('.kebab-trigger').forEach(b => b.setAttribute('aria-expanded', 'false'));
     const drawerMenu = document.getElementById('contact-drawer-kebab-menu');
     if (drawerMenu) drawerMenu.hidden = true;
@@ -446,13 +447,28 @@
     });
     peopleListWrap.querySelectorAll('.kebab-trigger').forEach(btn => {
       btn.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
-        const menu = btn.closest('.kebab-wrap').querySelector('.kebab-menu');
+        const wrap = btn.closest('.kebab-wrap');
+        const menu = wrap ? wrap.querySelector('.kebab-menu') : null;
+        if (!menu) return;
         const isOpen = !menu.hidden;
         peopleListWrap.querySelectorAll('.kebab-menu').forEach(m => { m.hidden = true; });
         peopleListWrap.querySelectorAll('.kebab-trigger').forEach(b => b.setAttribute('aria-expanded', 'false'));
-        if (!isOpen) { menu.hidden = false; btn.setAttribute('aria-expanded', 'true'); }
-      });
+        if (!isOpen) {
+          menu.hidden = false;
+          btn.setAttribute('aria-expanded', 'true');
+          const rect = btn.getBoundingClientRect();
+          menu.style.position = 'fixed';
+          menu.style.left = Math.max(8, Math.min(rect.right - 160, window.innerWidth - 168)) + 'px';
+          menu.style.top = (rect.bottom + 4) + 'px';
+          menu.style.right = 'auto';
+        } else {
+          menu.style.position = '';
+          menu.style.left = '';
+          menu.style.top = '';
+        }
+      }, true);
     });
     peopleListWrap.querySelectorAll('.btn-edit-person').forEach(btn => {
       btn.addEventListener('click', (e) => { e.stopPropagation(); btn.closest('.kebab-menu').hidden = true; openFormDrawer(parseInt(btn.dataset.personId, 10)); });

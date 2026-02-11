@@ -741,7 +741,7 @@ async def _run_scoring_for_pending_news() -> None:
     """Фоновая задача: проставить score всем новостям, у которых relevance_score ещё не задан."""
     async with session_scope() as session:
         try:
-            setup = await get_setup_for_scoring(session)
+            setup = await get_setup_for_scoring(session, 1)  # News: используют setup user_id=1 (новости глобальные)
             r = await session.execute(
                 select(NewsItem).where(NewsItem.relevance_score.is_(None)).order_by(NewsItem.id.asc())
             )

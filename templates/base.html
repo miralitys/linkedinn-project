@@ -288,6 +288,37 @@
     .badge { display: inline-flex; align-items: center; padding: var(--space-1) var(--space-2); font-size: var(--text-12); font-weight: 500; border-radius: var(--radius-sm); background: var(--primary-soft); color: var(--primary); }
     .badge-danger { background: var(--danger-soft); color: var(--danger); }
     .badge-muted { background: var(--bg); color: var(--text-muted); }
+    /* Onboarding overlay */
+    .onboarding-overlay { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: center; justify-content: center; padding: var(--space-6); background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); }
+    .onboarding-overlay[hidden] { display: none !important; }
+    .onboarding-modal { max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto; background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--elevation-modal); padding: var(--space-8); border: 1px solid var(--border); }
+    .onboarding-modal h2 { font-size: var(--text-20); font-weight: 700; margin: 0 0 var(--space-3); color: var(--text); }
+    .onboarding-modal .onboarding-message { font-size: var(--text-16); color: var(--text-muted); line-height: 1.6; margin: 0 0 var(--space-6); }
+    .onboarding-steps { display: flex; gap: var(--space-2); margin-bottom: var(--space-6); }
+    .onboarding-step-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--border); transition: background var(--motion-fast); }
+    .onboarding-step-dot.done { background: var(--success); }
+    .onboarding-step-dot.active { background: var(--primary); }
+    .onboarding-step-wrap { display: none; }
+    .onboarding-step-wrap.active { display: block; }
+    .onboarding-step-wrap h3 { font-size: var(--text-16); font-weight: 600; margin: 0 0 var(--space-2); color: var(--text); }
+    .onboarding-step-wrap .step-desc { font-size: var(--text-14); color: var(--text-muted); margin: 0 0 var(--space-4); line-height: 1.5; }
+    .onboarding-actions { display: flex; gap: var(--space-3); margin-top: var(--space-6); flex-wrap: wrap; }
+    .onboarding-actions .btn { flex: 1; min-width: 120px; }
+    .interview-modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 2100; padding: var(--space-4); }
+    .interview-modal-overlay[hidden] { display: none !important; }
+    .interview-modal { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--elevation-modal); max-width: 560px; width: 100%; padding: var(--space-6); }
+    .interview-confirm-box { text-align: center; }
+    .interview-modal-title { margin: 0 0 var(--space-3); font-size: var(--text-20); }
+    .interview-confirm-text { margin: 0 0 var(--space-5); color: var(--text); }
+    .interview-confirm-actions { display: flex; gap: var(--space-3); justify-content: center; }
+    .interview-question-box { max-height: 90vh; overflow-y: auto; }
+    .interview-progress-wrap { margin-bottom: var(--space-4); }
+    .interview-progress-bar { height: 8px; background: var(--border); border-radius: var(--radius-pill); overflow: hidden; }
+    .interview-progress-bar > .fill { display: block; height: 100%; background: var(--primary); border-radius: var(--radius-pill); transition: width var(--motion-normal); min-width: 2%; }
+    .interview-section-label { font-size: var(--text-14); font-weight: 600; color: var(--primary); margin: 0 0 var(--space-2); }
+    .interview-question-text { font-size: var(--text-16); color: var(--text); margin: 0 0 var(--space-3); line-height: 1.5; }
+    .interview-answer-input { width: 100%; padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: var(--text-14); resize: vertical; min-height: 100px; box-sizing: border-box; }
+    .interview-question-actions { display: flex; gap: var(--space-2); justify-content: space-between; margin-top: var(--space-4); }
     .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
     .toast-container { position: fixed; bottom: var(--space-6); right: var(--space-6); z-index: 1000; display: flex; flex-direction: column; gap: var(--space-2); max-width: 360px; }
     .toast-item { padding: var(--space-3) var(--space-4); border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--elevation-modal); font-size: var(--text-14); animation: toast-in 0.25s ease; }
@@ -447,7 +478,93 @@
     <main>{% block content %}{% endblock %}</main>
   </div>
   <div id="toast-container" class="toast-container" role="region" aria-label="{{ tr.toast_region }}"></div>
+  <!-- Onboarding overlay: минимальные данные (автор, компания, контакт) -->
+  <div id="onboarding-overlay" class="onboarding-overlay" role="dialog" aria-modal="true" aria-labelledby="onboarding-title" hidden>
+    <div class="onboarding-modal">
+      <h2 id="onboarding-title">{{ tr.onboarding_title }}</h2>
+      <p class="onboarding-message">{{ tr.onboarding_message }}</p>
+      <div class="onboarding-steps" aria-hidden="true">
+        <span id="onboarding-dot-1" class="onboarding-step-dot" title="Автор"></span>
+        <span id="onboarding-dot-2" class="onboarding-step-dot" title="Компания"></span>
+        <span id="onboarding-dot-3" class="onboarding-step-dot" title="Контакт"></span>
+      </div>
+      <div id="onboarding-step-1" class="onboarding-step-wrap">
+        <h3>{{ tr.onboarding_step_author }}</h3>
+        <p class="step-desc">{{ tr.onboarding_step_author_desc }}</p>
+        <label>{{ tr.setup_author_name }}</label>
+        <input type="text" id="onboarding-author-name" placeholder="{{ tr.setup_author_name }}">
+        <label>{{ tr.setup_author_role }}</label>
+        <input type="text" id="onboarding-author-role" placeholder="{{ tr.setup_author_role }}">
+        <label>{{ tr.setup_author_history }}</label>
+        <p class="form-hint" style="margin: 0 0 var(--space-2) 0; font-size: var(--text-14); color: var(--text-muted);">{{ tr.setup_author_history_hint }}</p>
+        <textarea id="onboarding-author-history" rows="3" placeholder="{{ tr.setup_author_history_placeholder }}"></textarea>
+        <div class="onboarding-step-actions" style="margin-top: var(--space-4);">
+          <button type="button" id="onboarding-btn-interview" class="btn secondary">{{ tr.setup_interview }}</button>
+        </div>
+      </div>
+      <div id="onboarding-step-2" class="onboarding-step-wrap">
+        <h3>{{ tr.onboarding_step_company }}</h3>
+        <p class="step-desc">{{ tr.onboarding_step_company_desc }}</p>
+        <label>{{ tr.onboarding_company_name }}</label>
+        <input type="text" id="onboarding-company-name" placeholder="{{ tr.onboarding_company_name }}" required>
+      </div>
+      <div id="onboarding-step-3" class="onboarding-step-wrap">
+        <h3>{{ tr.onboarding_step_contact }}</h3>
+        <p class="step-desc">{{ tr.onboarding_step_contact_desc }}</p>
+        <label>{{ tr.onboarding_contact_name }}</label>
+        <input type="text" id="onboarding-contact-name" placeholder="{{ tr.onboarding_contact_name }}" required>
+        <label>{{ tr.onboarding_contact_linkedin }}</label>
+        <input type="url" id="onboarding-contact-linkedin" placeholder="{{ tr.onboarding_contact_linkedin_placeholder }}">
+        <label>{{ tr.onboarding_contact_company }}</label>
+        <select id="onboarding-contact-company"><option value="">{{ tr.onboarding_contact_company_placeholder }}</option></select>
+      </div>
+      <div class="onboarding-actions">
+        <button type="button" id="onboarding-btn-prev" class="btn secondary" style="display:none;">{{ tr.onboarding_prev }}</button>
+        <button type="button" id="onboarding-btn-next" class="btn primary">{{ tr.onboarding_next }}</button>
+        <button type="button" id="onboarding-btn-done" class="btn primary" style="display:none;">{{ tr.onboarding_done }}</button>
+      </div>
+      <p id="onboarding-msg" class="form-hint" style="margin-top: var(--space-3); min-height: 1.5em; font-weight: 500;" role="status" aria-live="polite"></p>
+    </div>
   </div>
+  <!-- Interview modals (shared: onboarding + setup) -->
+  <div id="interview-confirm-modal" class="interview-modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="interview-confirm-title">
+    <div class="interview-modal interview-confirm-box">
+      <h2 id="interview-confirm-title" class="interview-modal-title">{{ tr.interview_title }}</h2>
+      <p class="interview-confirm-text">{{ tr.interview_intro|safe }}</p>
+      <div class="interview-confirm-actions">
+        <button type="button" id="interview-confirm-yes" class="btn primary">{{ tr.interview_ready }}</button>
+        <button type="button" id="interview-confirm-no" class="btn secondary">{{ tr.interview_later }}</button>
+      </div>
+    </div>
+  </div>
+  <div id="interview-resume-modal" class="interview-modal-overlay" hidden aria-modal="true" role="dialog">
+    <div class="interview-modal interview-confirm-box">
+      <h2 class="interview-modal-title">{{ tr.interview_resume_title }}</h2>
+      <p id="interview-resume-text" class="interview-confirm-text">{{ tr.interview_resume_text }}</p>
+      <div class="interview-confirm-actions">
+        <button type="button" id="interview-resume-continue" class="btn primary">{{ tr.interview_continue }}</button>
+        <button type="button" id="interview-resume-restart" class="btn secondary">{{ tr.interview_restart }}</button>
+      </div>
+    </div>
+  </div>
+  <div id="interview-modal" class="interview-modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="interview-question-title">
+    <div class="interview-modal interview-question-box">
+      <div class="interview-progress-wrap">
+        <div class="interview-progress-bar" id="interview-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><span class="fill" id="interview-progress-fill" style="width: 0%;"></span></div>
+        <p class="interview-progress-text" id="interview-progress-text" style="font-size: var(--text-14); color: var(--text-muted); margin: var(--space-1) 0 0 0;"></p>
+      </div>
+      <h2 id="interview-section-label" class="interview-section-label"></h2>
+      <p id="interview-question-title" class="interview-question-text"></p>
+      <textarea id="interview-answer-input" class="interview-answer-input" rows="4" placeholder="{{ tr.interview_answer_placeholder }}" aria-label="{{ tr.interview_answer_placeholder }}"></textarea>
+      <div class="interview-question-actions">
+        <button type="button" id="interview-close" class="btn secondary" style="margin-right: auto;">{{ tr.interview_close_save }}</button>
+        <button type="button" id="interview-prev" class="btn secondary">{{ tr.interview_prev }}</button>
+        <button type="button" id="interview-next" class="btn primary">{{ tr.interview_next }}</button>
+      </div>
+    </div>
+  </div>
+  </div>
+  <script src="/static/js/interview.js"></script>
   <script>
     window.toast = function(message, type) {
       type = type || 'success';
@@ -459,6 +576,164 @@
       if (container) container.appendChild(el);
       setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 4000);
     };
+  </script>
+  <script>
+    (function() {
+      var trDict = window.__tr || {};
+      var overlay = document.getElementById('onboarding-overlay');
+      var dots = [document.getElementById('onboarding-dot-1'), document.getElementById('onboarding-dot-2'), document.getElementById('onboarding-dot-3')];
+      var steps = [document.getElementById('onboarding-step-1'), document.getElementById('onboarding-step-2'), document.getElementById('onboarding-step-3')];
+      var btnPrev = document.getElementById('onboarding-btn-prev');
+      var btnNext = document.getElementById('onboarding-btn-next');
+      var btnDone = document.getElementById('onboarding-btn-done');
+      var msgEl = document.getElementById('onboarding-msg');
+      var status = { has_author: false, has_company: false, has_contact: false, complete: false };
+      var currentStep = 0;
+
+      function tr(key) { return trDict[key] || key; }
+      function showStep(step) {
+        steps.forEach(function(s, i) { s.classList.toggle('active', i === step); });
+        dots.forEach(function(d, i) { d.classList.toggle('done', i < step || (i === step && status.complete)); d.classList.toggle('active', i === step); });
+        if (btnPrev) btnPrev.style.display = step > 0 ? 'inline-block' : 'none';
+        btnNext.style.display = step < 2 ? 'inline-block' : 'none';
+        btnDone.style.display = step === 2 ? 'inline-block' : 'none';
+        msgEl.textContent = '';
+      }
+      function setMsg(t, isErr) { msgEl.textContent = t; msgEl.style.color = isErr ? 'var(--danger)' : 'var(--text-muted)'; }
+      function loadCompanies() {
+        return fetch('/companies', { credentials: 'include' }).then(function(r) {
+          if (r.ok) return r.json();
+          return [];
+        }).then(function(list) {
+          var sel = document.getElementById('onboarding-contact-company');
+          if (!sel) return list;
+          sel.innerHTML = '<option value="">' + tr('onboarding_contact_company_placeholder') + '</option>';
+          (list || []).forEach(function(c) { var o = document.createElement('option'); o.value = c.id; o.textContent = c.name || c.id; sel.appendChild(o); });
+          return list;
+        }).catch(function() { return []; });
+      }
+      function checkStatus() {
+        return fetch('/setup/onboarding-status', { credentials: 'include' }).then(function(r) {
+          if (r.status === 401) return null;
+          return r.ok ? r.json() : null;
+        }).then(function(s) {
+          if (s) status = s;
+          return status;
+        });
+      }
+      function showOverlayIfNeeded() {
+        checkStatus().then(function(s) {
+          if (!s || s.complete) return;
+          overlay.hidden = false;
+          if (s.has_author && s.has_company && !s.has_contact) currentStep = 2;
+          else if (s.has_author && !s.has_company) currentStep = 1;
+          else currentStep = 0;
+          if (currentStep >= 2) {
+            loadCompanies().then(function() { showStep(currentStep); });
+          } else {
+            if (currentStep >= 1) loadCompanies();
+            showStep(currentStep);
+          }
+        }).catch(function() {});
+      }
+      function disableNext(dis) { btnNext.disabled = dis; btnNext.textContent = dis ? '…' : tr('onboarding_next'); }
+      function disableDone(dis) { btnDone.disabled = dis; btnDone.textContent = dis ? '…' : tr('onboarding_done'); }
+      function showError(r) {
+        r.text().then(function(t) {
+          var msg = '';
+          try {
+            var j = JSON.parse(t);
+            if (typeof j.detail === 'string') msg = j.detail;
+            else if (Array.isArray(j.detail)) msg = j.detail.map(function(x) { return (x.msg || '') + (x.loc ? ' (' + (Array.isArray(x.loc) ? x.loc.join('.') : x.loc) + ')' : ''); }).filter(Boolean).join('; ') || t;
+            else msg = j.detail || t || String(r.status);
+          } catch(e) { msg = t || String(r.status); }
+          setMsg((tr('onboarding_error') || 'Ошибка: ').replace('{}', msg || String(r.status)), true);
+        }).catch(function() { setMsg((tr('onboarding_error') || 'Ошибка: ').replace('{}', String(r.status)), true); });
+      }
+      btnNext.addEventListener('click', function() {
+        if (btnNext.disabled) return;
+        setMsg('');
+        if (currentStep === 0) {
+          var name = (document.getElementById('onboarding-author-name').value || '').trim();
+          var role = (document.getElementById('onboarding-author-role').value || '').trim();
+          var history = (document.getElementById('onboarding-author-history').value || '').trim();
+          if (!name) { setMsg(tr('setup_author_name_required'), true); return; }
+          if (!role) { setMsg(tr('setup_author_role_required') || 'Заполните роль', true); return; }
+          if (!history) { setMsg(tr('setup_author_history_required') || 'Заполните историю', true); return; }
+          disableNext(true);
+          fetch('/setup/section', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ section: 'authors', value: [{ full_name: name, role: role, history: history }] }),
+            credentials: 'include'
+          }).then(function(r) {
+            disableNext(false);
+            if (r.ok) {
+              setMsg(tr('onboarding_saved'));
+              status.has_author = true;
+              currentStep = 1;
+              loadCompanies();
+              showStep(1);
+            } else { showError(r); }
+          }).catch(function(e) { disableNext(false); setMsg((tr('onboarding_error') || 'Ошибка: ') + (e.message || ''), true); });
+        } else if (currentStep === 1) {
+          var cname = (document.getElementById('onboarding-company-name').value || '').trim();
+          if (!cname) { setMsg(tr('onboarding_company_name') + '?', true); return; }
+          disableNext(true);
+          fetch('/companies', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: cname }),
+            credentials: 'include'
+          }).then(function(r) {
+            disableNext(false);
+            if (r.ok) {
+              setMsg(tr('onboarding_saved'));
+              loadCompanies().then(function() {
+                status.has_company = true;
+                currentStep = 2;
+                showStep(2);
+              });
+            } else { showError(r); }
+          }).catch(function(e) { disableNext(false); setMsg((tr('onboarding_error') || 'Ошибка: ') + (e.message || ''), true); });
+        }
+      });
+      btnDone.addEventListener('click', function() {
+        if (btnDone.disabled) return;
+        setMsg('');
+        var pname = (document.getElementById('onboarding-contact-name').value || '').trim();
+        var linkedinInput = document.getElementById('onboarding-contact-linkedin');
+        var linkedinUrl = (linkedinInput && linkedinInput.value) ? (linkedinInput.value || '').trim() : '';
+        var cid = document.getElementById('onboarding-contact-company');
+        var cidVal = cid ? cid.value : '';
+        var companyId = (cidVal && !isNaN(parseInt(cidVal, 10))) ? parseInt(cidVal, 10) : null;
+        if (!pname) { setMsg(tr('onboarding_contact_name') + '?', true); return; }
+        if (!linkedinUrl) { setMsg(tr('onboarding_contact_linkedin_required'), true); return; }
+        if (linkedinUrl.indexOf('linkedin.com') === -1) { setMsg(tr('person_linkedin_error'), true); return; }
+        if (!companyId) { setMsg(tr('onboarding_contact_company_required') || 'Выберите компанию', true); return; }
+        disableDone(true);
+        fetch('/people', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ full_name: pname, company_id: companyId, linkedin_url: linkedinUrl }),
+          credentials: 'include'
+        }).then(function(r) {
+          disableDone(false);
+          if (r.ok) {
+            setMsg(tr('onboarding_saved'));
+            checkStatus().then(function(s) {
+              if (s && s.complete) {
+                overlay.hidden = true;
+                if (window.toast) window.toast(tr('onboarding_all_done'));
+              } else { showStep(2); }
+            });
+          } else { showError(r); }
+        }).catch(function(e) { disableDone(false); setMsg((tr('onboarding_error') || 'Ошибка: ') + (e.message || ''), true); });
+      });
+      if (btnPrev) btnPrev.addEventListener('click', function() {
+        if (currentStep > 0) { currentStep--; showStep(currentStep); }
+      });
+      if (overlay) {
+        document.addEventListener('DOMContentLoaded', function() { showOverlayIfNeeded(); });
+      }
+    })();
   </script>
 </body>
 </html>

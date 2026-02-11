@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.db import get_session
+from app.deps import get_current_user_id
 from app.models import Draft, DraftStatus, DraftType, LeadMagnet, Offer, Person, PersonStatus, SalesAvatar, Segment, Touch
 from app.schemas import DailyQueueResponse
 from app.state_machine import may_send_dm
@@ -27,7 +28,10 @@ def _avatar_str(avatar) -> str:
 
 
 @router.get("", response_model=DailyQueueResponse)
-async def get_daily_queue(session: AsyncSession = Depends(get_session)):
+async def get_daily_queue(
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     """Return current queue: comments (KOL posts to comment), posts (content ideas), dm_queue (warm contacts + draft)."""
     comments: list[dict] = []
     posts: list[dict] = []
@@ -35,18 +39,21 @@ async def get_daily_queue(session: AsyncSession = Depends(get_session)):
 
     # Лидеры мнений = контакты с is_kol=True (для комментариев под постами)
     r = await session.execute(
-        select(Person).where(Person.is_kol == True).order_by(Person.priority.desc(), Person.id).limit(20)
+        select(Person)
+        .where(Person.user_id == user_id, Person.is_kol == True)
+        .order_by(Person.priority.desc(), Person.id)
+        .limit(20)
     )
     kol_people = list(r.scalars().all())
     for p in kol_people:
         comments.append({"kol_id": p.id, "kol_name": p.full_name, "post_text": "", "drafts": []})
 
     # Content: suggest 2–3 posts (need avatar + segment + offer)
-    r = await session.execute(select(SalesAvatar).limit(1))
+    r = await session.execute(select(SalesAvatar).where(SalesAvatar.user_id == user_id).limit(1))
     avatar = r.scalar_one_or_none()
-    r = await session.execute(select(Segment).limit(1))
+    r = await session.execute(select(Segment).where(Segment.user_id == user_id).limit(1))
     seg = r.scalar_one_or_none()
-    r = await session.execute(select(Offer).limit(1))
+    r = await session.execute(select(Offer).where(Offer.user_id == user_id).limit(1))
     offer = r.scalar_one_or_none()
     if avatar and (seg or offer):
         posts.append({
@@ -58,10 +65,13 @@ async def get_daily_queue(session: AsyncSession = Depends(get_session)):
 
     # DM queue: Warm contacts
     r = await session.execute(
-        select(Person).where(Person.status == PersonStatus.WARM.value).order_by(Person.priority.desc(), Person.last_touch_at).limit(20)
+        select(Person)
+        .where(Person.user_id == user_id, Person.status == PersonStatus.WARM.value)
+        .order_by(Person.priority.desc(), Person.last_touch_at)
+        .limit(20)
     )
     warm_people = list(r.scalars().all())
-    r = await session.execute(select(SalesAvatar).limit(1))
+    r = await session.execute(select(SalesAvatar).where(SalesAvatar.user_id == user_id).limit(1))
     avatar = r.scalar_one_or_none()
     for p in warm_people:
         # Touches summary
@@ -100,7 +110,8 @@ async def get_daily_queue(session: AsyncSession = Depends(get_session)):
 @router.post("")
 async def generate_daily_queue(
     session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
 ):
     """Generate drafts for daily queue (comment drafts for first N KOL, post drafts, DM drafts for warm). Can be called by scheduler."""
     # Same as GET but optionally trigger agent runs; for MVP we just return GET result
-    return await get_daily_queue(session)
+    return await get_daily_queue(session, user_id)

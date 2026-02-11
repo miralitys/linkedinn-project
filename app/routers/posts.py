@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.db import get_session
+from app.deps import get_current_user_id
 from app.models import ContactPost, Person
 from app.schemas import (
     ContactPostCreate,
@@ -76,11 +77,13 @@ async def list_posts(
     archived: Optional[str] = Query(None, description="false = only visible, true = only archived"),
     max_per_contact: Optional[int] = Query(None, description="макс. постов на контакт (напр. 3 = последние 3 по каждому)"),
     session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
 ):
+    person_subq = select(Person.id).where(Person.user_id == user_id)
     q = (
         select(ContactPost)
         .options(selectinload(ContactPost.person))
-        .where(ContactPost.person_id.in_(select(Person.id)))
+        .where(ContactPost.person_id.in_(person_subq))
     )
     if person_id is not None:
         q = q.where(ContactPost.person_id == person_id)
@@ -112,12 +115,15 @@ async def list_posts(
     return [_post_to_read(p) for p in posts]
 
 
-async def _sync_rss(session: AsyncSession) -> int:
+async def _sync_rss(session: AsyncSession, user_id: int) -> int:
     """Подгрузить посты из RSS-лент контактов. Не делает commit."""
     if feedparser is None:
         return 0
     r_people = await session.execute(
-        select(Person).where(Person.feed_url.isnot(None)).where(Person.feed_url != "")
+        select(Person)
+        .where(Person.user_id == user_id)
+        .where(Person.feed_url.isnot(None))
+        .where(Person.feed_url != "")
     )
     people = list(r_people.scalars().all())
     created = 0
@@ -164,7 +170,7 @@ async def _sync_rss(session: AsyncSession) -> int:
     return created
 
 
-async def _sync_linkedin_rapidapi(session: AsyncSession, limit_per_profile: int = 5) -> int:
+async def _sync_linkedin_rapidapi(session: AsyncSession, user_id: int, limit_per_profile: int = 5) -> int:
     """
     Для контактов с linkedin_url: Get Profile's Posts (последние limit постов),
     сравниваем post_url с уже сохранёнными. Добавляем новые; архивированные восстанавливаем (archived=False).
@@ -173,7 +179,10 @@ async def _sync_linkedin_rapidapi(session: AsyncSession, limit_per_profile: int 
     if not settings.rapidapi_key:
         return 0
     r_people = await session.execute(
-        select(Person).where(Person.linkedin_url.isnot(None)).where(Person.linkedin_url != "")
+        select(Person)
+        .where(Person.user_id == user_id)
+        .where(Person.linkedin_url.isnot(None))
+        .where(Person.linkedin_url != "")
     )
     people = list(r_people.scalars().all())
     created = 0
@@ -224,9 +233,9 @@ async def _sync_linkedin_rapidapi(session: AsyncSession, limit_per_profile: int 
     return created
 
 
-async def _sync_demo(session: AsyncSession) -> int:
+async def _sync_demo(session: AsyncSession, user_id: int) -> int:
     """Создать демо-пост для контактов без постов. Не делает commit."""
-    r_people = await session.execute(select(Person).order_by(Person.id))
+    r_people = await session.execute(select(Person).where(Person.user_id == user_id).order_by(Person.id))
     people = list(r_people.scalars().all())
     if not people:
         return 0
@@ -260,15 +269,20 @@ async def _sync_demo(session: AsyncSession) -> int:
 async def run_auto_sync() -> None:
     """Фоновая задача: автоматом подгрузить посты (RSS + демо для контактов без постов)."""
     from app.db import session_scope
+    from app.models import User
     async with session_scope() as session:
-        await _sync_rss(session)
-        await _sync_demo(session)
+        r = await session.execute(select(User.id))
+        user_ids = [row[0] for row in r.fetchall()]
+        for uid in user_ids:
+            await _sync_rss(session, uid)
+            await _sync_demo(session, uid)
 
 
 @router.post("/sync")
 async def sync_posts(
     source: str = Query("demo", description="demo | rss | linkedin"),
     session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
 ):
     """
     Авто-загрузка постов:
@@ -277,19 +291,19 @@ async def sync_posts(
     - linkedin: RapidAPI Get Profile's Posts — последние 5 постов профиля, добавляем только новые
     """
     if source == "demo":
-        created = await _sync_demo(session)
+        created = await _sync_demo(session, user_id)
         await session.commit()
         return {"synced": created, "message": f"Добавлено постов: {created}."}
     if source == "rss":
         if feedparser is None:
             return {"synced": 0, "message": "Установите feedparser: pip install feedparser"}
-        created = await _sync_rss(session)
+        created = await _sync_rss(session, user_id)
         await session.commit()
         return {"synced": created, "message": f"Из RSS добавлено постов: {created}."}
     if source == "linkedin":
         if not settings.rapidapi_key:
             return {"synced": 0, "message": "Задайте RAPIDAPI_KEY для синка из LinkedIn."}
-        created = await _sync_linkedin_rapidapi(session, limit_per_profile=5)
+        created = await _sync_linkedin_rapidapi(session, user_id, limit_per_profile=5)
         await session.commit()
         return {"synced": created, "message": f"Из LinkedIn (RapidAPI) добавлено постов: {created}."}
     return {"synced": 0, "message": f"Неизвестный источник: {source}. Используйте source=demo, rss или linkedin."}
@@ -299,6 +313,7 @@ async def sync_posts(
 async def parse_post_from_url_route(
     body: PostParseFromUrlRequest,
     session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
 ):
     """
     Парсинг поста по URL. Если задан RAPIDAPI_KEY и URL — LinkedIn, сначала пробует RapidAPI (без Playwright).
@@ -362,6 +377,8 @@ async def parse_post_from_url_route(
     person = await session.get(Person, body.person_id)
     if not person:
         return PostParseFromUrlResponse(error="Контакт не найден.", parsed=result)
+    if person.user_id is not None and person.user_id != user_id:
+        return PostParseFromUrlResponse(error="Контакт не найден.", parsed=result)
     posted_at = _parse_posted_at(result.get("published_at")) if result.get("published_at") else datetime.utcnow()
     post = ContactPost(
         person_id=body.person_id,
@@ -383,9 +400,15 @@ async def parse_post_from_url_route(
 
 
 @router.post("", response_model=ContactPostRead)
-async def create_post(body: ContactPostCreate, session: AsyncSession = Depends(get_session)):
+async def create_post(
+    body: ContactPostCreate,
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     person = await session.get(Person, body.person_id)
     if not person:
+        raise HTTPException(404, "Contact not found")
+    if person.user_id is not None and person.user_id != user_id:
         raise HTTPException(404, "Contact not found")
     tags = body.tags
     posted_at_utc = _posted_at_to_utc(body.posted_at, settings.display_timezone)
@@ -408,17 +431,27 @@ async def create_post(body: ContactPostCreate, session: AsyncSession = Depends(g
 
 
 @router.get("/{id}", response_model=ContactPostRead)
-async def get_post(id: int, session: AsyncSession = Depends(get_session)):
+async def get_post(
+    id: int,
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     q = select(ContactPost).options(selectinload(ContactPost.person)).where(ContactPost.id == id)
     r = await session.execute(q)
     post = r.scalar_one_or_none()
     if not post:
         raise HTTPException(404, "Post not found")
+    if post.person and post.person.user_id is not None and post.person.user_id != user_id:
+        raise HTTPException(404, "Post not found")
     return _post_to_read(post)
 
 
 @router.post("/{id}/refresh-date", response_model=ContactPostRead)
-async def refresh_post_date(id: int, session: AsyncSession = Depends(get_session)):
+async def refresh_post_date(
+    id: int,
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     """
     Обновить дату поста из LinkedIn (RapidAPI). Для постов с post_url на LinkedIn
     запрашивает Get Post Details и подставляет дату публикации.
@@ -427,6 +460,8 @@ async def refresh_post_date(id: int, session: AsyncSession = Depends(get_session
     r = await session.execute(q)
     post = r.scalar_one_or_none()
     if not post:
+        raise HTTPException(404, "Post not found")
+    if post.person and post.person.user_id is not None and post.person.user_id != user_id:
         raise HTTPException(404, "Post not found")
     url = (post.post_url or "").strip()
     if not url or "linkedin.com" not in url.lower() or not settings.rapidapi_key:
@@ -444,11 +479,18 @@ async def refresh_post_date(id: int, session: AsyncSession = Depends(get_session
 
 
 @router.patch("/{id}", response_model=ContactPostRead)
-async def update_post(id: int, body: ContactPostUpdate, session: AsyncSession = Depends(get_session)):
+async def update_post(
+    id: int,
+    body: ContactPostUpdate,
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
     q = select(ContactPost).options(selectinload(ContactPost.person)).where(ContactPost.id == id)
     r = await session.execute(q)
     post = r.scalar_one_or_none()
     if not post:
+        raise HTTPException(404, "Post not found")
+    if post.person and post.person.user_id is not None and post.person.user_id != user_id:
         raise HTTPException(404, "Post not found")
     dump = body.model_dump(exclude_unset=True)
     if "posted_at" in dump:
@@ -461,9 +503,17 @@ async def update_post(id: int, body: ContactPostUpdate, session: AsyncSession = 
 
 
 @router.delete("/{id}", status_code=204)
-async def delete_post(id: int, session: AsyncSession = Depends(get_session)):
-    post = await session.get(ContactPost, id)
+async def delete_post(
+    id: int,
+    session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
+):
+    q = select(ContactPost).options(selectinload(ContactPost.person)).where(ContactPost.id == id)
+    r = await session.execute(q)
+    post = r.scalar_one_or_none()
     if not post:
+        raise HTTPException(404, "Post not found")
+    if post.person and post.person.user_id is not None and post.person.user_id != user_id:
         raise HTTPException(404, "Post not found")
     await session.delete(post)
     await session.commit()
