@@ -642,7 +642,7 @@
         btn.closest('.kebab-menu').hidden = true;
         card.querySelector('.kebab-trigger').setAttribute('aria-expanded', 'false');
         const newList = savedIcpList.filter((_, idx) => idx !== i);
-        const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'icp', value: newList }) });
+        const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'icp', value: newList }), credentials: 'include' });
         if (res.ok && (await res.json()).ok) {
           savedIcpList = newList;
           if (editingIcpIndex === i) { editingIcpIndex = null; setIcpFormVisible(false); }
@@ -755,7 +755,7 @@
         btn.closest('.kebab-menu').hidden = true;
         card.querySelector('.kebab-trigger').setAttribute('aria-expanded', 'false');
         const newList = savedAuthorsList.filter((_, idx) => idx !== i);
-        const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'authors', value: newList }) });
+        const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'authors', value: newList }), credentials: 'include' });
         if (res.ok && (await res.json()).ok) {
           savedAuthorsList = newList;
           if (editingAuthorIndex === i) { editingAuthorIndex = null; setAuthorsFormVisible(false); }
@@ -820,7 +820,7 @@
         btn.closest('.kebab-menu').hidden = true;
         card.querySelector('.kebab-trigger').setAttribute('aria-expanded', 'false');
         const newList = savedProductsList.filter((_, idx) => idx !== i);
-        const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'products', value: newList }) });
+        const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'products', value: newList }), credentials: 'include' });
         if (res.ok && (await res.json()).ok) {
           savedProductsList = newList;
           if (editingProductIndex === i) { editingProductIndex = null; setProductsFormVisible(false); }
@@ -1088,7 +1088,7 @@
         return;
       }
       try {
-        var res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'authors', value: authors }) });
+        var res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'authors', value: authors }), credentials: 'include' });
         var data = await res.json().catch(function() { return {}; });
         if (msgEl) { msgEl.textContent = data.ok ? (tr.setup_author_saved || 'Author saved.') : (data.error || (tr.common_error || 'Error')); msgEl.style.color = data.ok ? 'var(--primary)' : 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; msgEl.style.color = ''; }, 4000); }
         if (data.ok) {
@@ -1118,7 +1118,7 @@
         return;
       }
       try {
-        const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'products', value: products }) });
+        const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'products', value: products }), credentials: 'include' });
         const data = await res.json().catch(function() { return {}; });
         var errMsg = data.error || (data.detail ? (Array.isArray(data.detail) ? data.detail.map(function(d) { return d.msg || d.loc; }).join(' ') : data.detail) : null);
         if (!res.ok && res.status === 404) errMsg = (tr.setup_route_not_found || 'Route not found (404).');
@@ -1153,7 +1153,7 @@
         icpList = savedIcpList.concat([formIcp]);
       }
       try {
-        const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'icp', value: icpList }) });
+        const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'icp', value: icpList }), credentials: 'include' });
         const data = await res.json().catch(function() { return {}; });
         if (msgEl) { msgEl.textContent = data.ok ? (tr.setup_icp_saved || 'Customer profile saved.') : (data.error || (tr.common_error || 'Error')); msgEl.style.color = data.ok ? 'var(--primary)' : 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; msgEl.style.color = ''; }, 4000); }
         if (data.ok) {
@@ -1193,7 +1193,7 @@
         var chip = btn.closest('.subreddit-chip');
         var name = chip && chip.dataset.name;
         if (!name) return;
-        fetch('/setup/subreddits/' + encodeURIComponent(name), { method: 'DELETE' })
+        fetch('/setup/subreddits/' + encodeURIComponent(name), { method: 'DELETE', credentials: 'include' })
           .then(function(r) {
             if (r.ok || r.status === 204) loadSavedSubreddits();
             else if (typeof window.toast === 'function') window.toast(tr.admin_error_delete || 'Failed to delete', 'error');
@@ -1203,7 +1203,7 @@
     });
   }
   function loadSavedSubreddits() {
-    fetch('/setup/subreddits')
+    fetch('/setup/subreddits', { credentials: 'include' })
       .then(function(r) { return r.ok ? r.json() : []; })
       .then(function(names) { renderSavedSubredditsList(names || []); })
       .catch(function() { renderSavedSubredditsList([]); });
@@ -1215,7 +1215,7 @@
     renderSavedProductsCards();
     renderSavedIcpCards();
     loadSavedSubreddits();
-    fetch('/setup/draft', { credentials: 'same-origin' })
+    fetch('/setup/draft', { credentials: 'include' })
       .then(function(r) {
         if (!r.ok) {
           if (r.status === 401 && typeof window.toast === 'function') {
@@ -1263,7 +1263,7 @@
         return;
       }
       addBtn.disabled = true;
-      fetch('/setup/subreddits', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name }) })
+      fetch('/setup/subreddits', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name }), credentials: 'include' })
         .then(function(r) {
           return r.json().catch(function() { return {}; }).then(function(data) {
             if (typeof data !== 'object') data = {};
