@@ -149,14 +149,26 @@ async def login_submit(
         request.session["authenticated"] = True
         request.session["user"] = email.strip()
         request.session["user_role"] = UserRole.ADMIN.value  # .env админ
-        # Найти или создать пользователя, чтобы user_id был в сессии (для API)
-        r = await session.execute(select(User).where(User.email == email.strip().lower()))
-        env_user = r.scalar_one_or_none()
-        if env_user:
-            request.session["user_id"] = env_user.id
+        # Найти или привязать user_id — админ из .env использует user_id=1, чтобы видеть данные
+        email_lower = email.strip().lower()
+        admin_email = (settings.auth_admin_email or "").strip().lower()
+        if admin_email and email_lower == admin_email:
+            r1 = await session.execute(select(User).where(User.id == 1))
+            env_user = r1.scalar_one_or_none()
+            if env_user:
+                if env_user.email.lower() != email_lower:
+                    env_user.email = email_lower
+                    await session.commit()
+            else:
+                env_user = None
         else:
+            env_user = None
+        if not env_user:
+            r = await session.execute(select(User).where(User.email == email_lower))
+            env_user = r.scalar_one_or_none()
+        if not env_user:
             env_user = User(
-                email=email.strip().lower(),
+                email=email_lower,
                 password_hash=_hash_password(password),
                 role=UserRole.ADMIN.value,
                 approval_status=UserApprovalStatus.APPROVED.value,
@@ -164,7 +176,7 @@ async def login_submit(
             session.add(env_user)
             await session.commit()
             await session.refresh(env_user)
-            request.session["user_id"] = env_user.id
+        request.session["user_id"] = env_user.id
         next_url = request.query_params.get("next", "/ui/posts")
         if not next_url.startswith("/"):
             next_url = "/ui/posts"

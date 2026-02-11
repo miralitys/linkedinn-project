@@ -1,7 +1,7 @@
 # app/routers/setup.py
 import json
 import logging
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import or_, select
@@ -202,12 +202,35 @@ async def get_setup_draft_debug(
     }
 
 
+def _kb_keys_for_user(base_keys: list, user_id: int, is_admin: bool) -> list:
+    """Ключи для поиска: legacy без суффикса, :1, свои — чтобы восстанавливать данные."""
+    keys = []
+    seen = set()
+    for bk in base_keys:
+        keys.append(bk)
+        seen.add(bk)
+    if is_admin and user_id != 1:
+        for bk in base_keys:
+            k1 = _kb_key(bk, 1)
+            if k1 not in seen:
+                keys.append(k1)
+                seen.add(k1)
+    for bk in base_keys:
+        k = _kb_key(bk, user_id)
+        if k not in seen:
+            keys.append(k)
+            seen.add(k)
+    return keys
+
+
 @router.get("/draft")
 async def get_setup_draft(
+    request: Request,
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
 ):
     """Return saved draft for each section (authors, products, icp_raw, tone, goals)."""
+    is_admin = (request.session.get("user_role") or "").lower() == "admin"
     result = {}
     # authors: try setup_authors, then legacy "authors"
     key_sets = {
@@ -217,10 +240,9 @@ async def get_setup_draft(
         "tone": ["setup_tone"],
         "goals": ["setup_goals"],
     }
-    for section, keys in key_sets.items():
+    for section, base_keys in key_sets.items():
         row = None
-        for base_key in keys:
-            key = _kb_key(base_key, user_id)
+        for key in _kb_keys_for_user(base_keys, user_id, is_admin):
             r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key))
             row = r.scalar_one_or_none()
             if row and row.value:
@@ -263,17 +285,21 @@ async def get_setup_draft(
 SUBREDDITS_KEY = "saved_subreddits"
 
 
-async def _get_subreddits_list(session: AsyncSession, user_id: int) -> list:
-    key = _kb_key(SUBREDDITS_KEY, user_id)
-    r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key))
-    row = r.scalar_one_or_none()
-    if not row or not row.value:
-        return []
-    try:
-        data = json.loads(row.value)
-        return list(data) if isinstance(data, list) else []
-    except Exception:
-        return []
+async def _get_subreddits_list(session: AsyncSession, user_id: int, fallback_user_ids: Optional[list] = None) -> list:
+    keys_to_try = [SUBREDDITS_KEY]  # legacy без суффикса — первым
+    keys_to_try.append(_kb_key(SUBREDDITS_KEY, user_id))
+    if fallback_user_ids:
+        keys_to_try.extend(_kb_key(SUBREDDITS_KEY, uid) for uid in fallback_user_ids)
+    for key in keys_to_try:
+        r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key))
+        row = r.scalar_one_or_none()
+        if row and row.value:
+            try:
+                data = json.loads(row.value)
+                return list(data) if isinstance(data, list) else []
+            except Exception:
+                pass
+    return []
 
 
 async def _save_subreddits_list(session: AsyncSession, user_id: int, names: list) -> None:
@@ -290,16 +316,19 @@ async def _save_subreddits_list(session: AsyncSession, user_id: int, names: list
 
 @router.get("/subreddits")
 async def list_setup_subreddits(
+    request: Request,
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
 ):
     """Список сохранённых сабреддитов (из KnowledgeBase)."""
-    names = await _get_subreddits_list(session, user_id)
+    fallback = [1] if (request.session.get("user_role") or "").lower() == "admin" and user_id != 1 else None
+    names = await _get_subreddits_list(session, user_id, fallback)
     return sorted(set(names))
 
 
 @router.post("/subreddits")
 async def add_setup_subreddit(
+    request: Request,
     body: dict,
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
@@ -308,7 +337,8 @@ async def add_setup_subreddit(
     raw = (body.get("name") or "").strip().lower().replace("/r/", "").split("/")[0]
     if not raw:
         raise HTTPException(400, "Укажите имя сабреддита")
-    names = await _get_subreddits_list(session, user_id)
+    fallback = [1] if (request.session.get("user_role") or "").lower() == "admin" and user_id != 1 else None
+    names = await _get_subreddits_list(session, user_id, fallback)
     if raw in names:
         return {"ok": True, "name": raw, "message": "Уже в списке"}
     names.append(raw)
@@ -319,6 +349,7 @@ async def add_setup_subreddit(
 @router.delete("/subreddits/{name:path}", status_code=204)
 async def remove_setup_subreddit(
     name: str,
+    request: Request,
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
 ):
@@ -326,7 +357,8 @@ async def remove_setup_subreddit(
     sub = (name or "").strip().lower().replace("/r/", "").split("/")[0]
     if not sub:
         raise HTTPException(400, "Укажите имя сабреддита")
-    names = await _get_subreddits_list(session, user_id)
+    fallback = [1] if (request.session.get("user_role") or "").lower() == "admin" and user_id != 1 else None
+    names = await _get_subreddits_list(session, user_id, fallback)
     if sub not in names:
         raise HTTPException(404, "Сабреддит не найден в списке")
     names = [n for n in names if n != sub]

@@ -6,7 +6,10 @@
     <h1>{{ (tr.admin_users_title if tr else 'Пользователи') }}</h1>
     <p class="page-header-desc">{{ (tr.admin_users_desc if tr else 'Список всех зарегистрированных пользователей') }}</p>
   </div>
-  <div class="page-header-actions">
+  <div class="page-header-actions" style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+    <button type="button" id="btn-clear-posts" class="btn secondary" aria-label="{{ (tr.admin_clear_posts if tr else 'Очистить посты') }}" title="{{ (tr.admin_clear_posts_desc if tr else 'Удалить все посты в разделе Комментарии') }}">
+      {{ (tr.admin_clear_posts if tr else 'Очистить посты') }}
+    </button>
     <button type="button" id="btn-add-user" class="btn primary" aria-label="{{ (tr.admin_add_user if tr else 'Добавить пользователя') }}">
       <span style="font-size: 1.25rem; line-height: 1; margin-right: var(--space-2);" aria-hidden="true">+</span> {{ (tr.admin_add_user if tr else 'Добавить пользователя') }}
     </button>
@@ -286,6 +289,26 @@
 
   if (addUserBtn) {
     addUserBtn.addEventListener('click', openAddUserModal);
+  }
+  const clearPostsBtn = document.getElementById('btn-clear-posts');
+  if (clearPostsBtn) {
+    clearPostsBtn.addEventListener('click', async function() {
+      if (!confirm(window.__tr && window.__tr.admin_clear_posts_confirm ? window.__tr.admin_clear_posts_confirm : 'Удалить все посты в разделе Комментарии? Это действие нельзя отменить.')) return;
+      clearPostsBtn.disabled = true;
+      try {
+        const r = await fetch('/admin/clear-posts', { method: 'POST', credentials: 'include' });
+        const data = await r.json().catch(function() { return {}; });
+        if (r.ok && data.ok) {
+          if (typeof window.toast === 'function') window.toast(data.message || (window.__tr && window.__tr.admin_posts_cleared) || 'Посты очищены', 'success');
+        } else {
+          if (typeof window.toast === 'function') window.toast(data.detail || (window.__tr && window.__tr.common_error) || 'Ошибка', 'error');
+        }
+      } catch (e) {
+        if (typeof window.toast === 'function') window.toast((window.__tr && window.__tr.parse_error_network) || 'Ошибка сети', 'error');
+      } finally {
+        clearPostsBtn.disabled = false;
+      }
+    });
   }
   if (addUserCancel) {
     addUserCancel.addEventListener('click', closeAddUserModal);

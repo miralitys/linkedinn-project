@@ -7,12 +7,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from sqlalchemy import and_, select, func
+from sqlalchemy import and_, delete, select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.db import get_session
-from app.models import User, UserRole, SubscriptionStatus, UserApprovalStatus
+from app.models import ContactPost, User, UserRole, SubscriptionStatus, UserApprovalStatus
 from app.translations import get_locale_from_cookie, get_tr
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -85,6 +85,21 @@ async def admin_users(
             "request": request,
         },
     )
+
+
+@router.post("/clear-posts", response_class=JSONResponse)
+async def admin_clear_posts(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+):
+    """Очистить все посты в разделе Комментарии (только для админов)."""
+    if not _is_admin(request):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    count_r = await session.execute(select(func.count()).select_from(ContactPost))
+    count = count_r.scalar() or 0
+    await session.execute(delete(ContactPost))
+    await session.commit()
+    return JSONResponse({"ok": True, "deleted": count, "message": f"Удалено постов: {count}."})
 
 
 class UserCreateRequest(BaseModel):
