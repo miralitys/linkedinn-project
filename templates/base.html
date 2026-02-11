@@ -415,6 +415,23 @@
 </head>
 <body>
   <script>window.__tr = {{ (tr|tojson|safe) if tr is defined and tr else '{}' }}; window.__locale = "{{ locale if locale is defined else 'ru' }}";</script>
+  <script>
+    (function() {
+      var _fetch = window.fetch;
+      if (!_fetch) return;
+      window.fetch = function() {
+        var args = arguments;
+        return _fetch.apply(this, args).then(function(response) {
+          if (response.status === 401 && response.url && response.url.indexOf('/login') === -1 && response.url.indexOf('/logout') === -1 && response.url.indexOf('/register') === -1) {
+            var next = encodeURIComponent(window.location.pathname + window.location.search);
+            window.location.href = '/login?next=' + next;
+            return Promise.reject(new Error('Authentication required'));
+          }
+          return response;
+        });
+      };
+    })();
+  </script>
   <div class="app-layout">
   <aside class="layout-sidebar">
     <a href="/ui/posts" class="logo">

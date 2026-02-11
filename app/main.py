@@ -113,6 +113,8 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=settings.session_secret or "lfas-change-me-in-production",
     max_age=30 * 24 * 3600,
+    same_site="lax",
+    https_only=getattr(settings, "session_https_only", False),
 )
 
 app.include_router(auth.router)

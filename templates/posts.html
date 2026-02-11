@@ -383,7 +383,7 @@
     return y + '-' + m + '-' + day + 'T' + h + ':' + min + ':' + s;
   }
 
-  function loadPosts(doSyncIfEmpty) {
+  function loadPosts() {
     postsLoading.style.display = 'block';
     postsEmpty.style.display = 'none';
     document.getElementById('posts-error').style.display = 'none';
@@ -393,29 +393,11 @@
     if (period) params.set('period', period);
     params.set('sort', sort);
     params.set('archived', 'false');
-    fetch('/posts?' + params).then(r => {
+    fetch('/posts?' + params, { credentials: 'include' }).then(r => {
       if (!r.ok) throw new Error(r.status === 401 ? (window.__tr && window.__tr.required_login) || 'Login required' : (window.__tr && window.__tr.load_error) || 'Load error');
       return r.json();
     }).then(posts => {
       if (!Array.isArray(posts)) throw new Error((window.__tr && window.__tr.server_error) || 'Invalid response');
-      if (doSyncIfEmpty && (!posts || !posts.length)) {
-        Promise.all([
-          fetch('/posts/sync?source=rss', { method: 'POST' }).then(r => r.json()).catch(err => ({ synced: 0, message: 'RSS sync failed: ' + (err.message || 'unknown') })),
-          fetch('/posts/sync?source=demo', { method: 'POST' }).then(r => r.json()).catch(err => ({ synced: 0, message: 'Demo sync failed: ' + (err.message || 'unknown') }))
-        ]).then((results) => {
-          const totalSynced = (results[0]?.synced || 0) + (results[1]?.synced || 0);
-          if (totalSynced > 0) {
-            loadPosts(false);
-          } else {
-            postsLoading.style.display = 'none';
-            postsEmpty.style.display = 'block';
-          }
-        }).catch(() => { 
-          postsLoading.style.display = 'none'; 
-          postsEmpty.style.display = 'block'; 
-        });
-        return;
-      }
       postsLoading.style.display = 'none';
       const list = posts || [];
       if (!list.length) {
@@ -1190,15 +1172,15 @@ btn.textContent = (tr.posts_copied || 'Copied');
       sel.appendChild(new Option(a.full_name || ((tr.reddit_author_n || 'Author {}').replace('{}', i + 1)), String(i)));
     });
   }
-  fetch('/setup/draft').then(r => r.json()).then(draft => {
+  fetch('/setup/draft', { credentials: 'include' }).then(r => r.json()).then(draft => {
     viewPostSetupDraft = { authors: draft.authors || [], products: draft.products || [] };
     fillAuthorSelect(draft.authors);
   }).catch(() => { viewPostSetupDraft = { authors: [], products: [] }; fillAuthorSelect([]); });
 
   // Загружаем посты сразу, чтобы лента не оставалась пустой при медленном ответе /people
-  loadPosts(true);
+  loadPosts();
 
-  fetch('/people').then(r => r.json()).then(people => {
+  fetch('/people', { credentials: 'include' }).then(r => r.json()).then(people => {
     fillPersonSelect(people || []);
   }).catch(() => fillPersonSelect([]));
 })();
