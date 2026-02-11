@@ -1,9 +1,10 @@
 # app/deps.py — зависимости для FastAPI (текущий пользователь)
+import bcrypt
 from fastapi import Depends, HTTPException, Request
 from sqlalchemy import select
 
 from app.db import async_session_maker
-from app.models import User
+from app.models import User, UserApprovalStatus, UserRole
 
 
 async def get_current_user_id(request: Request) -> int:
@@ -11,14 +12,25 @@ async def get_current_user_id(request: Request) -> int:
     uid = request.session.get("user_id")
     if uid is not None:
         return int(uid)
-    # Fallback: если authenticated, но user_id нет (legacy-сессия) — ищем по email
+    # Fallback: если authenticated, но user_id нет (legacy-сессия) — ищем или создаём по email
     if request.session.get("authenticated") and request.session.get("user"):
         email = str(request.session.get("user", "")).strip().lower()
         if email:
             async with async_session_maker() as db:
                 r = await db.execute(select(User).where(User.email == email))
                 user = r.scalar_one_or_none()
-                if user:
-                    request.session["user_id"] = user.id
-                    return user.id
+                if not user:
+                    # Сессия от .env-логина до деплоя — пользователя в БД нет, создаём
+                    pw_hash = bcrypt.hashpw(b"legacy-session-fix", bcrypt.gensalt()).decode("utf-8")
+                    user = User(
+                        email=email,
+                        password_hash=pw_hash,
+                        role=UserRole.ADMIN.value,
+                        approval_status=UserApprovalStatus.APPROVED.value,
+                    )
+                    db.add(user)
+                    await db.commit()
+                    await db.refresh(user)
+                request.session["user_id"] = user.id
+                return user.id
     raise HTTPException(status_code=401, detail="Authentication required")
