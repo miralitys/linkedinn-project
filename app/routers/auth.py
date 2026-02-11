@@ -149,6 +149,22 @@ async def login_submit(
         request.session["authenticated"] = True
         request.session["user"] = email.strip()
         request.session["user_role"] = UserRole.ADMIN.value  # .env админ
+        # Найти или создать пользователя, чтобы user_id был в сессии (для API)
+        r = await session.execute(select(User).where(User.email == email.strip().lower()))
+        env_user = r.scalar_one_or_none()
+        if env_user:
+            request.session["user_id"] = env_user.id
+        else:
+            env_user = User(
+                email=email.strip().lower(),
+                password_hash=_hash_password(password),
+                role=UserRole.ADMIN.value,
+                approval_status=UserApprovalStatus.APPROVED.value,
+            )
+            session.add(env_user)
+            await session.commit()
+            await session.refresh(env_user)
+            request.session["user_id"] = env_user.id
         next_url = request.query_params.get("next", "/ui/posts")
         if not next_url.startswith("/"):
             next_url = "/ui/posts"
