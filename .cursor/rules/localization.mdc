@@ -1,0 +1,21 @@
+---
+description: Локализация интервью и UI: RU — русский, EN — английский
+globs: templates/**/*.html, app/translations.py
+alwaysApply: false
+---
+
+# Локализация интервью и UI
+
+**Правило:** В русской версии интервью и UI на русском языке. В английской версии — на английском.
+
+## Интервью (setup.html)
+
+- Вопросы, секции, placeholder «Ваш ответ» / «Your answer», кнопки «Далее» / «Next», «Завершить» / «Finish», «Закрыть (сохранить прогресс)» / «Close (save progress)»
+- `INTERVIEW_QUESTIONS_RU` — русские вопросы
+- `INTERVIEW_QUESTIONS_EN` — английские вопросы
+- Выбор по `window.__locale`: `ru` → русский, `en` → английский
+
+## Переводы
+
+- Добавлять все строки в `app/translations.py` в словари RU и EN
+- JS использует `window.__tr` для динамических строк

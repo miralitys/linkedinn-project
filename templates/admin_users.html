@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+{% block title %}{{ (tr.admin_users_title if tr else 'Пользователи') }} — MyVOICE's{% endblock %}
+{% block content %}
+<header class="page-header">
+  <div class="page-header-text">
+    <h1>{{ (tr.admin_users_title if tr else 'Пользователи') }}</h1>
+    <p class="page-header-desc">{{ (tr.admin_users_desc if tr else 'Список всех зарегистрированных пользователей') }}</p>
+  </div>
+  <div class="page-header-actions">
+    <button type="button" id="btn-add-user" class="btn primary" aria-label="{{ (tr.admin_add_user if tr else 'Добавить пользователя') }}">
+      <span style="font-size: 1.25rem; line-height: 1; margin-right: var(--space-2);" aria-hidden="true">+</span> {{ (tr.admin_add_user if tr else 'Добавить пользователя') }}
+    </button>
+  </div>
+</header>
+
+<div class="admin-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6);">
+  <div class="card admin-stat-card" style="padding: var(--space-4);">
+    <div style="font-size: var(--text-24); font-weight: 700; color: var(--primary);">{{ total_users }}</div>
+    <div style="font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1);">{{ (tr.admin_total_users if tr else 'Всего пользователей') }}</div>
+  </div>
+  <div class="card admin-stat-card" style="padding: var(--space-4);">
+    <div style="font-size: var(--text-24); font-weight: 700; color: var(--primary);">{{ admin_count }}</div>
+    <div style="font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1);">{{ (tr.admin_admins if tr else 'Администраторов') }}</div>
+  </div>
+  <div class="card admin-stat-card" style="padding: var(--space-4);">
+    <div style="font-size: var(--text-24); font-weight: 700; color: var(--success, #10b981);">{{ active_subscriptions }}</div>
+    <div style="font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1);">{{ (tr.admin_active_subscriptions if tr else 'Активных подписок') }}</div>
+  </div>
+  <div class="card admin-stat-card" style="padding: var(--space-4);">
+    <div style="font-size: var(--text-24); font-weight: 700; color: var(--warning, #f59e0b);">{{ trial_users }}</div>
+    <div style="font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1);">{{ (tr.admin_trial_users if tr else 'Пробных пользователей') }}</div>
+  </div>
+  <div class="card admin-stat-card" style="padding: var(--space-4);">
+    <div style="font-size: var(--text-24); font-weight: 700; color: var(--warning, #f59e0b);">{{ pending_users }}</div>
+    <div style="font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1);">{{ (tr.admin_pending_users if tr else 'Ожидают подтверждения') }}</div>
+  </div>
+</div>
+
+<div class="card admin-users-card">
+  <div class="data-table-wrap">
+    <table class="data-table" role="table">
+      <thead>
+        <tr>
+          <th>{{ (tr.admin_email if tr else 'Email') }}</th>
+          <th>{{ (tr.admin_status if tr else 'Статус') }}</th>
+          <th>{{ (tr.admin_role if tr else 'Роль') }}</th>
+          <th>{{ (tr.admin_subscription if tr else 'Подписка') }}</th>
+          <th>{{ (tr.admin_subscription_expires if tr else 'Истекает') }}</th>
+          <th>{{ (tr.admin_created_at if tr else 'Зарегистрирован') }}</th>
+          <th>{{ (tr.admin_last_login if tr else 'Последний вход') }}</th>
+          <th style="width: 52px; text-align: right;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr data-user-id="{{ user.id }}">
+          <td><strong>{{ user.email }}</strong></td>
+          <td>
+            {% if (user.approval_status if user is defined and user else 'approved') == 'pending' %}
+            <span class="badge" style="background: var(--warning-soft, #fef3c7); color: var(--warning, #f59e0b);">{{ (tr.admin_status_pending if tr else 'Ожидает') }}</span>
+            {% elif (user.approval_status if user is defined and user else 'approved') == 'rejected' %}
+            <span class="badge badge-danger">{{ (tr.admin_status_rejected if tr else 'Отклонён') }}</span>
+            {% else %}
+            <span class="badge" style="background: var(--success-soft, #d1fae5); color: var(--success, #10b981);">{{ (tr.admin_status_approved if tr else 'Одобрен') }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if user.role == 'admin' %}
+            <span class="badge" style="background: var(--primary-soft); color: var(--primary);">{{ (tr.admin_role_admin if tr else 'Админ') }}</span>
+            {% else %}
+            <span class="badge badge-muted">{{ (tr.admin_role_user if tr else 'Пользователь') }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if user.subscription_status == 'active' %}
+            <span class="badge" style="background: var(--success-soft, #d1fae5); color: var(--success, #10b981);">{{ (tr.admin_subscription_active if tr else 'Активна') }}</span>
+            {% elif user.subscription_status == 'trial' %}
+            <span class="badge" style="background: var(--warning-soft, #fef3c7); color: var(--warning, #f59e0b);">{{ (tr.admin_subscription_trial if tr else 'Пробная') }}</span>
+            {% elif user.subscription_status == 'expired' %}
+            <span class="badge badge-danger">{{ (tr.admin_subscription_expired if tr else 'Истекла') }}</span>
+            {% elif user.subscription_status == 'cancelled' %}
+            <span class="badge badge-muted">{{ (tr.admin_subscription_cancelled if tr else 'Отменена') }}</span>
+            {% else %}
+            <span class="badge badge-muted">{{ (tr.admin_subscription_free if tr else 'Бесплатная') }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if user.subscription_expires_at %}
+            {{ user.subscription_expires_at.strftime('%d.%m.%Y') if user.subscription_expires_at else '—' }}
+            {% else %}
+            —
+            {% endif %}
+          </td>
+          <td>{{ user.created_at.strftime('%d.%m.%Y %H:%M') if user.created_at else '—' }}</td>
+          <td>{{ user.last_login_at.strftime('%d.%m.%Y %H:%M') if user.last_login_at else '—' }}</td>
+          <td style="text-align: right;">
+            <div class="admin-user-menu-wrap">
+              <button type="button" class="btn btn-ghost btn-sm btn-card-menu btn-icon admin-user-menu-btn" data-user-id="{{ user.id }}" aria-label="{{ (tr.admin_more_actions if tr else 'Ещё') }}" aria-haspopup="true" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>
+              </button>
+              <div class="admin-user-menu-dropdown" role="menu">
+                {% if (user.approval_status if user is defined and user else 'approved') == 'pending' %}
+                <button type="button" role="menuitem" class="admin-user-menu-item btn-approve-user" data-user-id="{{ user.id }}">{{ (tr.admin_approve_user if tr else 'Одобрить') }}</button>
+                <button type="button" role="menuitem" class="admin-user-menu-item btn-reject-user danger" data-user-id="{{ user.id }}">{{ (tr.admin_reject_user if tr else 'Отклонить') }}</button>
+                {% endif %}
+                <button type="button" role="menuitem" class="admin-user-menu-item btn-edit-user" data-user-id="{{ user.id }}">{{ (tr.admin_edit_user if tr else 'Редактировать') }}</button>
+                <button type="button" role="menuitem" class="admin-user-menu-item btn-delete-user danger" data-user-id="{{ user.id }}">{{ (tr.admin_delete_user if tr else 'Удалить') }}</button>
+              </div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+        {% if not users %}
+        <tr>
+          <td colspan="8" style="text-align: center; padding: var(--space-8); color: var(--text-muted);">
+            {{ (tr.admin_no_users if tr else 'Пользователей пока нет') }}
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Модальное окно добавления пользователя -->
+<div id="add-user-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="add-user-modal-title" hidden>
+  <div class="modal-backdrop" aria-hidden="true"></div>
+  <div class="modal-content card confirm-modal-content" style="max-width: 480px;">
+    <h2 id="add-user-modal-title" class="confirm-modal-title">{{ (tr.admin_add_user if tr else 'Добавить пользователя') }}</h2>
+    <form id="add-user-form" class="admin-user-form">
+      <div style="margin-bottom: var(--space-4);">
+        <label for="add-user-email" style="display: block; font-size: var(--text-14); font-weight: 500; margin-bottom: var(--space-2); color: var(--text);">
+          {{ (tr.login_email if tr else 'Email') }} <span style="color: var(--error);">*</span>
+        </label>
+        <input type="email" id="add-user-email" name="email" required autocomplete="email" style="width: 100%; padding: 0.6rem 0.75rem; font-size: var(--text-16); border: 1px solid var(--border); border-radius: var(--radius);" placeholder="user@example.com">
+      </div>
+      <div style="margin-bottom: var(--space-4);">
+        <label for="add-user-password" style="display: block; font-size: var(--text-14); font-weight: 500; margin-bottom: var(--space-2); color: var(--text);">
+          {{ (tr.login_password if tr else 'Пароль') }} <span style="color: var(--error);">*</span>
+        </label>
+        <input type="password" id="add-user-password" name="password" required autocomplete="new-password" minlength="6" style="width: 100%; padding: 0.6rem 0.75rem; font-size: var(--text-16); border: 1px solid var(--border); border-radius: var(--radius);" placeholder="{{ (tr.admin_password_placeholder if tr else 'Минимум 6 символов') }}">
+      </div>
+      <div style="margin-bottom: var(--space-4);">
+        <label for="add-user-role" style="display: block; font-size: var(--text-14); font-weight: 500; margin-bottom: var(--space-2); color: var(--text);">
+          {{ (tr.admin_role if tr else 'Роль') }}
+        </label>
+        <select id="add-user-role" name="role" style="width: 100%; padding: 0.6rem 0.75rem; font-size: var(--text-16); border: 1px solid var(--border); border-radius: var(--radius);">
+          <option value="user">{{ (tr.admin_role_user if tr else 'Пользователь') }}</option>
+          <option value="admin">{{ (tr.admin_role_admin if tr else 'Админ') }}</option>
+        </select>
+      </div>
+      <div style="margin-bottom: var(--space-4);">
+        <label for="add-user-subscription" style="display: block; font-size: var(--text-14); font-weight: 500; margin-bottom: var(--space-2); color: var(--text);">
+          {{ (tr.admin_subscription if tr else 'Подписка') }}
+        </label>
+        <select id="add-user-subscription" name="subscription_status" style="width: 100%; padding: 0.6rem 0.75rem; font-size: var(--text-16); border: 1px solid var(--border); border-radius: var(--radius);">
+          <option value="free">{{ (tr.admin_subscription_free if tr else 'Бесплатная') }}</option>
+          <option value="trial">{{ (tr.admin_subscription_trial if tr else 'Пробная') }}</option>
+          <option value="active">{{ (tr.admin_subscription_active if tr else 'Активна') }}</option>
+          <option value="expired">{{ (tr.admin_subscription_expired if tr else 'Истекла') }}</option>
+          <option value="cancelled">{{ (tr.admin_subscription_cancelled if tr else 'Отменена') }}</option>
+        </select>
+      </div>
+      <div id="add-user-error" style="display: none; font-size: var(--text-14); color: var(--error); margin-bottom: var(--space-4); padding: var(--space-2); background: var(--danger-soft, #fee2e2); border-radius: var(--radius-sm);"></div>
+      <div class="modal-actions">
+        <button type="button" id="add-user-cancel" class="btn secondary">{{ (tr.admin_cancel if tr else 'Отмена') }}</button>
+        <button type="submit" id="add-user-submit" class="btn primary">{{ (tr.admin_add_user if tr else 'Добавить пользователя') }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Модальное окно редактирования пользователя -->
+<div id="edit-user-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-user-modal-title" hidden>
+  <div class="modal-backdrop" aria-hidden="true"></div>
+  <div class="modal-content card confirm-modal-content" style="max-width: 480px;">
+    <h2 id="edit-user-modal-title" class="confirm-modal-title">{{ (tr.admin_edit_user if tr else 'Редактировать пользователя') }}</h2>
+    <form id="edit-user-form" class="admin-user-form">
+      <input type="hidden" id="edit-user-id" name="id">
+      <div style="margin-bottom: var(--space-4);">
+        <label for="edit-user-email" style="display: block; font-size: var(--text-14); font-weight: 500; margin-bottom: var(--space-2); color: var(--text);">
+          {{ (tr.login_email if tr else 'Email') }} <span style="color: var(--error);">*</span>
+        </label>
+        <input type="email" id="edit-user-email" name="email" required autocomplete="email" style="width: 100%; padding: 0.6rem 0.75rem; font-size: var(--text-16); border: 1px solid var(--border); border-radius: var(--radius);" placeholder="user@example.com">
+      </div>
+      <div style="margin-bottom: var(--space-4);">
+        <label for="edit-user-password" style="display: block; font-size: var(--text-14); font-weight: 500; margin-bottom: var(--space-2); color: var(--text);">
+          {{ (tr.login_password if tr else 'Пароль') }} <span style="font-size: var(--text-12); color: var(--text-muted); font-weight: 400;">({{ (tr.admin_password_optional if tr else 'оставьте пустым, чтобы не менять') }})</span>
+        </label>
+        <input type="password" id="edit-user-password" name="password" autocomplete="new-password" minlength="6" style="width: 100%; padding: 0.6rem 0.75rem; font-size: var(--text-16); border: 1px solid var(--border); border-radius: var(--radius);" placeholder="{{ (tr.admin_password_placeholder if tr else 'Минимум 6 символов') }}">
+      </div>
+      <div style="margin-bottom: var(--space-4);">
+        <label for="edit-user-role" style="display: block; font-size: var(--text-14); font-weight: 500; margin-bottom: var(--space-2); color: var(--text);">
+          {{ (tr.admin_role if tr else 'Роль') }}
+        </label>
+        <select id="edit-user-role" name="role" style="width: 100%; padding: 0.6rem 0.75rem; font-size: var(--text-16); border: 1px solid var(--border); border-radius: var(--radius);">
+          <option value="user">{{ (tr.admin_role_user if tr else 'Пользователь') }}</option>
+          <option value="admin">{{ (tr.admin_role_admin if tr else 'Админ') }}</option>
+        </select>
+      </div>
+      <div style="margin-bottom: var(--space-4);">
+        <label for="edit-user-subscription" style="display: block; font-size: var(--text-14); font-weight: 500; margin-bottom: var(--space-2); color: var(--text);">
+          {{ (tr.admin_subscription if tr else 'Подписка') }}
+        </label>
+        <select id="edit-user-subscription" name="subscription_status" style="width: 100%; padding: 0.6rem 0.75rem; font-size: var(--text-16); border: 1px solid var(--border); border-radius: var(--radius);">
+          <option value="free">{{ (tr.admin_subscription_free if tr else 'Бесплатная') }}</option>
+          <option value="trial">{{ (tr.admin_subscription_trial if tr else 'Пробная') }}</option>
+          <option value="active">{{ (tr.admin_subscription_active if tr else 'Активна') }}</option>
+          <option value="expired">{{ (tr.admin_subscription_expired if tr else 'Истекла') }}</option>
+          <option value="cancelled">{{ (tr.admin_subscription_cancelled if tr else 'Отменена') }}</option>
+        </select>
+      </div>
+      <div style="margin-bottom: var(--space-4);">
+        <label for="edit-user-expires" style="display: block; font-size: var(--text-14); font-weight: 500; margin-bottom: var(--space-2); color: var(--text);">
+          {{ (tr.admin_subscription_expires if tr else 'Истекает') }}
+        </label>
+        <input type="date" id="edit-user-expires" name="subscription_expires_at" style="width: 100%; padding: 0.6rem 0.75rem; font-size: var(--text-16); border: 1px solid var(--border); border-radius: var(--radius);" placeholder="YYYY-MM-DD">
+      </div>
+      <div id="edit-user-error" style="display: none; font-size: var(--text-14); color: var(--error); margin-bottom: var(--space-4); padding: var(--space-2); background: var(--danger-soft, #fee2e2); border-radius: var(--radius-sm);"></div>
+      <div class="modal-actions">
+        <button type="button" id="edit-user-cancel" class="btn secondary">{{ (tr.admin_cancel if tr else 'Отмена') }}</button>
+        <button type="submit" id="edit-user-submit" class="btn primary">{{ (tr.admin_save if tr else 'Сохранить') }}</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Подтверждение удаления -->
+<div id="delete-user-modal" class="modal confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="delete-user-modal-title" hidden>
+  <div class="modal-backdrop" aria-hidden="true"></div>
+  <div class="modal-content card confirm-modal-content" style="max-width: 400px;">
+    <h2 id="delete-user-modal-title" class="confirm-modal-title">{{ (tr.admin_delete_user_confirm_title if tr else 'Удалить пользователя?') }}</h2>
+    <p id="delete-user-modal-desc" class="confirm-modal-desc">{{ (tr.admin_delete_user_confirm_desc if tr else 'Это действие нельзя отменить.') }}</p>
+    <div class="modal-actions">
+      <button type="button" id="delete-user-cancel" class="btn secondary">{{ (tr.admin_cancel if tr else 'Отмена') }}</button>
+      <button type="button" id="delete-user-ok" class="btn btn-danger">{{ (tr.companies_delete if tr else 'Удалить') }}</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .admin-stats { align-items: stretch; }
+  .admin-stats .admin-stat-card { height: 6rem; display: flex; flex-direction: column; justify-content: center; }
+  .admin-users-card { overflow: visible; }
+  .admin-users-card .data-table-wrap { overflow: visible; }
+  .admin-users-card .data-table td { overflow: visible; }
+  .admin-user-menu-wrap { position: relative; display: inline-block; }
+  .admin-user-menu-wrap .btn-card-menu { min-width: 36px; min-height: 36px; padding: 0; border: none; background: transparent; color: var(--text-muted); border-radius: var(--radius-sm); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+  .admin-user-menu-wrap .btn-card-menu:hover { background: var(--primary-soft); color: var(--primary); }
+  .admin-user-menu-wrap .btn-card-menu:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .admin-user-menu-dropdown { position: absolute; right: 0; top: 100%; margin-top: 4px; min-width: 140px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); padding: var(--space-1); z-index: 100; display: none; }
+  .admin-user-menu-wrap.is-open .admin-user-menu-dropdown { display: block; }
+  .admin-user-menu-item { display: block; width: 100%; padding: var(--space-2) var(--space-3); text-align: left; font-size: var(--text-13); color: var(--text); background: none; border: none; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; }
+  .admin-user-menu-item:hover { background: var(--bg-soft); }
+  .admin-user-menu-item.danger:hover { color: var(--danger); }
+  .confirm-modal-desc { margin: 0 0 var(--space-4); font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; }
+  .btn.btn-danger { background: var(--danger); color: white; border: none; }
+  .btn.btn-danger:hover { background: #b91c1c; color: white; }
+</style>
+
+<script>
+(function() {
+  const tr = window.__tr || {};
+  const addUserBtn = document.getElementById('btn-add-user');
+  const addUserModal = document.getElementById('add-user-modal');
+  const addUserForm = document.getElementById('add-user-form');
+  const addUserCancel = document.getElementById('add-user-cancel');
+  const addUserError = document.getElementById('add-user-error');
+  const modalBackdrop = addUserModal.querySelector('.modal-backdrop');
+
+  function openAddUserModal() {
+    addUserModal.hidden = false;
+    addUserModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('add-user-email').focus();
+  }
+
+  function closeAddUserModal() {
+    addUserModal.hidden = true;
+    addUserModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    addUserForm.reset();
+    addUserError.style.display = 'none';
+    addUserError.textContent = '';
+  }
+
+  if (addUserBtn) {
+    addUserBtn.addEventListener('click', openAddUserModal);
+  }
+  if (addUserCancel) {
+    addUserCancel.addEventListener('click', closeAddUserModal);
+  }
+  if (modalBackdrop) {
+    modalBackdrop.addEventListener('click', closeAddUserModal);
+  }
+
+  addUserModal.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !addUserModal.hidden) {
+      closeAddUserModal();
+    }
+  });
+
+  if (addUserForm) {
+    addUserForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      addUserError.style.display = 'none';
+      addUserError.textContent = '';
+
+      const email = document.getElementById('add-user-email').value.trim();
+      const password = document.getElementById('add-user-password').value;
+      const role = document.getElementById('add-user-role').value;
+      const subscription_status = document.getElementById('add-user-subscription').value;
+
+      if (!email || !password) {
+        addUserError.textContent = tr.admin_error_required || 'Заполните все обязательные поля';
+        addUserError.style.display = 'block';
+        return;
+      }
+
+      if (password.length < 6) {
+        addUserError.textContent = tr.register_error_short_password || 'Пароль должен быть не менее 6 символов';
+        addUserError.style.display = 'block';
+        return;
+      }
+
+      const submitBtn = document.getElementById('add-user-submit');
+      submitBtn.disabled = true;
+      submitBtn.textContent = tr.admin_adding || 'Добавление...';
+
+      try {
+        const response = await fetch('/admin/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, role, subscription_status })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || data.error || 'Ошибка создания пользователя');
+        }
+
+        if (typeof window.toast === 'function') {
+          window.toast(tr.admin_user_added || 'Пользователь добавлен', 'success');
+        }
+        closeAddUserModal();
+        window.location.reload();
+      } catch (err) {
+        addUserError.textContent = err.message || (tr.admin_error_create || 'Не удалось создать пользователя');
+        addUserError.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = tr.admin_add_user || 'Добавить пользователя';
+      }
+    });
+  }
+
+  // Сохраняем данные пользователей для редактирования
+  const usersData = {{ users_serialized|tojson|safe }};
+
+  function toIsoDate(d) {
+    if (!d) return '';
+    try {
+      const dt = typeof d === 'string' ? new Date(d) : d;
+      return dt.toISOString ? dt.toISOString().slice(0, 10) : '';
+    } catch (_) { return ''; }
+  }
+
+  // Три точки: открытие/закрытие меню
+  document.querySelectorAll('.admin-user-menu-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const wrap = btn.closest('.admin-user-menu-wrap');
+      const isOpen = wrap && wrap.classList.contains('is-open');
+      document.querySelectorAll('.admin-user-menu-wrap.is-open').forEach(function(w) { w.classList.remove('is-open'); });
+      if (wrap && !isOpen) {
+        wrap.classList.add('is-open');
+        btn.setAttribute('aria-expanded', 'true');
+      } else if (btn) {
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  });
+  document.addEventListener('click', function() {
+    document.querySelectorAll('.admin-user-menu-wrap.is-open').forEach(function(w) {
+      w.classList.remove('is-open');
+      const b = w.querySelector('.admin-user-menu-btn');
+      if (b) b.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  // Редактировать
+  const editUserModal = document.getElementById('edit-user-modal');
+  const editUserForm = document.getElementById('edit-user-form');
+  const editUserCancel = document.getElementById('edit-user-cancel');
+  const editUserError = document.getElementById('edit-user-error');
+  const editModalBackdrop = editUserModal && editUserModal.querySelector('.modal-backdrop');
+
+  function openEditUserModal(userId) {
+    const u = usersData.find(function(x) { return x.id === userId; });
+    if (!u) return;
+    document.getElementById('edit-user-id').value = u.id;
+    document.getElementById('edit-user-email').value = u.email || '';
+    document.getElementById('edit-user-password').value = '';
+    document.getElementById('edit-user-role').value = u.role || 'user';
+    document.getElementById('edit-user-subscription').value = u.subscription_status || 'free';
+    document.getElementById('edit-user-expires').value = toIsoDate(u.subscription_expires_at);
+    editUserError.style.display = 'none';
+    editUserError.textContent = '';
+    editUserModal.hidden = false;
+    editUserModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('edit-user-email').focus();
+  }
+
+  function closeEditUserModal() {
+    editUserModal.hidden = true;
+    editUserModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll('.btn-edit-user').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.querySelectorAll('.admin-user-menu-wrap.is-open').forEach(function(w) { w.classList.remove('is-open'); });
+      openEditUserModal(parseInt(btn.dataset.userId, 10));
+    });
+  });
+
+  if (editUserCancel) editUserCancel.addEventListener('click', closeEditUserModal);
+  if (editModalBackdrop) editModalBackdrop.addEventListener('click', closeEditUserModal);
+  editUserModal.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !editUserModal.hidden) closeEditUserModal();
+  });
+
+  if (editUserForm) {
+    editUserForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      editUserError.style.display = 'none';
+      editUserError.textContent = '';
+      const userId = parseInt(document.getElementById('edit-user-id').value, 10);
+      const email = document.getElementById('edit-user-email').value.trim();
+      const password = document.getElementById('edit-user-password').value;
+      const role = document.getElementById('edit-user-role').value;
+      const subscription_status = document.getElementById('edit-user-subscription').value;
+      const subscription_expires_at = document.getElementById('edit-user-expires').value;
+      if (!email || email.indexOf('@') === -1) {
+        editUserError.textContent = tr.admin_error_required || 'Заполните email';
+        editUserError.style.display = 'block';
+        return;
+      }
+      if (password && password.length < 6) {
+        editUserError.textContent = tr.register_error_short_password || 'Пароль не менее 6 символов';
+        editUserError.style.display = 'block';
+        return;
+      }
+      const submitBtn = document.getElementById('edit-user-submit');
+      submitBtn.disabled = true;
+      submitBtn.textContent = tr.admin_saving || 'Сохранение...';
+      try {
+        const body = { email, role, subscription_status };
+        if (password) body.password = password;
+        body.subscription_expires_at = subscription_expires_at || '';
+        const res = await fetch('/admin/users/' + userId, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json().catch(function() { return {}; });
+        if (!res.ok) throw new Error(data.detail || data.error || 'Ошибка');
+        if (typeof window.toast === 'function') window.toast(tr.admin_user_updated || 'Пользователь обновлён', 'success');
+        closeEditUserModal();
+        window.location.reload();
+      } catch (err) {
+        editUserError.textContent = err.message || (tr.admin_error_update || 'Не удалось обновить');
+        editUserError.style.display = 'block';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = tr.admin_save || 'Сохранить';
+      }
+    });
+  }
+
+  // Удалить
+  const deleteUserModal = document.getElementById('delete-user-modal');
+  const deleteUserCancel = document.getElementById('delete-user-cancel');
+  const deleteUserOk = document.getElementById('delete-user-ok');
+  const deleteModalBackdrop = deleteUserModal && deleteUserModal.querySelector('.modal-backdrop');
+  let deleteUserId = null;
+
+  function openDeleteUserModal(userId) {
+    deleteUserId = userId;
+    const u = usersData.find(function(x) { return x.id === userId; });
+    const desc = document.getElementById('delete-user-modal-desc');
+    if (desc && u) desc.textContent = (tr.admin_delete_user_confirm_desc || 'Пользователь') + ' ' + (u.email || '') + ' ' + (tr.admin_will_be_deleted || 'будет удалён. Это действие нельзя отменить.');
+    if (desc && !u) desc.textContent = tr.admin_delete_user_confirm_desc || 'Это действие нельзя отменить.';
+    deleteUserModal.hidden = false;
+    deleteUserModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    deleteUserOk.focus();
+  }
+
+  function closeDeleteUserModal() {
+    deleteUserModal.hidden = true;
+    deleteUserModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    deleteUserId = null;
+  }
+
+  document.querySelectorAll('.btn-delete-user').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.querySelectorAll('.admin-user-menu-wrap.is-open').forEach(function(w) { w.classList.remove('is-open'); });
+      openDeleteUserModal(parseInt(btn.dataset.userId, 10));
+    });
+  });
+
+  // Одобрить / Отклонить
+  async function approveOrReject(userId, action) {
+    const url = action === 'approve' ? '/admin/users/' + userId + '/approve' : '/admin/users/' + userId + '/reject';
+    try {
+      const res = await fetch(url, { method: 'POST' });
+      const data = await res.json().catch(function() { return {}; });
+      if (!res.ok) throw new Error(data.detail || data.error || 'Ошибка');
+      const msg = action === 'approve' ? (tr.admin_user_approved || 'Пользователь одобрен') : (tr.admin_user_rejected || 'Регистрация отклонена');
+      if (typeof window.toast === 'function') window.toast(msg, 'success');
+      window.location.reload();
+    } catch (err) {
+      if (typeof window.toast === 'function') window.toast(err.message || 'Ошибка', 'error');
+    }
+  }
+  document.querySelectorAll('.btn-approve-user').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.querySelectorAll('.admin-user-menu-wrap.is-open').forEach(function(w) { w.classList.remove('is-open'); });
+      approveOrReject(parseInt(btn.dataset.userId, 10), 'approve');
+    });
+  });
+  document.querySelectorAll('.btn-reject-user').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.querySelectorAll('.admin-user-menu-wrap.is-open').forEach(function(w) { w.classList.remove('is-open'); });
+      approveOrReject(parseInt(btn.dataset.userId, 10), 'reject');
+    });
+  });
+
+  if (deleteUserCancel) deleteUserCancel.addEventListener('click', closeDeleteUserModal);
+  if (deleteModalBackdrop) deleteModalBackdrop.addEventListener('click', closeDeleteUserModal);
+  deleteUserModal.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !deleteUserModal.hidden) closeDeleteUserModal();
+  });
+
+  if (deleteUserOk) {
+    deleteUserOk.addEventListener('click', async function() {
+      if (deleteUserId == null) return;
+      const id = deleteUserId;
+      closeDeleteUserModal();
+      try {
+        const res = await fetch('/admin/users/' + id, { method: 'DELETE' });
+        const data = await res.json().catch(function() { return {}; });
+        if (!res.ok) throw new Error(data.detail || data.error || 'Ошибка');
+        if (typeof window.toast === 'function') window.toast(tr.admin_user_deleted || 'Пользователь удалён', 'success');
+        window.location.reload();
+      } catch (err) {
+        if (typeof window.toast === 'function') window.toast(err.message || (tr.admin_error_delete || 'Не удалось удалить'), 'error');
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

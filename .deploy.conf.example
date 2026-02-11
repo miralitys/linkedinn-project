@@ -1,0 +1,11 @@
+# Копируйте в .deploy.conf и укажите свой сервер
+# cp .deploy.conf.example .deploy.conf
+
+REMOTE=user@ваш-сервер.com
+REMOTE_PATH=/var/www/myvoices
+
+# Опционально: автоматический перезапуск после деплоя
+# RESTART_AFTER_DEPLOY=true
+
+# Если используете systemd (укажите имя сервиса)
+# SYSTEMD_SERVICE=myvoices

@@ -89,7 +89,43 @@ class DraftStatus(str, PyEnum):
     REJECTED = "rejected"
 
 
+class UserRole(str, PyEnum):
+    USER = "user"
+    ADMIN = "admin"
+
+
+class UserApprovalStatus(str, PyEnum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+class SubscriptionStatus(str, PyEnum):
+    FREE = "free"
+    TRIAL = "trial"
+    ACTIVE = "active"
+    EXPIRED = "expired"
+    CANCELLED = "cancelled"
+
+
 # --------------- Core entities ---------------
+
+
+class User(Base):
+    """Пользователь системы: регистрация, роли, подписка."""
+    __tablename__ = "users"
+    __table_args__ = (UniqueConstraint("email", name="uq_users_email"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(256), nullable=False, unique=True)
+    password_hash: Mapped[str] = mapped_column(String(256), nullable=False)  # bcrypt hash
+    role: Mapped[str] = mapped_column(String(16), default=UserRole.USER.value, nullable=False)
+    approval_status: Mapped[str] = mapped_column(String(16), default=UserApprovalStatus.APPROVED.value, nullable=False)
+    subscription_status: Mapped[str] = mapped_column(String(32), default=SubscriptionStatus.FREE.value, nullable=False)
+    subscription_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_login_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
 
 class Company(Base):

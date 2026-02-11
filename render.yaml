@@ -17,3 +17,7 @@ services:
         generateValue: true
       - key: OPENAI_API_KEY
         sync: false
+      - key: AUTH_ADMIN_EMAIL
+        sync: false
+      - key: AUTH_ADMIN_PASSWORD
+        sync: false

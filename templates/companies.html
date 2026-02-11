@@ -1,29 +1,29 @@
 {% extends "base.html" %}
-{% block title %}Компании — MyVOICE's{% endblock %}
+{% block title %}{{ tr.companies_title }} — MyVOICE's{% endblock %}
 {% block content %}
 <header class="page-header">
   <div class="page-header-text">
-    <h1>Компании</h1>
-    <p class="page-header-desc">Добавляйте компании и управляйте контактами по каждой. Выберите компанию в списке, чтобы увидеть детали и связанных людей.</p>
+    <h1>{{ tr.companies_title }}</h1>
+    <p class="page-header-desc">{{ tr.companies_lead }}</p>
   </div>
   <div class="page-header-actions">
-    <button type="button" id="btn-add-company" class="btn primary btn-add-contact" aria-label="Добавить компанию" title="Добавить компанию">
-      <span class="btn-add-icon" aria-hidden="true">+</span> Добавить компанию
+    <button type="button" id="btn-add-company" class="btn primary btn-add-contact" aria-label="{{ tr.companies_add }}" title="{{ tr.companies_add }}">
+      <span class="btn-add-icon" aria-hidden="true">+</span> {{ tr.companies_add }}
     </button>
   </div>
 </header>
 
-<div class="companies-split" role="region" aria-label="Модуль компаний">
+<div class="companies-split" role="region" aria-label="{{ tr.companies_list_title }}">
   <!-- Left pane: list -->
-  <aside class="companies-list-pane card" aria-label="Список компаний">
+  <aside class="companies-list-pane card" aria-label="{{ tr.companies_list_title }}">
     <div class="companies-list-header">
-      <h2 class="section-title" id="companies-list-heading">Список компаний</h2>
+      <h2 class="section-title" id="companies-list-heading">{{ tr.companies_list_title }}</h2>
     </div>
     <div class="companies-search-wrap">
-      <label for="companies-search" class="visually-hidden">Поиск по названию, сайту, LinkedIn</label>
+      <label for="companies-search" class="visually-hidden">{{ tr.companies_search_label }}</label>
       <span class="companies-search-inner">
-        <input type="text" id="companies-search" class="companies-search-input" placeholder="Поиск..." autocomplete="off" aria-describedby="companies-search-hint">
-        <button type="button" id="companies-search-clear" class="btn-icon companies-search-clear" aria-label="Очистить поиск" title="Очистить" hidden>×</button>
+        <input type="text" id="companies-search" class="companies-search-input" placeholder="{{ tr.companies_search_placeholder }}" autocomplete="off" aria-describedby="companies-search-hint">
+        <button type="button" id="companies-search-clear" class="btn-icon companies-search-clear" aria-label="{{ tr.companies_clear_search }}" title="{{ tr.companies_clear_search }}" hidden>×</button>
       </span>
       <span id="companies-search-hint" class="companies-search-hint" aria-live="polite"></span>
     </div>
@@ -38,26 +38,26 @@
     <div id="companies-list" class="companies-list-rows" role="list" aria-labelledby="companies-list-heading"></div>
 
     <div id="companies-empty" class="companies-state-card companies-empty" style="display: none;" role="status">
-      <p class="companies-state-title">Добавь первую компанию</p>
-      <p class="companies-state-desc">Создайте компанию, чтобы привязывать к ней контакты.</p>
-      <button type="button" id="companies-empty-cta" class="btn primary">Добавить компанию</button>
+      <p class="companies-state-title">{{ tr.companies_empty_first }}</p>
+      <p class="companies-state-desc">{{ tr.companies_empty_desc }}</p>
+      <button type="button" id="companies-empty-cta" class="btn primary">{{ tr.companies_add }}</button>
     </div>
     <div id="companies-search-empty" class="companies-state-card companies-no-results" style="display: none;" role="status">
-      <p class="companies-state-title">Ничего не найдено</p>
-      <p class="companies-state-desc">Попробуйте другой запрос или сбросьте поиск.</p>
-      <button type="button" id="companies-search-reset" class="btn secondary">Сбросить</button>
+      <p class="companies-state-title">{{ tr.companies_no_results }}</p>
+      <p class="companies-state-desc">{{ tr.companies_no_results_desc }}</p>
+      <button type="button" id="companies-search-reset" class="btn secondary">{{ tr.companies_reset }}</button>
     </div>
     <div id="companies-error" class="companies-state-card companies-error-state" style="display: none;" role="alert">
-      <p class="companies-state-title">Не удалось загрузить</p>
-      <p class="companies-state-desc">Проверьте соединение и повторите попытку.</p>
-      <button type="button" id="companies-error-retry" class="btn primary">Повторить</button>
+      <p class="companies-state-title">{{ tr.companies_load_error_title }}</p>
+      <p class="companies-state-desc">{{ tr.companies_load_error_desc }}</p>
+      <button type="button" id="companies-error-retry" class="btn primary">{{ tr.posts_retry }}</button>
     </div>
   </aside>
 
   <!-- Right pane: company details -->
-  <section id="companies-details-pane" class="companies-details-pane card" aria-label="Детали компании" aria-live="polite">
+  <section id="companies-details-pane" class="companies-details-pane card" aria-label="{{ tr.companies_list_title }}" aria-live="polite">
     <div id="companies-details-placeholder" class="companies-details-placeholder">
-      <p class="companies-details-placeholder-text">Выберите компанию из списка</p>
+      <p class="companies-details-placeholder-text">{{ tr.companies_select_company }}</p>
     </div>
     <div id="companies-details-content" class="companies-details-content" style="display: none;">
       <div class="companies-details-header">
@@ -66,41 +66,41 @@
           <span id="companies-details-count" class="badge badge-muted"></span>
         </div>
         <div class="companies-details-actions">
-          <a id="companies-details-website" href="#" target="_blank" rel="noopener" class="btn secondary btn-icon-text" style="display: none;" aria-label="Открыть сайт компании">
+          <a id="companies-details-website" href="#" target="_blank" rel="noopener" class="btn secondary btn-icon-text" style="display: none;" aria-label="{{ tr.companies_open_website }}">
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            Сайт
+            {{ tr.companies_website }}
           </a>
-          <a id="companies-details-linkedin" href="#" target="_blank" rel="noopener" class="btn secondary btn-icon-text" style="display: none;" aria-label="Открыть LinkedIn компании">
+          <a id="companies-details-linkedin" href="#" target="_blank" rel="noopener" class="btn secondary btn-icon-text" style="display: none;" aria-label="{{ tr.companies_open_linkedin }}">
             <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
             LinkedIn
           </a>
-          <button type="button" id="companies-details-edit" class="btn secondary" aria-label="Редактировать компанию">Редактировать</button>
+          <button type="button" id="companies-details-edit" class="btn secondary" aria-label="{{ tr.companies_edit_company }}">{{ tr.companies_edit }}</button>
           <div class="companies-details-kebab-wrap">
-            <button type="button" id="companies-details-kebab" class="btn-icon" aria-label="Ещё действия" aria-expanded="false" aria-haspopup="menu" aria-controls="companies-details-kebab-menu">…</button>
+            <button type="button" id="companies-details-kebab" class="btn-icon" aria-label="{{ tr.companies_more_actions }}" aria-expanded="false" aria-haspopup="menu" aria-controls="companies-details-kebab-menu">…</button>
             <ul id="companies-details-kebab-menu" class="kebab-menu" role="menu" hidden>
-              <li><button type="button" class="kebab-item danger" role="menuitem" data-action="delete">Удалить</button></li>
+              <li><button type="button" class="kebab-item danger" role="menuitem" data-action="delete">{{ tr.companies_delete }}</button></li>
             </ul>
           </div>
         </div>
       </div>
       <section class="companies-details-section" aria-labelledby="companies-about-heading">
-        <h3 id="companies-about-heading" class="companies-details-section-title">О компании</h3>
+        <h3 id="companies-about-heading" class="companies-details-section-title">{{ tr.companies_about }}</h3>
         <dl class="companies-details-dl">
-          <dt>Сайт</dt>
+          <dt>{{ tr.companies_website }}</dt>
           <dd id="companies-details-website-val"></dd>
           <dt>LinkedIn</dt>
           <dd id="companies-details-linkedin-val"></dd>
         </dl>
       </section>
       <section class="companies-details-section" aria-labelledby="companies-contacts-heading">
-        <h3 id="companies-contacts-heading" class="companies-details-section-title">Контакты</h3>
-        <div id="companies-contacts-loading" class="companies-contacts-loading" style="display: none;">Загрузка контактов…</div>
+        <h3 id="companies-contacts-heading" class="companies-details-section-title">{{ tr.companies_contacts }}</h3>
+        <div id="companies-contacts-loading" class="companies-contacts-loading" style="display: none;">{{ tr.companies_contacts_loading }}</div>
         <div id="companies-contacts-table-wrap" class="companies-contacts-table-wrap" style="display: none;">
           <table class="companies-contacts-table" role="grid" aria-labelledby="companies-contacts-heading">
             <thead>
               <tr>
-                <th scope="col">Имя</th>
-                <th scope="col">Должность</th>
+                <th scope="col">{{ tr.common_name }}</th>
+                <th scope="col">{{ tr.people_role }}</th>
                 <th scope="col">KOL</th>
                 <th scope="col"></th>
               </tr>
@@ -109,13 +109,13 @@
           </table>
         </div>
         <div id="companies-contacts-empty" class="companies-contacts-empty" style="display: none;">
-          <p class="companies-state-desc">В этой компании пока нет контактов.</p>
-          <a id="companies-contacts-add-link" href="/ui/people" class="btn secondary">Добавить контакт</a>
+          <p class="companies-state-desc">{{ tr.companies_contacts_empty }}</p>
+          <a id="companies-contacts-add-link" href="/ui/people" class="btn secondary">{{ tr.companies_add_contact }}</a>
         </div>
       </section>
       <section class="companies-details-section" aria-labelledby="companies-posts-heading">
-        <h3 id="companies-posts-heading" class="companies-details-section-title">Посты</h3>
-        <p class="companies-details-posts-desc">Посты контактов отображаются на странице <a href="/ui/posts">Комментарии</a>. Добавьте посты через «Распознать по ссылке» и привяжите к контакту.</p>
+        <h3 id="companies-posts-heading" class="companies-details-section-title">{{ tr.companies_posts }}</h3>
+        <p class="companies-details-posts-desc">{{ tr.companies_posts_desc_before }}<a href="/ui/posts">{{ tr.comments_page }}</a>{{ tr.companies_posts_desc_after }}</p>
       </section>
     </div>
   </section>
@@ -126,30 +126,30 @@
   <div class="company-drawer-backdrop" id="company-form-drawer-backdrop"></div>
   <div class="company-drawer-panel card">
     <div class="company-drawer-header">
-      <h2 id="company-form-drawer-title" class="company-drawer-title">Добавить компанию</h2>
-      <button type="button" id="company-form-drawer-close" class="btn-icon company-drawer-close" title="Закрыть (Esc)" aria-label="Закрыть">×</button>
+      <h2 id="company-form-drawer-title" class="company-drawer-title">{{ tr.company_form_add }}</h2>
+      <button type="button" id="company-form-drawer-close" class="btn-icon company-drawer-close" title="{{ tr.common_close_esc }}" aria-label="{{ tr.common_close }}">×</button>
     </div>
     <form id="company-form" class="company-form-inner" novalidate>
       <input type="hidden" name="id">
       <div class="company-form-field">
-        <label for="company-form-name">Название <span aria-hidden="true">*</span></label>
-        <input id="company-form-name" name="name" placeholder="Название компании" required aria-required="true" aria-invalid="false">
+        <label for="company-form-name">{{ tr.company_form_name }} <span aria-hidden="true">*</span></label>
+        <input id="company-form-name" name="name" placeholder="{{ tr.company_form_name_placeholder }}" required aria-required="true" aria-invalid="false">
       </div>
       <div class="company-form-field">
-        <label for="company-form-website">Сайт</label>
+        <label for="company-form-website">{{ tr.companies_website }}</label>
         <input id="company-form-website" name="website_url" type="url" placeholder="https://example.com" aria-describedby="company-form-website-hint">
-        <span id="company-form-website-hint" class="form-hint">Например: https://example.com</span>
+        <span id="company-form-website-hint" class="form-hint">{{ tr.company_form_website_hint }}</span>
       </div>
       <div class="company-form-field">
-        <label for="company-form-linkedin">LinkedIn компании</label>
+        <label for="company-form-linkedin">{{ tr.company_form_linkedin_label }}</label>
         <input id="company-form-linkedin" name="linkedin_url" type="url" placeholder="https://linkedin.com/company/..." aria-describedby="company-form-linkedin-hint">
-        <span id="company-form-linkedin-hint" class="form-hint">Ссылка на страницу компании в LinkedIn</span>
+        <span id="company-form-linkedin-hint" class="form-hint">{{ tr.company_form_linkedin_hint }}</span>
       </div>
       <p id="company-form-msg" class="company-form-msg" role="alert" aria-live="polite"></p>
     </form>
     <div class="company-drawer-footer">
-      <button type="button" id="company-form-cancel" class="btn secondary">Отмена</button>
-      <button type="submit" form="company-form" id="company-form-submit" class="btn primary">Сохранить</button>
+      <button type="button" id="company-form-cancel" class="btn secondary">{{ tr.company_cancel }}</button>
+      <button type="submit" form="company-form" id="company-form-submit" class="btn primary">{{ tr.company_save }}</button>
     </div>
   </div>
 </div>
@@ -157,12 +157,12 @@
 <!-- Confirm delete modal (unchanged API) -->
 <div id="company-delete-modal" class="modal confirm-modal" role="dialog" aria-modal="true" aria-labelledby="company-delete-title" hidden>
   <div class="modal-content card confirm-modal-content">
-    <h2 id="company-delete-title" class="confirm-modal-title">Удалить компанию?</h2>
+    <h2 id="company-delete-title" class="confirm-modal-title">{{ tr.company_delete_title }}</h2>
     <p id="company-delete-message" class="confirm-modal-message"></p>
-    <p class="confirm-modal-consequence">Контакты, привязанные к этой компании, не будут удалены, но останутся без компании.</p>
+    <p class="confirm-modal-consequence">{{ tr.company_delete_consequence }}</p>
     <div class="modal-actions">
-      <button type="button" id="company-delete-cancel" class="btn secondary">Отмена</button>
-      <button type="button" id="company-delete-confirm" class="btn danger">Удалить</button>
+      <button type="button" id="company-delete-cancel" class="btn secondary">{{ tr.company_cancel }}</button>
+      <button type="button" id="company-delete-confirm" class="btn danger">{{ tr.companies_delete }}</button>
     </div>
   </div>
 </div>
@@ -337,6 +337,7 @@
 </style>
 <script>
 (function() {
+  const tr = window.__tr || {};
   const listEl = document.getElementById('companies-list');
   const loadingEl = document.getElementById('companies-loading');
   const emptyEl = document.getElementById('companies-empty');
@@ -385,9 +386,9 @@
     });
     const total = companiesData.length;
     if (searchHint) {
-      if (q && visibleCount === 0) searchHint.textContent = 'Ничего не найдено';
-      else if (q) searchHint.textContent = 'Найдено: ' + visibleCount + (total ? ' из ' + total : '');
-      else searchHint.textContent = total ? total + ' компаний' : '';
+      if (q && visibleCount === 0) searchHint.textContent = tr.companies_no_results || 'No results';
+      else if (q) searchHint.textContent = (tr.companies_found || 'Found: {0} of {1}').replace('{0}', visibleCount).replace('{1}', total);
+      else searchHint.textContent = total ? (tr.companies_n_companies || '{} companies').replace('{}', total) : '';
     }
     if (searchEmptyEl) searchEmptyEl.style.display = (q && visibleCount === 0) ? 'block' : 'none';
   }
@@ -413,7 +414,7 @@
     const selectBtn = document.createElement('button');
     selectBtn.type = 'button';
     selectBtn.className = 'company-row-select';
-    selectBtn.innerHTML = '<span class="company-row-name">' + escapeHtml(c.name || 'Без названия') + '</span><span class="company-row-badge">' + (contactCount >= 0 ? contactCount + ' контактов' : '—') + '</span>';
+    selectBtn.innerHTML = '<span class="company-row-name">' + escapeHtml(c.name || (tr.companies_no_name || 'No name')) + '</span><span class="company-row-badge">' + (contactCount >= 0 ? (tr.companies_n_contacts || '{} contacts').replace('{}', contactCount) : '—') + '</span>';
     selectBtn.addEventListener('click', () => selectCompany(c.id));
     row.appendChild(selectBtn);
     const actions = document.createElement('div');
@@ -422,7 +423,7 @@
     const kebabBtn = document.createElement('button');
     kebabBtn.type = 'button';
     kebabBtn.className = 'btn-icon kebab-trigger';
-    kebabBtn.setAttribute('aria-label', 'Действия для компании');
+    kebabBtn.setAttribute('aria-label', tr.companies_company_actions || 'Company actions');
     kebabBtn.setAttribute('aria-expanded', 'false');
     kebabBtn.setAttribute('aria-haspopup', 'menu');
     kebabBtn.setAttribute('aria-controls', 'company-kebab-menu-' + c.id);
@@ -437,7 +438,7 @@
     btnEdit.type = 'button';
     btnEdit.className = 'kebab-item';
     btnEdit.setAttribute('role', 'menuitem');
-    btnEdit.textContent = 'Редактировать';
+    btnEdit.textContent = tr.companies_edit || 'Edit';
     btnEdit.addEventListener('click', e => { e.stopPropagation(); menu.hidden = true; kebabBtn.setAttribute('aria-expanded', 'false'); openEditCompany(c); });
     liEdit.appendChild(btnEdit);
     const liDel = document.createElement('li');
@@ -445,7 +446,7 @@
     btnDel.type = 'button';
     btnDel.className = 'kebab-item danger';
     btnDel.setAttribute('role', 'menuitem');
-    btnDel.textContent = 'Удалить';
+    btnDel.textContent = tr.companies_delete || 'Delete';
     btnDel.addEventListener('click', e => { e.stopPropagation(); menu.hidden = true; kebabBtn.setAttribute('aria-expanded', 'false'); openDeleteConfirm(c.id, c.name); });
     liDel.appendChild(btnDel);
     menu.appendChild(liEdit);
@@ -488,8 +489,8 @@
     }
     detailsPlaceholder.style.display = 'none';
     detailsContent.style.display = 'block';
-    detailsName.textContent = c.name || 'Без названия';
-    detailsCount.textContent = (companyContactsCache[id] != null ? companyContactsCache[id].length : '…') + ' контактов';
+    detailsName.textContent = c.name || (tr.companies_no_name || 'No name');
+    detailsCount.textContent = (tr.companies_n_contacts || '{} contacts').replace('{}', companyContactsCache[id] != null ? companyContactsCache[id].length : '…');
     const webUrl = (c.website_url || '').trim();
     const linkedinUrl = (c.linkedin_url || '').trim();
     if (webUrl) {
@@ -525,7 +526,7 @@
     contactsEmpty.style.display = 'none';
     fetch('/people?company_id=' + id).then(r => r.json()).then(people => {
       companyContactsCache[id] = people;
-      detailsCount.textContent = people.length + ' контактов';
+      detailsCount.textContent = (tr.companies_n_contacts || '{} contacts').replace('{}', people.length);
       contactsLoading.style.display = 'none';
       if (!people.length) {
         const addLink = document.getElementById('companies-contacts-add-link');
@@ -555,7 +556,7 @@
           a.target = '_blank';
           a.rel = 'noopener';
           a.className = 'btn-icon';
-          a.setAttribute('aria-label', 'Открыть LinkedIn контакта');
+          a.setAttribute('aria-label', tr.companies_open_contact_linkedin || 'Open contact LinkedIn');
           a.innerHTML = '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>';
           actionCell.appendChild(a);
         }
@@ -565,7 +566,7 @@
     }).catch(() => {
       contactsLoading.style.display = 'none';
       contactsEmpty.style.display = 'block';
-      if (typeof window.toast === 'function') window.toast('Ошибка загрузки контактов', 'error');
+      if (typeof window.toast === 'function') window.toast(tr.contacts_load_error_toast || 'Failed to load contacts', 'error');
     });
   }
 
@@ -590,12 +591,12 @@
           companyContactsCache[c.id] = people;
           const row = listEl.querySelector('.company-row[data-id="' + c.id + '"]');
           const badge = row ? row.querySelector('.company-row-badge') : null;
-          if (badge) badge.textContent = people.length + ' контактов';
+          if (badge) badge.textContent = (tr.companies_n_contacts || '{} contacts').replace('{}', people.length);
         });
       });
     }).catch(() => {
       showListState('error');
-      if (typeof window.toast === 'function') window.toast('Ошибка загрузки компаний', 'error');
+      if (typeof window.toast === 'function') window.toast(tr.companies_load_error_toast || 'Failed to load companies', 'error');
     });
   }
 
@@ -624,7 +625,7 @@
   let pendingDeleteCompany = null;
   function openDeleteConfirm(id, name) {
     pendingDeleteCompany = { id, name };
-    document.getElementById('company-delete-message').textContent = 'Вы действительно хотите удалить компанию «' + (name || '') + '»?';
+    document.getElementById('company-delete-message').textContent = (tr.company_delete_confirm_msg || 'Delete company «{}»?').replace('{}', name || '');
     const modal = document.getElementById('company-delete-modal');
     modal.hidden = false;
     modal.style.display = 'flex';
@@ -641,9 +642,9 @@
     const { id } = pendingDeleteCompany;
     closeDeleteConfirm();
     fetch('/companies/' + id, { method: 'DELETE' }).then(res => {
-      if (res.ok) { loadCompanies(); selectedCompanyId = null; detailsPlaceholder.style.display = 'block'; detailsContent.style.display = 'none'; if (typeof window.toast === 'function') window.toast('Компания удалена', 'success'); }
-      else res.text().then(t => { if (typeof window.toast === 'function') window.toast('Ошибка: ' + t, 'error'); });
-    }).catch(err => { if (typeof window.toast === 'function') window.toast('Ошибка: ' + (err.message || 'сеть'), 'error'); });
+      if (res.ok) { loadCompanies(); selectedCompanyId = null; detailsPlaceholder.style.display = 'block'; detailsContent.style.display = 'none'; if (typeof window.toast === 'function') window.toast(tr.company_deleted || 'Company deleted', 'success'); }
+      else res.text().then(t => { if (typeof window.toast === 'function') window.toast((tr.load_error || 'Error') + ': ' + t, 'error'); });
+    }).catch(err => { if (typeof window.toast === 'function') window.toast((tr.load_error || 'Error') + ': ' + (err.message || 'network'), 'error'); });
   });
 
   const formDrawer = document.getElementById('company-form-drawer');
@@ -674,7 +675,7 @@
 
   function openFormDrawer(company) {
     formDrawerRestoreFocus = document.activeElement;
-    formTitle.textContent = company ? 'Редактировать компанию' : 'Добавить компанию';
+    formTitle.textContent = company ? (tr.company_form_edit || 'Edit company') : (tr.company_form_add || 'Add company');
     companyForm.querySelector('input[name="id"]').value = company ? company.id : '';
     document.getElementById('company-form-name').value = company ? (company.name || '') : '';
     document.getElementById('company-form-website').value = company ? (company.website_url || '') : '';
@@ -748,16 +749,16 @@
         closeFormDrawer();
         loadCompanies();
         if (id) { selectedCompanyId = data.id; selectCompany(data.id); }
-        if (typeof window.toast === 'function') window.toast(id ? 'Компания сохранена' : 'Компания добавлена', 'success');
+        if (typeof window.toast === 'function') window.toast(id ? (tr.company_saved || 'Company saved') : (tr.company_added || 'Company added'), 'success');
       } else {
-        const errMsg = (data && data.detail) ? (Array.isArray(data.detail) ? data.detail.map(d => d.msg || '').join('; ') : data.detail) : text || 'Ошибка';
+        const errMsg = (data && data.detail) ? (Array.isArray(data.detail) ? data.detail.map(d => d.msg || '').join('; ') : data.detail) : text || (tr.common_error || 'Error');
         formMsg.textContent = errMsg;
         formMsg.style.color = 'var(--danger)';
         formMsg.style.display = 'block';
         formMsg.setAttribute('role', 'alert');
       }
     } catch (err) {
-      formMsg.textContent = 'Ошибка: ' + (err.message || 'сеть');
+      formMsg.textContent = (tr.load_error || 'Error') + ': ' + (err.message || 'network');
       formMsg.style.color = 'var(--danger)';
       formMsg.style.display = 'block';
     } finally {

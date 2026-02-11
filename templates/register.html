@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="{% if locale == 'en' %}en{% else %}ru{% endif %}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ (tr.register_title if tr else 'Регистрация') }} — MyVOICE's</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --space-2: 8px; --space-4: 16px; --space-6: 24px; --space-8: 32px;
+      --radius: 12px; --radius-pill: 999px;
+      --text-14: 0.875rem; --text-16: 1rem; --text-18: 1.125rem; --text-24: 1.5rem;
+      --bg: #ffffff; --surface-alt: #f8fafc; --text: #0f172a; --text-muted: #64748b;
+      --border: #e2e8f0; --primary: #6366f1; --primary-hover: #4f46e5;
+      --error: #dc2626;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      overflow-x: hidden;
+    }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--surface-alt);
+      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+      position: relative;
+    }
+    .login-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: var(--space-8);
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .login-card h1 {
+      margin: 0 0 var(--space-6);
+      font-size: var(--text-24);
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--text);
+    }
+    .login-card a.back {
+      display: inline-block;
+      margin-bottom: var(--space-6);
+      font-size: var(--text-14);
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+    .login-card a.back:hover { 
+      color: var(--primary); 
+      text-decoration: none;
+    }
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .login-form label {
+      display: block;
+      font-size: var(--text-14);
+      font-weight: 500;
+      margin-bottom: var(--space-2);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .login-form input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: var(--text-16);
+      font-family: inherit;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: var(--space-4);
+      background: var(--bg);
+      color: var(--text);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .login-form input::placeholder {
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+    .login-form input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    .login-form button {
+      width: 100%;
+      padding: 0.875rem 1.5rem;
+      font-size: var(--text-16);
+      font-weight: 600;
+      font-family: inherit;
+      color: #fff;
+      background: var(--primary);
+      border: none;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      margin-top: var(--space-2);
+      transition: background-color 0.15s ease, transform 0.1s ease;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    .login-form button:hover { 
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    }
+    .login-form button:active {
+      transform: translateY(0);
+    }
+    .login-form button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .login-error {
+      font-size: var(--text-14);
+      color: var(--error);
+      margin-bottom: var(--space-4);
+      padding: var(--space-3);
+      background: rgba(220, 38, 38, 0.1);
+      border-radius: var(--radius);
+      border: 1px solid rgba(220, 38, 38, 0.2);
+      line-height: 1.5;
+    }
+    .login-link {
+      text-align: center;
+      margin-top: var(--space-8);
+      padding-top: var(--space-6);
+      position: relative;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .login-link::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--border), transparent);
+    }
+    .login-link-text {
+      font-size: var(--text-14);
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: var(--space-3);
+      text-align: center;
+      width: 100%;
+    }
+    .login-link-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: 0.625rem 1.5rem;
+      font-size: var(--text-14);
+      font-weight: 600;
+      color: var(--primary);
+      background: rgba(99, 102, 241, 0.08);
+      border: 1.5px solid rgba(99, 102, 241, 0.2);
+      border-radius: var(--radius-pill);
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .login-link-button:hover {
+      background: rgba(99, 102, 241, 0.12);
+      border-color: var(--primary);
+      color: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+    }
+    .login-link-button:active {
+      transform: translateY(0);
+    }
+    @media (max-width: 480px) {
+      body {
+        padding: var(--space-2);
+      }
+      .login-card {
+        padding: var(--space-6);
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <a href="{% if locale == 'en' %}/en{% else %}/{% endif %}" class="back">{{ tr.login_back if tr else '← На главную' }}</a>
+    <h1>{{ tr.register_title if tr else 'Регистрация' }}</h1>
+    {% if error %}
+    <p class="login-error">{{ error }}</p>
+    {% endif %}
+    <form class="login-form" method="post" action="/register">
+      <div style="margin-bottom: 0;">
+        <label for="email">{{ tr.login_email if tr else 'Email' }}</label>
+        <input id="email" name="email" type="email" required autocomplete="email" placeholder="your@email.com">
+      </div>
+      <div style="margin-bottom: 0;">
+        <label for="password">{{ tr.login_password if tr else 'Пароль' }}</label>
+        <input id="password" name="password" type="password" required autocomplete="new-password" minlength="6" placeholder="{{ (tr.admin_password_placeholder if tr else 'Минимум 6 символов') }}">
+      </div>
+      <div style="margin-bottom: 0;">
+        <label for="password_confirm">{{ (tr.register_password_confirm if tr else 'Подтвердите пароль') }}</label>
+        <input id="password_confirm" name="password_confirm" type="password" required autocomplete="new-password" minlength="6" placeholder="{{ (tr.register_password_confirm if tr else 'Подтвердите пароль') }}">
+      </div>
+      <button type="submit">{{ (tr.register_submit if tr else 'Зарегистрироваться') }}</button>
+    </form>
+    <div class="login-link">
+      <div class="login-link-text">{{ (tr.register_have_account if tr else 'Уже есть аккаунт?') }}</div>
+      <a href="/login" class="login-link-button">{{ (tr.login_title if tr else 'Войти') }}</a>
+    </div>
+  </div>
+</body>
+</html>

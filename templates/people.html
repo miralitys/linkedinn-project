@@ -1,27 +1,27 @@
 {% extends "base.html" %}
-{% block title %}Контакты — MyVOICE's{% endblock %}
+{% block title %}{{ tr.people_title }} — MyVOICE's{% endblock %}
 {% block content %}
 <header class="page-header">
   <div class="page-header-text">
-    <h1>Контакты</h1>
-    <p class="page-header-desc">Таблица контактов: имя, должность, компания, лидер мнения (KOL), LinkedIn. Список по алфавиту.</p>
+    <h1>{{ tr.people_title }}</h1>
+    <p class="page-header-desc">{{ tr.people_lead }}</p>
   </div>
   <div class="page-header-actions">
-    <button type="button" id="btn-toggle-add" class="btn primary btn-add-contact" aria-expanded="false" aria-label="Добавить новый контакт" title="Добавить контакт">
-      <span class="btn-add-icon" aria-hidden="true">+</span> Добавить контакт
+    <button type="button" id="btn-toggle-add" class="btn primary btn-add-contact" aria-expanded="false" aria-label="{{ tr.people_add_contact }}" title="{{ tr.people_add_contact }}">
+      <span class="btn-add-icon" aria-hidden="true">+</span> {{ tr.people_add_contact }}
     </button>
   </div>
 </header>
 <div class="card people-card">
-  <h2 class="section-title">Список контактов</h2>
+  <h2 class="section-title">{{ tr.people_list_title }}</h2>
   <div class="people-toolbar">
     <div class="people-search-wrap">
-      <input type="text" id="people-search" class="people-search-input" placeholder="Поиск по имени, должности, компании..." autocomplete="off" aria-label="Поиск контактов">
-      <button type="button" id="people-search-clear" class="btn-icon people-search-clear" title="Очистить поиск" aria-label="Очистить поиск" style="display: none;">×</button>
+      <input type="text" id="people-search" class="people-search-input" placeholder="{{ tr.people_search_placeholder }}" autocomplete="off" aria-label="{{ tr.people_search_label }}">
+      <button type="button" id="people-search-clear" class="btn-icon people-search-clear" title="{{ tr.companies_clear_search }}" aria-label="{{ tr.companies_clear_search }}" style="display: none;">×</button>
     </div>
     <label class="people-kol-toggle">
-      <input type="checkbox" id="people-kol-only" aria-label="Показать только лидеров мнений (KOL)">
-      <span>Только KOL</span>
+      <input type="checkbox" id="people-kol-only" aria-label="{{ tr.people_kol_only }}">
+      <span>{{ tr.people_kol_only }}</span>
     </label>
   </div>
   <div id="people-loading" class="loading-skeleton-inline" style="display: none;" aria-live="polite">
@@ -31,18 +31,18 @@
   </div>
   <div id="people-list-wrap" class="people-list-wrap" style="display: none;"></div>
   <div id="people-empty" class="empty-state-card" style="display: none;">
-    <p class="empty-state-title">Нет контактов</p>
-    <p class="empty-state-desc">Добавьте первый контакт кнопкой «Добавить контакт» выше.</p>
-    <button type="button" id="people-empty-cta" class="btn primary">Добавить контакт</button>
+    <p class="empty-state-title">{{ tr.people_empty_title }}</p>
+    <p class="empty-state-desc">{{ tr.people_empty_desc }}</p>
+    <button type="button" id="people-empty-cta" class="btn primary">{{ tr.people_add_contact }}</button>
   </div>
   <div id="people-search-empty" class="empty-state-card" style="display: none;">
-    <p class="empty-state-title">Ничего не найдено</p>
-    <p class="empty-state-desc">Попробуйте другой запрос или сбросьте фильтры.</p>
-    <button type="button" id="people-reset-filters" class="btn secondary">Сбросить фильтры</button>
+    <p class="empty-state-title">{{ tr.people_no_results }}</p>
+    <p class="empty-state-desc">{{ tr.people_no_results_desc }}</p>
+    <button type="button" id="people-reset-filters" class="btn secondary">{{ tr.people_reset_filters }}</button>
   </div>
   <div id="people-error" class="error-state-card" style="display: none;">
-    <p class="error-state-text">Ошибка загрузки контактов</p>
-    <button type="button" id="people-error-retry" class="btn primary">Повторить</button>
+    <p class="error-state-text">{{ tr.people_error_title }}</p>
+    <button type="button" id="people-error-retry" class="btn primary">{{ tr.posts_retry }}</button>
   </div>
 </div>
 
@@ -55,35 +55,35 @@
       <span id="contact-drawer-company" class="contact-drawer-company"></span>
       <span id="contact-drawer-kol-badge" class="badge contact-drawer-kol" style="display: none;">KOL</span>
       <div class="contact-drawer-actions">
-        <a id="contact-drawer-linkedin" href="#" target="_blank" rel="noopener" class="btn secondary contact-drawer-btn-linkedin" style="display: none;" aria-label="Открыть профиль в LinkedIn">Открыть LinkedIn</a>
-        <button type="button" id="contact-drawer-edit" class="btn secondary" aria-label="Редактировать контакт">Редактировать</button>
+        <a id="contact-drawer-linkedin" href="#" target="_blank" rel="noopener" class="btn secondary contact-drawer-btn-linkedin" style="display: none;" aria-label="{{ tr.people_open_linkedin }}">{{ tr.people_open_linkedin }}</a>
+        <button type="button" id="contact-drawer-edit" class="btn secondary" aria-label="{{ tr.person_form_edit }}">{{ tr.setup_edit }}</button>
         <div class="contact-drawer-kebab-wrap">
-          <button type="button" id="contact-drawer-kebab" class="btn-icon kebab-trigger" aria-label="Действия" aria-expanded="false" aria-haspopup="true" title="Действия">…</button>
+          <button type="button" id="contact-drawer-kebab" class="btn-icon kebab-trigger" aria-label="{{ tr.people_actions }}" aria-expanded="false" aria-haspopup="true" title="{{ tr.people_actions }}">…</button>
           <div id="contact-drawer-kebab-menu" class="kebab-menu" role="menu" hidden>
-            <button type="button" class="kebab-item btn-contact-drawer-delete danger" role="menuitem">Удалить</button>
+            <button type="button" class="kebab-item btn-contact-drawer-delete danger" role="menuitem">{{ tr.companies_delete }}</button>
           </div>
         </div>
       </div>
-      <button type="button" id="contact-drawer-close" class="contact-drawer-close btn-icon" title="Закрыть (Esc)" aria-label="Закрыть панель">×</button>
+      <button type="button" id="contact-drawer-close" class="contact-drawer-close btn-icon" title="{{ tr.common_close_esc }}" aria-label="{{ tr.people_close_drawer }}">×</button>
     </div>
     <div class="contact-drawer-body">
       <section class="contact-drawer-section" aria-labelledby="contact-overview-heading">
-        <h3 id="contact-overview-heading" class="contact-drawer-section-title">Обзор</h3>
+        <h3 id="contact-overview-heading" class="contact-drawer-section-title">{{ tr.people_overview }}</h3>
         <dl class="contact-drawer-dl">
-          <dt>Должность</dt><dd id="contact-drawer-title-val"></dd>
-          <dt>Компания</dt><dd id="contact-drawer-company-val"></dd>
+          <dt>{{ tr.people_role }}</dt><dd id="contact-drawer-title-val"></dd>
+          <dt>{{ tr.people_company }}</dt><dd id="contact-drawer-company-val"></dd>
           <dt>LinkedIn</dt><dd id="contact-drawer-linkedin-val"></dd>
-          <dt>Лидер мнения</dt><dd id="contact-drawer-kol-val"></dd>
+          <dt>{{ tr.people_thought_leader }}</dt><dd id="contact-drawer-kol-val"></dd>
         </dl>
       </section>
       <section class="contact-drawer-section" aria-labelledby="contact-notes-heading">
-        <h3 id="contact-notes-heading" class="contact-drawer-section-title">Заметки</h3>
-        <textarea id="contact-drawer-notes" class="contact-drawer-notes" rows="4" placeholder="Заметки по контакту..." aria-label="Заметки"></textarea>
-        <button type="button" id="contact-drawer-notes-save" class="btn secondary btn-sm" style="margin-top: var(--space-2);">Сохранить заметки</button>
+        <h3 id="contact-notes-heading" class="contact-drawer-section-title">{{ tr.people_notes }}</h3>
+        <textarea id="contact-drawer-notes" class="contact-drawer-notes" rows="4" placeholder="{{ tr.people_notes_placeholder }}" aria-label="{{ tr.people_notes }}"></textarea>
+        <button type="button" id="contact-drawer-notes-save" class="btn secondary btn-sm" style="margin-top: var(--space-2);">{{ tr.people_save_notes }}</button>
       </section>
       <section class="contact-drawer-section" aria-labelledby="contact-posts-heading">
-        <h3 id="contact-posts-heading" class="contact-drawer-section-title">Посты</h3>
-        <p id="contact-drawer-posts-empty" class="contact-drawer-posts-empty">Посты контактов отображаются на странице <a href="/ui/posts">Комментарии</a>. Добавьте посты через «Распознать по ссылке» и привяжите к контакту.</p>
+        <h3 id="contact-posts-heading" class="contact-drawer-section-title">{{ tr.companies_posts }}</h3>
+        <p id="contact-drawer-posts-empty" class="contact-drawer-posts-empty">{{ tr.companies_posts_desc_before }}<a href="/ui/posts">{{ tr.comments_page }}</a>{{ tr.companies_posts_desc_after }}</p>
       </section>
     </div>
   </div>
@@ -94,22 +94,22 @@
   <div class="contact-drawer-backdrop" id="person-form-drawer-backdrop"></div>
   <div class="contact-drawer-panel card person-form-drawer-panel">
     <div class="contact-drawer-header">
-      <h2 id="person-form-drawer-title" class="contact-drawer-name">Добавить контакт</h2>
-      <button type="button" id="person-form-drawer-close" class="contact-drawer-close btn-icon" title="Закрыть (Esc)" aria-label="Закрыть">×</button>
+      <h2 id="person-form-drawer-title" class="contact-drawer-name">{{ tr.person_form_add }}</h2>
+      <button type="button" id="person-form-drawer-close" class="contact-drawer-close btn-icon" title="{{ tr.common_close_esc }}" aria-label="{{ tr.common_close }}">×</button>
     </div>
     <div class="contact-drawer-body person-form-drawer-body">
       <form id="person-form" class="person-form-inner">
-        <label for="person-full-name">ФИО <span class="required">*</span></label>
-        <input name="full_name" id="person-full-name" placeholder="ФИО" required aria-required="true">
-        <label for="person-title">Должность</label>
-        <input name="title" id="person-title" placeholder="Должность">
-        <label for="person-company-search">Компания</label>
+        <label for="person-full-name">{{ tr.person_full_name }} <span class="required">*</span></label>
+        <input name="full_name" id="person-full-name" placeholder="{{ tr.person_full_name_placeholder }}" required aria-required="true">
+        <label for="person-title">{{ tr.people_role }}</label>
+        <input name="title" id="person-title" placeholder="{{ tr.people_role }}">
+        <label for="person-company-search">{{ tr.people_company }}</label>
         <div class="person-company-combobox">
-          <input type="text" id="person-company-search" placeholder="Поиск или введите новую..." autocomplete="off" aria-label="Компания" aria-expanded="false" aria-controls="person-company-list">
+          <input type="text" id="person-company-search" placeholder="{{ tr.person_company_placeholder }}" autocomplete="off" aria-label="{{ tr.people_company }}" aria-expanded="false" aria-controls="person-company-list">
           <input type="hidden" name="company_id" id="person-company-id" value="">
           <div id="person-company-list" class="person-company-list" role="listbox" hidden></div>
         </div>
-        <p class="form-hint" style="margin-top: var(--space-1);">Введите название — если компании нет, создайте через «Создать …» в списке.</p>
+        <p class="form-hint" style="margin-top: var(--space-1);">{{ tr.person_company_hint }}</p>
         <label for="person-linkedin-url">LinkedIn URL</label>
         <input name="linkedin_url" id="person-linkedin-url" placeholder="https://www.linkedin.com/in/..." type="url" aria-describedby="person-linkedin-error" aria-invalid="false">
         <p id="person-linkedin-error" class="input-error-text" role="alert" style="display: none;"></p>
@@ -117,15 +117,15 @@
           <label class="kol-checkbox-label">
             <input type="checkbox" name="is_kol" value="1" class="kol-checkbox" id="person-is-kol">
             <span class="kol-checkbox-custom" aria-hidden="true"></span>
-            <span class="kol-label">Лидер мнения (KOL)</span>
+            <span class="kol-label">{{ tr.person_kol_label }}</span>
           </label>
         </div>
         <p id="person-form-msg" class="person-form-msg"></p>
       </form>
     </div>
     <div class="contact-drawer-footer person-form-drawer-footer">
-      <button type="button" id="btn-cancel-add" class="btn secondary">Отмена</button>
-      <button type="submit" id="person-form-submit" form="person-form" class="btn primary">Сохранить</button>
+      <button type="button" id="btn-cancel-add" class="btn secondary">{{ tr.company_cancel }}</button>
+      <button type="submit" id="person-form-submit" form="person-form" class="btn primary">{{ tr.company_save }}</button>
     </div>
   </div>
 </div>
@@ -247,6 +247,7 @@
   .contact-drawer .kebab-trigger { min-width: 44px; min-height: 44px; }
 </style>
 <script>
+  const tr = window.__tr || {};
   const personLinkedinInput = document.getElementById('person-linkedin-url');
   const personLinkedinError = document.getElementById('person-linkedin-error');
   const personFormSubmit = document.getElementById('person-form-submit');
@@ -264,7 +265,7 @@
     personLinkedinInput.classList.toggle('input-error', !linkedinValid);
     if (personLinkedinError) {
       personLinkedinError.style.display = linkedinValid ? 'none' : 'block';
-      personLinkedinError.textContent = linkedinValid ? '' : 'Введите корректную ссылку LinkedIn (linkedin.com).';
+      personLinkedinError.textContent = linkedinValid ? '' : (tr.person_linkedin_error || 'Enter a valid LinkedIn URL (linkedin.com).');
     }
     personLinkedinInput.setAttribute('aria-invalid', linkedinValid ? 'false' : 'true');
     const canSave = !!fullName.trim() && linkedinValid;
@@ -289,7 +290,7 @@
         const el = document.createElement('button');
         el.type = 'button';
         el.className = 'person-company-item';
-        el.textContent = c.name || ('Компания #' + c.id);
+        el.textContent = c.name || ((tr.company_default_name || 'Company #{}').replace('{}', c.id));
         el.dataset.id = c.id;
         el.dataset.name = c.name || '';
         el.addEventListener('click', () => { personCompanyId.value = c.id; personCompanySearch.value = c.name || ''; personCompanyList.hidden = true; personCompanySearch.setAttribute('aria-expanded', 'false'); validatePersonForm(); });
@@ -300,7 +301,7 @@
         const el = document.createElement('button');
         el.type = 'button';
         el.className = 'person-company-item';
-        el.textContent = c.name || ('Компания #' + c.id);
+        el.textContent = c.name || ((tr.company_default_name || 'Company #{}').replace('{}', c.id));
         el.dataset.id = c.id;
         el.dataset.name = c.name || '';
         el.addEventListener('click', () => { personCompanyId.value = c.id; personCompanySearch.value = c.name || ''; personCompanyList.hidden = true; personCompanySearch.setAttribute('aria-expanded', 'false'); validatePersonForm(); });
@@ -311,7 +312,7 @@
         createEl.type = 'button';
         createEl.className = 'person-company-item create';
         const nameDisplay = (query || '').trim().slice(0, 40);
-        createEl.textContent = 'Создать «' + nameDisplay + ((query || '').trim().length > 40 ? '…' : '') + '»';
+        createEl.textContent = (tr.create_company_btn || 'Create «{}»').replace('{}', nameDisplay + ((query || '').trim().length > 40 ? '…' : ''));
         createEl.addEventListener('click', async () => {
           const name = personCompanySearch.value.trim();
           if (!name) return;
@@ -325,7 +326,7 @@
             personCompanySearch.value = company.name || '';
             personCompanyList.hidden = true;
             personCompanySearch.setAttribute('aria-expanded', 'false');
-            if (typeof window.toast === 'function') window.toast('Компания создана', 'success');
+            if (typeof window.toast === 'function') window.toast(tr.company_created || 'Company created', 'success');
           } catch (_) {}
         });
         personCompanyList.appendChild(createEl);
@@ -390,7 +391,7 @@
   }
   function getCompanyName(p, companyMap) {
     if (p.company_id == null) return '—';
-    return companyMap[p.company_id] || ('Компания #' + p.company_id);
+    return companyMap[p.company_id] || ((tr.company_default_name || 'Company #{}').replace('{}', p.company_id));
   }
   function renderPeopleTable(peopleList, companyMap, filterStr, kolOnly) {
     let list = peopleList || [];
@@ -419,14 +420,14 @@
       const fullName = (p.full_name || '').trim() || '—';
       const companyName = getCompanyName(p, companyMap);
       const linkedinCell = (p.linkedin_url && p.linkedin_url.trim())
-        ? '<a href="' + escapeHtml(p.linkedin_url.trim()) + '" target="_blank" rel="noopener" class="linkedin-link" title="Открыть LinkedIn" aria-label="Открыть LinkedIn">' + linkedinSvg + '</a>'
+        ? '<a href="' + escapeHtml(p.linkedin_url.trim()) + '" target="_blank" rel="noopener" class="linkedin-link" title="' + (tr.people_open_linkedin || 'Open LinkedIn') + '" aria-label="' + (tr.people_open_linkedin || 'Open LinkedIn') + '">' + linkedinSvg + '</a>'
         : '—';
       const kolCell = p.is_kol ? '<span class="badge">KOL</span>' : '—';
-      const actionsCell = '<div class="row-actions" onclick="event.stopPropagation()"><div class="kebab-wrap"><button type="button" class="btn-icon kebab-trigger" aria-label="Действия" aria-expanded="false" aria-haspopup="menu" data-person-id="' + p.id + '">' + kebabSvg + '</button><div class="kebab-menu" role="menu" hidden><button type="button" class="kebab-item btn-edit-person" role="menuitem" data-person-id="' + p.id + '">Редактировать</button><button type="button" class="kebab-item btn-delete-person danger" role="menuitem" data-person-id="' + p.id + '">Удалить</button></div></div></div>';
-      const linkedinCellContent = (p.linkedin_url && p.linkedin_url.trim()) ? '<a href="' + escapeHtml(p.linkedin_url.trim()) + '" target="_blank" rel="noopener" class="linkedin-link" title="Открыть LinkedIn" aria-label="Открыть LinkedIn">' + linkedinSvg + '</a>' : '—';
+      const actionsCell = '<div class="row-actions" onclick="event.stopPropagation()"><div class="kebab-wrap"><button type="button" class="btn-icon kebab-trigger" aria-label="' + (tr.people_actions || 'Actions') + '" aria-expanded="false" aria-haspopup="menu" data-person-id="' + p.id + '">' + kebabSvg + '</button><div class="kebab-menu" role="menu" hidden><button type="button" class="kebab-item btn-edit-person" role="menuitem" data-person-id="' + p.id + '">' + (tr.setup_edit || 'Edit') + '</button><button type="button" class="kebab-item btn-delete-person danger" role="menuitem" data-person-id="' + p.id + '">' + (tr.companies_delete || 'Delete') + '</button></div></div></div>';
+      const linkedinCellContent = (p.linkedin_url && p.linkedin_url.trim()) ? '<a href="' + escapeHtml(p.linkedin_url.trim()) + '" target="_blank" rel="noopener" class="linkedin-link" title="' + (tr.people_open_linkedin || 'Open LinkedIn') + '" aria-label="' + (tr.people_open_linkedin || 'Open LinkedIn') + '">' + linkedinSvg + '</a>' : '—';
       return '<tr class="contact-row" data-person-id="' + p.id + '" tabindex="0" role="button"><td><a href="#" class="contact-name-link open-contact" data-person-id="' + p.id + '">' + escapeHtml(fullName) + '</a></td><td>' + escapeHtml(p.title || '—') + '</td><td>' + escapeHtml(companyName) + '</td><td>' + kolCell + '</td><td>' + linkedinCellContent + '</td><td>' + actionsCell + '</td></tr>';
     }).join('');
-    peopleListWrap.innerHTML = '<table class="people-table-main" role="grid"><thead><tr><th scope="col">Имя</th><th scope="col">Должность</th><th scope="col">Компания</th><th scope="col">Лидер мнения</th><th scope="col">LinkedIn</th><th scope="col"></th></tr></thead><tbody>' + rows + '</tbody></table>';
+    peopleListWrap.innerHTML = '<table class="people-table-main" role="grid"><thead><tr><th scope="col">' + (tr.common_name || 'Name') + '</th><th scope="col">' + (tr.people_role || 'Position') + '</th><th scope="col">' + (tr.people_company || 'Company') + '</th><th scope="col">' + (tr.people_thought_leader || 'Thought leader') + '</th><th scope="col">LinkedIn</th><th scope="col"></th></tr></thead><tbody>' + rows + '</tbody></table>';
     peopleListWrap.querySelectorAll('.contact-row').forEach(row => {
       row.addEventListener('click', (e) => {
         if (e.target.closest('.row-actions')) return;
@@ -554,10 +555,10 @@
     contactDrawer.classList.add('is-open');
     try {
       const res = await fetch('/people/' + id);
-      if (!res.ok) { closeContactDrawer(); if (typeof window.toast === 'function') window.toast('Контакт не найден', 'error'); return; }
+      if (!res.ok) { closeContactDrawer(); if (typeof window.toast === 'function') window.toast(tr.contact_not_found || 'Contact not found', 'error'); return; }
       const p = await res.json();
       currentContactId = id;
-      const companyName = (p.company_id != null && companiesList.length) ? (companiesList.find(c => c.id === p.company_id) || {}).name || 'Компания #' + p.company_id : '—';
+      const companyName = (p.company_id != null && companiesList.length) ? (companiesList.find(c => c.id === p.company_id) || {}).name || (tr.company_default_name || 'Company #{}').replace('{}', p.company_id) : '—';
       document.getElementById('contact-drawer-title').textContent = p.full_name || '—';
       document.getElementById('contact-drawer-company').textContent = companyName;
       const kolBadge = document.getElementById('contact-drawer-kol-badge');
@@ -576,17 +577,17 @@
         a.href = p.linkedin_url.trim();
         a.target = '_blank';
         a.rel = 'noopener';
-        a.textContent = 'Профиль LinkedIn';
+        a.textContent = tr.contact_linkedin_profile || 'LinkedIn profile';
         a.className = 'contact-name-link';
         linkedinVal.appendChild(a);
       } else linkedinVal.textContent = '—';
-      document.getElementById('contact-drawer-kol-val').textContent = p.is_kol ? 'Да' : 'Нет';
+      document.getElementById('contact-drawer-kol-val').textContent = p.is_kol ? (tr.contact_yes || 'Yes') : (tr.contact_no || 'No');
       const notesEl = document.getElementById('contact-drawer-notes');
       notesEl.value = (p.notes || '').trim();
       requestAnimationFrame(() => { const focusables = getContactDrawerFocusables(); if (focusables.length) focusables[0].focus(); });
     } catch (e) {
       closeContactDrawer();
-      if (typeof window.toast === 'function') window.toast('Ошибка загрузки контакта', 'error');
+      if (typeof window.toast === 'function') window.toast(tr.contact_load_error || 'Failed to load contact', 'error');
     }
   }
   document.getElementById('contact-drawer-notes-save').addEventListener('click', async () => {
@@ -594,7 +595,7 @@
     const notes = document.getElementById('contact-drawer-notes').value;
     try {
       const res = await fetch('/people/' + currentContactId, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ notes: notes || null }) });
-      if (res.ok && typeof window.toast === 'function') window.toast('Заметки сохранены', 'success');
+      if (res.ok && typeof window.toast === 'function') window.toast(tr.contact_notes_saved || 'Notes saved', 'success');
     } catch (_) {}
   });
   document.getElementById('contact-drawer-edit').addEventListener('click', () => {
@@ -649,7 +650,7 @@
   async function openFormDrawer(editId) {
     formDrawerRestoreFocus = document.activeElement;
     editingPersonId = editId || null;
-    formDrawerTitle.textContent = editingPersonId ? 'Редактировать контакт' : 'Добавить контакт';
+    formDrawerTitle.textContent = editingPersonId ? (tr.person_form_edit || 'Edit contact') : (tr.person_form_add || 'Add contact');
     const form = document.getElementById('person-form');
     form.reset();
     personCompanyId.value = '';
@@ -683,17 +684,17 @@
   document.getElementById('btn-cancel-add').addEventListener('click', () => { editingPersonId = null; closeFormDrawer(); });
 
   async function deletePerson(id) {
-    if (!confirm('Удалить этот контакт?')) return;
+    if (!confirm(tr.delete_contact_confirm || 'Delete this contact?')) return;
     try {
       const res = await fetch('/people/' + id, { method: 'DELETE' });
       if (res.ok) {
-        if (typeof window.toast === 'function') window.toast('Контакт удалён', 'success');
+        if (typeof window.toast === 'function') window.toast(tr.contact_deleted || 'Contact deleted', 'success');
         loadPeople();
       } else {
         if (typeof window.toast === 'function') window.toast(await res.text(), 'error');
       }
     } catch (e) {
-      if (typeof window.toast === 'function') window.toast('Ошибка при удалении', 'error');
+      if (typeof window.toast === 'function') window.toast(tr.delete_contact_error || 'Error deleting', 'error');
     }
   }
   function escapeHtml(s) {
@@ -728,7 +729,7 @@
       e.target.reset();
       personCompanyId.value = '';
       personCompanySearch.value = '';
-      if (typeof window.toast === 'function') window.toast(isEdit ? 'Контакт обновлён' : 'Контакт добавлен', 'success');
+      if (typeof window.toast === 'function') window.toast(isEdit ? (tr.contact_updated || 'Contact updated') : (tr.contact_added || 'Contact added'), 'success');
       closeFormDrawer();
       loadPeople();
     } else {

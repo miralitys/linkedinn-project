@@ -119,6 +119,14 @@ async def run_agent_endpoint(
 
     try:
         result = await run_agent(agent_name, payload)
+    except ValueError as e:
+        msg = str(e)
+        if "OPENROUTER_API_KEY" in msg and "not set" in msg.lower():
+            raise HTTPException(
+                status_code=503,
+                detail="OPENROUTER_API_KEY is not set. Add OPENROUTER_API_KEY=sk-or-v1-... to your .env file (get a key at https://openrouter.ai) to enable AI rewrite.",
+            )
+        raise HTTPException(status_code=400, detail=msg)
     except Exception as e:
         import logging
         logging.exception("Agent %s failed: %s", agent_name, e)

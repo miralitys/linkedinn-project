@@ -89,19 +89,24 @@ app = FastAPI(title="MyVOICE's", description="LinkedIn Funnel Agent System", lif
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    """Ловим любую необработанную ошибку и показываем понятную страницу вместо Internal Server Error."""
+    """Ловим любую необработанную ошибку и показываем traceback для отладки."""
+    import traceback
     logging.exception("Unhandled error for %s: %s", request.url.path, exc)
+    tb = traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")
     return HTMLResponse(
-        '<html><body style="font-family:sans-serif;padding:2rem;max-width:600px;margin:0 auto;">'
+        '<html><body style="font-family:sans-serif;padding:2rem;max-width:900px;margin:0 auto;">'
         "<h1>Ошибка сервера</h1>"
         "<p>Что-то пошло не так. Попробуйте <a href=\"/logout\">выйти</a> и войти снова, или вернуться на <a href=\"/\">главную</a>.</p>"
-        "<p style=\"color:#666;font-size:0.9rem;\">Подробности в логах сервера (терминал, где запущен uvicorn).</p>"
-        "</body></html>",
+        "<p style=\"color:#666;font-size:0.9rem;\">Traceback:</p><pre style=\"background:#f1f5f9;padding:1rem;overflow:auto;font-size:12px;white-space:pre-wrap;\">"
+        + tb
+        + "</pre></body></html>",
         status_code=500,
     )
 
 
-# Порядок важен: последний add_middleware = первый по цепочке запроса. SessionMiddleware должен быть ближе к app, чтобы session была доступна в AuthMiddleware.
+# Порядок важен: последний add_middleware = первый по цепочке запроса.
+# SessionMiddleware должен быть добавлен ВТОРЫМ (последним в коде), чтобы он выполнился ПЕРВЫМ и инициализировал session.
+# AuthMiddleware должен быть добавлен ПЕРВЫМ, чтобы он выполнился ПОСЛЕ SessionMiddleware и мог использовать session.
 from app.middleware.auth import AuthMiddleware
 app.add_middleware(AuthMiddleware)
 app.add_middleware(
@@ -111,6 +116,8 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+from app.routers import admin
+app.include_router(admin.router)
 app.include_router(setup.router)
 app.include_router(companies.router)
 app.include_router(people.router)
@@ -125,15 +132,41 @@ app.include_router(linkedin_oauth.router)
 from fastapi.templating import Jinja2Templates as _Jinja2Templates
 _landing_templates = _Jinja2Templates(directory=str(settings.base_dir / "templates"))
 
+def _landing_response(request: Request, template: str, locale: str):
+    r = _landing_templates.TemplateResponse(request, template, {"locale": locale})
+    r.set_cookie("locale", locale, max_age=365 * 24 * 3600, samesite="lax")
+    return r
+
+
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    """Главная страница — лендинг."""
-    return _landing_templates.TemplateResponse(request, "index.html")
+    """Главная страница — лендинг (русский)."""
+    return _landing_response(request, "index.html", "ru")
+
+
+@app.get("/en", response_class=HTMLResponse)
+@app.get("/en/", response_class=HTMLResponse)
+async def root_en(request: Request):
+    """Landing page — English."""
+    return _landing_response(request, "index_en.html", "en")
+
+
+@app.get("/set-locale")
+async def set_locale(request: Request, locale: str = "ru", next: str = "/ui/posts"):
+    """Set locale cookie and redirect to next (for in-app language switch)."""
+    loc = "en" if (locale and str(locale).strip().lower() == "en") else "ru"
+    safe_next = next if next.startswith("/") and "//" not in next else "/ui/posts"
+    r = RedirectResponse(url=safe_next, status_code=302)
+    r.set_cookie("locale", loc, max_age=365 * 24 * 3600, samesite="lax")
+    return r
+
 
 # Mount UI templates and static if present
 try:
     import json
     from fastapi.templating import Jinja2Templates
+
+    from app.translations import RU, get_locale_from_cookie, get_tr
 
     templates = Jinja2Templates(directory=str(settings.base_dir / "templates"))
     templates.env.filters["tojson"] = lambda x: json.dumps(x, ensure_ascii=False)
@@ -141,48 +174,79 @@ try:
     if static_dir.exists():
         app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
+    def _app_context(request: Request):
+        try:
+            locale = get_locale_from_cookie(getattr(request, "cookies", None))
+            return {"locale": locale, "tr": get_tr(locale)}
+        except Exception:
+            return {"locale": "ru", "tr": RU}
+
     @app.get("/ui", response_class=HTMLResponse)
     async def ui_landing(request: Request):
-        """Главная страница — лендинг. Приложение: /ui/posts"""
-        return templates.TemplateResponse(request, "index.html")
+        ctx = {"request": request, **_app_context(request)}
+        template = "index_en.html" if ctx.get("locale") == "en" else "index.html"
+        return templates.TemplateResponse(request, template, ctx)
 
     @app.get("/ui/setup", response_class=HTMLResponse)
     async def ui_setup(request: Request):
-        return templates.TemplateResponse(request, "setup.html")
+        return templates.TemplateResponse(
+            request, "setup.html", {"request": request, **_app_context(request)}
+        )
 
     @app.get("/ui/companies", response_class=HTMLResponse)
     async def ui_companies(request: Request):
-        return templates.TemplateResponse(request, "companies.html")
+        return templates.TemplateResponse(
+            request, "companies.html", {"request": request, **_app_context(request)}
+        )
 
     @app.get("/ui/people", response_class=HTMLResponse)
     async def ui_people(request: Request):
-        return templates.TemplateResponse(request, "people.html")
+        return templates.TemplateResponse(
+            request, "people.html", {"request": request, **_app_context(request)}
+        )
 
     @app.get("/ui/kol")
     async def ui_kol_redirect():
-        """Раздел KOL убран — лидеры мнений отмечаются в контактах. Редирект на контакты."""
         return RedirectResponse(url="/ui/people", status_code=302)
 
     @app.get("/ui/posts", response_class=HTMLResponse)
     async def ui_posts(request: Request):
         try:
             tz = getattr(settings, "display_timezone", None) or "UTC"
-            return templates.TemplateResponse(request, "posts.html", {"display_timezone": tz})
+            ctx = _app_context(request)
+            return templates.TemplateResponse(
+                request,
+                "posts.html",
+                {"request": request, **ctx, "display_timezone": tz},
+            )
         except Exception as e:
+            import traceback
             logging.exception("Error rendering /ui/posts: %s", e)
+            try:
+                ctx = _app_context(request)
+                load_err = ctx["tr"].get("load_error", "Ошибка загрузки")
+            except Exception:
+                load_err = "Ошибка загрузки"
+            tb = traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")
             return HTMLResponse(
-                f'<html><body style="font-family:sans-serif;padding:2rem;max-width:600px;margin:0 auto;">'
-                f'<h1>Ошибка загрузки</h1><p>Не удалось открыть страницу. Попробуйте <a href="/logout">выйти</a> и войти снова, или вернуться на <a href="/">главную</a>.</p>'
-                f'<p style="color:#666;font-size:0.9rem;">В логах сервера есть подробности.</p></body></html>',
+                "<html><body style=\"font-family:sans-serif;padding:2rem;max-width:900px;margin:0 auto;\">"
+                "<h1>" + load_err + "</h1><p>Не удалось открыть страницу. Попробуйте <a href=\"/logout\">выйти</a> и <a href=\"/login\">войти</a> снова, или вернуться на <a href=\"/\">главную</a>.</p>"
+                "<p style=\"color:#666;font-size:0.9rem;\">Подробности (уберите после отладки):</p><pre style=\"background:#f1f5f9;padding:1rem;overflow:auto;font-size:12px;white-space:pre-wrap;\">" + tb + "</pre></body></html>",
                 status_code=500,
             )
 
     @app.get("/ui/reddit", response_class=HTMLResponse)
     async def ui_reddit(request: Request):
-        return templates.TemplateResponse(request, "reddit.html", {"display_timezone": settings.display_timezone})
+        return templates.TemplateResponse(
+            request,
+            "reddit.html",
+            {"request": request, **_app_context(request), "display_timezone": settings.display_timezone},
+        )
 
     @app.get("/ui/news", response_class=HTMLResponse)
     async def ui_news(request: Request):
-        return templates.TemplateResponse(request, "news.html")
+        return templates.TemplateResponse(
+            request, "news.html", {"request": request, **_app_context(request)}
+        )
 except Exception as e:
     logging.exception("UI routes failed to load (templates/static): %s", e)

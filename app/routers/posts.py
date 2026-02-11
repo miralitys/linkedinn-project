@@ -73,7 +73,7 @@ async def list_posts(
     person_id: Optional[int] = None,
     period: Optional[str] = Query(None, description="all|week|month"),
     sort: str = Query("desc", description="desc|asc"),
-    archived: Optional[bool] = Query(None, description="false = only visible, true = only archived"),
+    archived: Optional[str] = Query(None, description="false = only visible, true = only archived"),
     max_per_contact: Optional[int] = Query(None, description="макс. постов на контакт (напр. 3 = последние 3 по каждому)"),
     session: AsyncSession = Depends(get_session),
 ):
@@ -90,8 +90,13 @@ async def list_posts(
     elif period == "month":
         since = datetime.utcnow() - timedelta(days=30)
         q = q.where(ContactPost.posted_at >= since)
+    # Обрабатываем archived как строку для корректной работы с query параметрами
     if archived is not None:
-        q = q.where(ContactPost.archived == archived)
+        archived_bool = archived.lower() in ("true", "1", "yes") if isinstance(archived, str) else bool(archived)
+        q = q.where(ContactPost.archived == archived_bool)
+    else:
+        # По умолчанию показываем только неархивированные посты
+        q = q.where(ContactPost.archived == False)
     order = ContactPost.posted_at.desc() if sort == "desc" else ContactPost.posted_at.asc()
     q = q.order_by(order)
     r = await session.execute(q)

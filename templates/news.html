@@ -1,31 +1,31 @@
 {% extends "base.html" %}
-{% block title %}Новости — MyVOICE's{% endblock %}
+{% block title %}{{ tr.news_title }} — MyVOICE's{% endblock %}
 {% block content %}
 <div class="news-page-wrap">
 <header class="news-page-header">
   <div class="news-header-top">
-    <h1 class="news-page-title">Новости</h1>
-    <button type="button" id="news-refresh-btn" class="btn primary btn-icon-text news-refresh-btn" aria-label="Обновить" title="Обновить"><span aria-hidden="true">↻</span> Обновить</button>
+    <h1 class="news-page-title">{{ tr.news_title }}</h1>
+    <button type="button" id="news-refresh-btn" class="btn primary btn-icon-text news-refresh-btn" aria-label="{{ tr.posts_refresh }}" title="{{ tr.posts_refresh }}"><span aria-hidden="true">↻</span> {{ tr.posts_refresh }}</button>
   </div>
-  <p class="news-header-desc">Новости Land Line Media, Transport Topics и CDLLife за последние 3 дня — в одной ленте по дате.</p>
+  <p class="news-header-desc">{{ tr.news_lead }}</p>
   <div class="news-toolbar-row news-toolbar-row-reddit">
     <div class="news-toolbar-field">
-      <label class="news-toolbar-label" for="news-source-filter">Источник</label>
-      <select id="news-source-filter" class="news-toolbar-select" aria-label="Источник">
-        <option value="">Все источники</option>
+      <label class="news-toolbar-label" for="news-source-filter">{{ tr.news_source }}</label>
+      <select id="news-source-filter" class="news-toolbar-select" aria-label="{{ tr.news_source }}">
+        <option value="">{{ tr.news_all_sources }}</option>
         <option value="Land Line Media">Land Line Media</option>
         <option value="Transport Topics">Transport Topics</option>
         <option value="CDLLife">CDLLife</option>
       </select>
     </div>
     <div class="news-toolbar-field">
-      <label class="news-toolbar-label" for="news-score-filter">Score</label>
-      <select id="news-score-filter" class="news-toolbar-select" aria-label="Фильтр по релевантности">
-        <option value="">Все</option>
-        <option value="blue">Синий (81+)</option>
-        <option value="green">Зелёный (61–80)</option>
-        <option value="yellow">Жёлтый (31–60)</option>
-        <option value="red">Красный (0–30)</option>
+      <label class="news-toolbar-label" for="news-score-filter">{{ tr.news_score_label }}</label>
+      <select id="news-score-filter" class="news-toolbar-select" aria-label="{{ tr.news_filter_relevance }}">
+        <option value="">{{ tr.news_all }}</option>
+        <option value="blue">{{ tr.reddit_score_blue }}</option>
+        <option value="green">{{ tr.reddit_score_green }}</option>
+        <option value="yellow">{{ tr.reddit_score_yellow }}</option>
+        <option value="red">{{ tr.reddit_score_red }}</option>
       </select>
     </div>
   </div>
@@ -39,36 +39,36 @@
   </div>
   <div id="news-list"></div>
   <div id="news-empty" class="news-empty-state" style="display: none;">
-    <p class="news-empty-title">Нет новостей</p>
-    <p class="news-empty-desc">За последние 3 дня записей не найдено. Нажмите «Обновить» или зайдите позже.</p>
-    <button type="button" id="news-empty-retry" class="btn primary">Обновить</button>
+    <p class="news-empty-title">{{ tr.news_empty_title }}</p>
+    <p class="news-empty-desc">{{ tr.news_empty_desc }}</p>
+    <button type="button" id="news-empty-retry" class="btn primary">{{ tr.news_refresh }}</button>
   </div>
   <div id="news-error" class="news-error-state" style="display: none;">
-    <p class="news-error-text">Не удалось загрузить новости.</p>
+    <p class="news-error-text">{{ tr.news_error }}</p>
     <p id="news-error-detail" class="news-error-detail"></p>
-    <button type="button" id="news-error-retry" class="btn secondary">Повторить</button>
+    <button type="button" id="news-error-retry" class="btn secondary">{{ tr.news_retry }}</button>
   </div>
 </div>
 </div>
 
-<!-- Панель статьи — выезжает справа -->
+<!-- Article panel -->
 <div id="news-view-drawer" class="news-view-drawer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="news-view-title">
   <div class="news-view-backdrop" id="news-view-backdrop"></div>
   <div class="news-view-panel">
     <div class="news-view-header">
       <div class="news-view-header-top">
-        <span class="news-view-header-label" aria-hidden="true">Новость</span>
+        <span class="news-view-header-label" aria-hidden="true">{{ tr.news_article_label }}</span>
         <div class="news-view-header-actions">
-          <a id="news-view-link" href="#" target="_blank" rel="noopener" class="news-view-open-link link-tertiary" title="Открыть оригинал" aria-label="Открыть оригинал" style="display: none;">Открыть оригинал <span aria-hidden="true">↗</span></a>
-          <button type="button" class="news-view-close" id="news-view-close" title="Закрыть (Esc)" aria-label="Закрыть">×</button>
+          <a id="news-view-link" href="#" target="_blank" rel="noopener" class="news-view-open-link link-tertiary" title="{{ tr.open_original }}" aria-label="{{ tr.open_original }}" style="display: none;">{{ tr.open_original }} <span aria-hidden="true">↗</span></a>
+          <button type="button" class="news-view-close" id="news-view-close" title="{{ tr.common_close_esc }}" aria-label="{{ tr.common_close }}">×</button>
         </div>
       </div>
       <h2 id="news-view-title" class="news-view-title"></h2>
     </div>
     <div class="news-view-meta" id="news-view-meta">
       <span id="news-view-score-wrap" style="display: none; margin-left: var(--space-3);">
-        <span id="news-view-score" class="news-card-score-loading" title="Оценка релевантности...">—</span>
-        <button type="button" id="news-view-score-refresh" class="news-score-refresh-btn" title="Обновить оценку релевантности" style="display: none; margin-left: var(--space-2);" aria-label="Обновить score">
+        <span id="news-view-score" class="news-card-score-loading" title="{{ tr.news_relevance_loading }}">—</span>
+        <button type="button" id="news-view-score-refresh" class="news-score-refresh-btn" title="{{ tr.news_refresh_score }}" style="display: none; margin-left: var(--space-2);" aria-label="{{ tr.news_refresh_score }}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10"></polyline>
             <polyline points="1 20 1 14 7 14"></polyline>
@@ -82,34 +82,34 @@
       <div id="news-view-body" class="news-view-body"></div>
       <div class="news-rewrite-block">
       <div class="news-rewrite-header">
-        <h3 class="news-rewrite-title">Переписать эту новость</h3>
-        <p class="news-rewrite-desc">Выберите автора и цель — AI переформулирует новость в пост для LinkedIn.</p>
+        <h3 class="news-rewrite-title">{{ tr.news_rewrite_title }}</h3>
+        <p class="news-rewrite-desc">{{ tr.news_rewrite_desc }}</p>
       </div>
       <div class="news-rewrite-form">
         <div class="news-rewrite-fields">
           <div class="news-rewrite-field">
-            <label for="news-rewrite-author">От лица автора</label>
-            <select id="news-rewrite-author" aria-label="Автор"><option value="">— Загрузка… —</option></select>
+            <label for="news-rewrite-author">{{ tr.reddit_as_author }}</label>
+            <select id="news-rewrite-author" aria-label="{{ tr.reddit_author }}"><option value="">{{ tr.reddit_loading }}</option></select>
           </div>
           <div class="news-rewrite-field">
-            <label for="news-rewrite-goal">Цель</label>
-            <select id="news-rewrite-goal" aria-label="Цель"><option value="network">Network</option><option value="native_ads">Нативная реклама</option><option value="full_ads">Сто процентов рекламы</option></select>
+            <label for="news-rewrite-goal">{{ tr.reddit_goal }}</label>
+            <select id="news-rewrite-goal" aria-label="{{ tr.reddit_goal }}"><option value="network">Network</option><option value="native_ads">{{ tr.reddit_goal_native }}</option><option value="full_ads">{{ tr.reddit_goal_full }}</option></select>
           </div>
           <div class="news-rewrite-field">
-            <label for="news-rewrite-length">Длина поста</label>
-            <select id="news-rewrite-length" aria-label="Длина поста"><option value="short">Короткий (600–900 знаков)</option><option value="medium" selected>Средний (900–1400 знаков)</option><option value="long">Длинный (1400–2200 знаков)</option></select>
+            <label for="news-rewrite-length">{{ tr.reddit_length }}</label>
+            <select id="news-rewrite-length" aria-label="{{ tr.reddit_length }}"><option value="short">{{ tr.reddit_length_short }}</option><option value="medium" selected>{{ tr.reddit_length_medium }}</option><option value="long">{{ tr.reddit_length_long }}</option></select>
           </div>
-          <button type="button" id="news-rewrite-btn" class="btn primary news-rewrite-btn" aria-label="Переписать новость">Переписать</button>
+          <button type="button" id="news-rewrite-btn" class="btn primary news-rewrite-btn" aria-label="{{ tr.news_rewrite_title }}">{{ tr.reddit_rewrite_btn }}</button>
         </div>
         <div class="news-rewrite-output">
           <div class="news-rewrite-output-header">
-            <span class="news-rewrite-result-label">Результат</span>
+            <span class="news-rewrite-result-label">{{ tr.reddit_result }}</span>
             <div style="display: flex; align-items: center; gap: var(--space-2);">
               <span id="news-write-char-count" class="news-char-count" style="font-size: var(--text-12); color: var(--text-muted);"></span>
-              <button type="button" id="news-write-copy" class="btn secondary btn-sm news-copy-btn">Копировать</button>
+              <button type="button" id="news-write-copy" class="btn secondary btn-sm news-copy-btn">{{ tr.reddit_copy }}</button>
             </div>
           </div>
-          <textarea id="news-write-textarea" rows="4" placeholder="Результат появится здесь…"></textarea>
+          <textarea id="news-write-textarea" rows="4" placeholder="{{ tr.reddit_result_placeholder }}"></textarea>
         </div>
       </div>
     </div>
@@ -425,6 +425,7 @@
 </style>
 <script>
 (function() {
+  const tr = window.__tr || {};
   function escapeHtml(s) {
     if (s == null) return '';
     return String(s)
@@ -433,11 +434,12 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
   }
+  var localeForDate = (typeof window.__locale !== 'undefined' && window.__locale === 'en') ? 'en-US' : 'ru-RU';
   function formatDate(iso) {
     if (!iso) return '—';
     try {
       var d = new Date(iso);
-      return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      return d.toLocaleDateString(localeForDate, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     } catch (e) { return iso; }
   }
   function relativeTime(iso) {
@@ -446,10 +448,10 @@
       var d = new Date(iso);
       var now = new Date();
       var s = Math.floor((now - d) / 1000);
-      if (s < 60) return 'только что';
-      if (s < 3600) return Math.floor(s / 60) + ' мин. назад';
-      if (s < 86400) return Math.floor(s / 3600) + ' ч. назад';
-      if (s < 604800) return Math.floor(s / 86400) + ' дн. назад';
+      if (s < 60) return (tr.news_time_just_now || 'just now');
+      if (s < 3600) return (tr.news_time_min_ago || '{} min ago').replace('{}', Math.floor(s / 60));
+      if (s < 86400) return (tr.news_time_hr_ago || '{} hr ago').replace('{}', Math.floor(s / 3600));
+      if (s < 604800) return (tr.news_time_days_ago || '{} days ago').replace('{}', Math.floor(s / 86400));
       return formatDate(iso);
     } catch (e) { return iso; }
   }
@@ -497,8 +499,8 @@
         emptyEl.style.display = 'block';
         var titleEl = emptyEl.querySelector('.news-empty-title');
         var descEl = emptyEl.querySelector('.news-empty-desc');
-        if (titleEl) titleEl.textContent = 'Нет новостей';
-        if (descEl) descEl.textContent = filterVal && scoreRange ? 'Нет новостей по выбранному источнику и Score. Смените фильтры.' : filterVal ? 'Выберите другой источник или зайдите позже.' : 'Нет новостей с выбранным Score. Смените фильтр.';
+        if (titleEl) titleEl.textContent = tr.news_empty_title || 'No news';
+        if (descEl) descEl.textContent = filterVal && scoreRange ? (tr.news_empty_filter_both || 'No news for selected filters.') : filterVal ? (tr.news_empty_filter_source || 'Select another source.') : (tr.news_empty_filter_score || 'No news with selected Score.');
       }
       if (emptyRetryBtn) emptyRetryBtn.style.display = 'none';
       if (listEl) { listEl.style.display = 'none'; listEl.innerHTML = ''; }
@@ -516,17 +518,19 @@
     listEl.innerHTML = filtered.map(function(x) {
       var item = x.item;
       var idx = x.origIdx;
-      var title = escapeHtml(item.title || 'Без заголовка');
+      var title = escapeHtml(item.title || (tr.news_no_title || 'No title'));
       var link = (item.link || '').trim();
       var summary = escapeHtml(item.summary || '');
       var publishedRel = relativeTime(item.published);
       var sourceName = item.source || 'Land Line Media';
-      var linkText = link ? '<a href="' + escapeHtml(link) + '" target="_blank" rel="noopener" class="news-card-open-link" title="Открыть оригинал" aria-label="Открыть оригинал" onclick="event.stopPropagation()">Открыть оригинал <span aria-hidden="true">↗</span></a>' : '';
+      var openOrig = tr.open_original || 'Open original';
+      var linkText = link ? '<a href="' + escapeHtml(link) + '" target="_blank" rel="noopener" class="news-card-open-link" title="' + openOrig + '" aria-label="' + openOrig + '" onclick="event.stopPropagation()">' + openOrig + ' <span aria-hidden="true">↗</span></a>' : '';
       var score = item.score !== undefined && item.score !== null ? item.score : null;
       var scoreColorClass = score !== null ? getScoreColorClass(score) : '';
+      var relevanceTitle = (tr.news_relevance_score || 'Relevance: {}').replace('{}', score) + '/100';
       var scoreHtml = score !== null 
-        ? '<span class="news-card-score ' + scoreColorClass + '" data-score="' + score + '" title="Релевантность: ' + score + '/100">Score: ' + score + '</span>' 
-        : '<span class="news-card-score-loading" data-index="' + idx + '" title="Оценка релевантности...">—</span>';
+        ? '<span class="news-card-score ' + scoreColorClass + '" data-score="' + score + '" title="' + relevanceTitle + '">Score: ' + score + '</span>' 
+        : '<span class="news-card-score-loading" data-index="' + idx + '" title="' + (tr.news_relevance_loading || 'Relevance score...') + '">—</span>';
       return '<article class="news-card" data-index="' + idx + '" role="button" tabindex="0">' +
         '<div class="news-card-top">' +
           '<span class="news-card-meta">' + escapeHtml(sourceName) + ' · ' + escapeHtml(publishedRel) + '</span>' +
@@ -538,11 +542,11 @@
         '</div>' +
         '<div class="news-card-footer">' +
           '<div class="news-card-footer-left">' +
-            '<button type="button" class="news-card-read-more btn-news-read-full" data-index="' + idx + '" onclick="event.stopPropagation()">Развернуть</button>' +
+            '<button type="button" class="news-card-read-more btn-news-read-full" data-index="' + idx + '" onclick="event.stopPropagation()">' + (tr.news_expand || 'Expand') + '</button>' +
           '</div>' +
           '<div class="news-card-actions">' +
             scoreHtml +
-            '<button type="button" class="btn primary btn-sm btn-news-rewrite-post" data-index="' + idx + '" onclick="event.stopPropagation()">Сделать пост</button>' +
+            '<button type="button" class="btn primary btn-sm btn-news-rewrite-post" data-index="' + idx + '" onclick="event.stopPropagation()">' + (tr.news_make_post || 'Make post') + '</button>' +
           '</div>' +
         '</div>' +
         '</article>';
@@ -660,7 +664,7 @@
     scoreEl.className = 'news-card-score ' + colorClass;
     scoreEl.setAttribute('data-score', score);
     scoreEl.textContent = 'Score: ' + score;
-    scoreEl.title = 'Релевантность: ' + score + '/100';
+    scoreEl.title = (tr.news_relevance_score || 'Relevance: {}').replace('{}', score + '/100');
     // Убираем data-index если был
     scoreEl.removeAttribute('data-index');
     
@@ -673,7 +677,7 @@
         detailScoreEl.className = 'news-card-score ' + colorClass;
         detailScoreEl.setAttribute('data-score', score);
         detailScoreEl.textContent = 'Score: ' + score;
-        detailScoreEl.title = 'Релевантность: ' + score + '/100';
+        detailScoreEl.title = (tr.news_relevance_score || 'Relevance: {}').replace('{}', score + '/100');
         if (scoreRefreshBtn) {
           scoreRefreshBtn.style.display = 'inline-flex';
           scoreRefreshBtn.onclick = function(e) {
@@ -691,7 +695,7 @@
     var scoreRefreshBtn = document.getElementById('news-view-score-refresh');
     if (scoreEl) {
       scoreEl.textContent = '…';
-      scoreEl.title = 'Обновление оценки...';
+      scoreEl.title = (tr.reddit_score_updating || 'Updating score...');
     }
     if (scoreRefreshBtn) scoreRefreshBtn.disabled = true;
     try {
@@ -728,7 +732,7 @@
           scoreEl.className = 'news-card-score ' + colorClass;
           scoreEl.setAttribute('data-score', score);
           scoreEl.textContent = 'Score: ' + score;
-          scoreEl.title = 'Релевантность: ' + score + '/100';
+          scoreEl.title = (tr.news_relevance_score || 'Relevance: {}').replace('{}', score + '/100');
         }
         if (scoreRefreshBtn) {
           scoreRefreshBtn.style.display = 'inline-flex';
@@ -740,14 +744,14 @@
       } else {
         if (scoreEl) {
           scoreEl.textContent = '—';
-          scoreEl.title = 'Не удалось получить оценку';
+          scoreEl.title = (tr.reddit_score_failed || 'Failed to get score');
         }
       }
     } catch (e) {
       console.error('Scoring error:', e);
       if (scoreEl) {
         scoreEl.textContent = '—';
-        scoreEl.title = 'Ошибка обновления';
+        scoreEl.title = (tr.news_score_update_error || 'Update error');
       }
     } finally {
       if (scoreRefreshBtn) scoreRefreshBtn.disabled = false;
@@ -762,12 +766,12 @@
       .then(function(r) {
         if (!r.ok) {
           return r.json().then(function(body) {
-            var detail = (body && body.detail) ? body.detail : r.statusText || 'Ошибка загрузки';
+            var detail = (body && body.detail) ? body.detail : r.statusText || (tr.news_load_error || 'Load error');
             setErrorDetail(detail);
             throw new Error(detail);
           }).catch(function(e) {
             if (!document.getElementById('news-error-detail').textContent)
-              setErrorDetail(e.message || 'Сервер вернул ошибку ' + r.status);
+              setErrorDetail(e.message || (tr.news_server_error || 'Server error {}').replace('{}', r.status));
             throw e;
           });
         }
@@ -785,13 +789,13 @@
         renderNewsList();
         // Запускаем скорринг для всех новостей без score
         scoreNewsItems();
-        if (forceRefresh && typeof window.toast === 'function') window.toast('Новости обновлены');
+        if (forceRefresh && typeof window.toast === 'function') window.toast(tr.news_updated_toast || 'News updated');
       })
       .catch(function(err) {
         setState(false, false, true);
         listEl.innerHTML = '';
         if (!document.getElementById('news-error-detail').textContent)
-          setErrorDetail(err && err.message ? err.message : 'Проверьте подключение к интернету.');
+          setErrorDetail(err && err.message ? err.message : (tr.news_check_connection || 'Check your internet connection.'));
       });
   }
   function stripLinksInHtml(html) {
@@ -819,7 +823,7 @@
     var scoreWrap = document.getElementById('news-view-score-wrap');
     var scoreEl = document.getElementById('news-view-score');
     var scoreRefreshBtn = document.getElementById('news-view-score-refresh');
-    if (titleEl) titleEl.textContent = item.title || 'Без заголовка';
+    if (titleEl) titleEl.textContent = item.title || (tr.news_no_title || 'No title');
     var dateText = formatDate(item.published);
     // Обновляем score в детальном виде
     if (scoreWrap && scoreEl) {
@@ -832,7 +836,7 @@
         scoreEl.className = 'news-card-score ' + colorClass;
         scoreEl.setAttribute('data-score', score);
         scoreEl.textContent = 'Score: ' + score;
-        scoreEl.title = 'Релевантность: ' + score + '/100';
+        scoreEl.title = (tr.news_relevance_score || 'Relevance: {}').replace('{}', score + '/100');
         if (scoreRefreshBtn) {
           scoreRefreshBtn.style.display = 'inline-flex';
           scoreRefreshBtn.onclick = function(e) {
@@ -843,7 +847,7 @@
       } else {
         scoreEl.className = 'news-card-score-loading';
         scoreEl.textContent = '—';
-        scoreEl.title = 'Оценка релевантности...';
+        scoreEl.title = (tr.news_relevance_loading || 'Relevance score...');
         if (scoreRefreshBtn) {
           scoreRefreshBtn.style.display = 'inline-flex';
           scoreRefreshBtn.onclick = function(e) {
@@ -864,11 +868,11 @@
       var sName = item.source || 'Land Line Media';
       var sUrl = (item.sourceUrl || 'https://landline.media/news/').trim();
       var sLabel = sName === 'Transport Topics' ? 'ttnews.com' : (sName === 'CDLLife' ? 'cdllife.com' : 'landline.media');
-      sourceEl.innerHTML = 'Источник: <a href="' + escapeHtml(sUrl) + '" target="_blank" rel="noopener">' + escapeHtml(sName) + '</a> (' + escapeHtml(sLabel) + ')';
+      sourceEl.innerHTML = (tr.reddit_source || 'Source:') + ' <a href="' + escapeHtml(sUrl) + '" target="_blank" rel="noopener">' + escapeHtml(sName) + '</a> (' + escapeHtml(sLabel) + ')';
     }
     var fallbackContent = item.content || item.summary || '';
     if (bodyEl) {
-      bodyEl.innerHTML = '<p class="news-view-loading">Загрузка полного текста…</p>';
+      bodyEl.innerHTML = '<p class="news-view-loading">' + (tr.news_loading_full || 'Loading full text…') + '</p>';
     }
     if (linkEl) {
       linkEl.href = item.link || '#';
@@ -902,7 +906,7 @@
     } else {
       if (bodyEl) {
         if (/<[a-z][\s\S]*>/i.test(fallbackContent)) bodyEl.innerHTML = stripLinksInHtml(fallbackContent);
-        else bodyEl.textContent = fallbackContent || 'Нет текста.';
+        else bodyEl.textContent = fallbackContent || (tr.news_no_text || 'No text.');
       }
     }
   }
@@ -925,7 +929,7 @@
       var text = ta ? ta.value : '';
       if (!text) return;
       navigator.clipboard.writeText(text).then(function() {
-        if (typeof window.toast === 'function') window.toast('Скопировано');
+        if (typeof window.toast === 'function') window.toast(tr.reddit_copied || 'Copied');
       }).catch(function() {});
     });
   }
@@ -938,11 +942,11 @@
     if (!sel) return;
     sel.innerHTML = '';
     if (!newsRewriteAuthorsList.length) {
-      sel.appendChild(new Option('— Добавьте авторов в Settings —', ''));
+      sel.appendChild(new Option(tr.reddit_add_authors_first || '— Add authors in Settings —', ''));
       return;
     }
     newsRewriteAuthorsList.forEach(function(a, i) {
-      sel.appendChild(new Option(a.full_name || ('Автор ' + (i + 1)), String(i)));
+      sel.appendChild(new Option(a.full_name || ((tr.reddit_author_n || 'Author {}').replace('{}', String(i + 1))), String(i)));
     });
   }
   fetch('/setup/draft').then(function(r) { return r.json(); }).then(function(draft) {
@@ -966,7 +970,7 @@
     var range = ranges[length] || ranges.medium;
     var isValid = charCount >= range.min && charCount <= range.max;
     var status = isValid ? 'valid' : (charCount < range.min ? 'too-short' : 'too-long');
-    countEl.textContent = charCount + ' / ' + range.min + '–' + range.max + ' знаков';
+    countEl.textContent = charCount + ' / ' + range.min + '–' + range.max + ' ' + (tr.reddit_chars || 'chars');
     countEl.className = 'news-char-count news-char-count-' + status;
   }
   var newsRewriteBtn = document.getElementById('news-rewrite-btn');
@@ -976,14 +980,14 @@
       var ta = document.getElementById('news-write-textarea');
       var postText = bodyEl ? bodyEl.innerText || '' : '';
       postText = postText.trim();
-      if (postText === 'Загрузка полного текста…' || postText.length < 100) {
+      if (postText === (tr.news_loading_full || 'Loading full text…') || postText.length < 100) {
         if (currentNewsItem) {
           var fc = currentNewsItem.content || currentNewsItem.summary || '';
           postText = (fc + '').replace(/<[^>]+>/g, ' ').trim();
         }
       }
       if (!postText || postText.length < 50) {
-        if (typeof window.toast === 'function') window.toast('Дождитесь загрузки статьи или обновите страницу', 'error');
+        if (typeof window.toast === 'function') window.toast(tr.news_wait_article || 'Wait for the article to load or refresh the page', 'error');
         return;
       }
       var goal = document.getElementById('news-rewrite-goal').value;
@@ -994,31 +998,31 @@
       if (author) payload.author = { full_name: author.full_name, role: author.role || '', history: author.history || '', linkedin_url: author.linkedin_url || '' };
       if (newsRewriteSetupDraft.products && newsRewriteSetupDraft.products.length) payload.products = newsRewriteSetupDraft.products;
       newsRewriteBtn.disabled = true;
-      newsRewriteBtn.textContent = 'Генерация…';
-      if (ta) ta.value = 'Генерация…';
+      newsRewriteBtn.textContent = (tr.reddit_generating || 'Generating…');
+      if (ta) ta.value = (tr.reddit_generating || 'Generating…');
       updateNewsCharCount();
       fetch('/agents/news_post_agent/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ payload: payload }) })
         .then(function(r) { return r.text().then(function(t) { return { ok: r.ok, status: r.status, text: t }; }); })
         .then(function(r) {
           if (!r.ok) {
-            var errMsg = r.text ? (function() { try { var j = JSON.parse(r.text); return j.detail || j.message || r.text.slice(0, 300); } catch (_) { return r.text.slice(0, 300); } }()) : 'Ошибка сервера';
-            if (ta) ta.value = 'Ошибка сервера (' + r.status + '): ' + errMsg;
+            var errMsg = r.text ? (function() { try { var j = JSON.parse(r.text); return j.detail || j.message || r.text.slice(0, 300); } catch (_) { return r.text.slice(0, 300); } }()) : (tr.news_error_server || 'Server error');
+            if (ta) ta.value = (tr.news_error_server || 'Server error') + ' (' + r.status + '): ' + errMsg;
             updateNewsCharCount();
             return;
           }
           var data;
-          try { data = JSON.parse(r.text); } catch (_) { if (ta) ta.value = 'Ошибка: ответ не JSON.'; updateNewsCharCount(); return; }
+          try { data = JSON.parse(r.text); } catch (_) { if (ta) ta.value = (tr.news_error_not_json || 'Error: response is not JSON.'); updateNewsCharCount(); return; }
           var postTextResult = data.result && data.result.post ? data.result.post : '';
-          if (ta) ta.value = (postTextResult || '').trim() || 'Не удалось сгенерировать пост.';
+          if (ta) ta.value = (postTextResult || '').trim() || (tr.reddit_generate_failed || 'Failed to generate post.');
           updateNewsCharCount();
         })
         .catch(function(err) {
-          if (ta) ta.value = 'Ошибка: ' + (err && err.message ? err.message : 'Не удалось подключиться к серверу.');
+          if (ta) ta.value = (tr.news_error_connect || 'Failed to connect to server.') + (err && err.message ? ': ' + err.message : '');
           updateNewsCharCount();
         })
         .finally(function() {
           newsRewriteBtn.disabled = false;
-          newsRewriteBtn.textContent = 'Переписать';
+          newsRewriteBtn.textContent = (tr.reddit_rewrite_btn || 'Rewrite');
         });
     });
   }

@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Settings — MyVOICE's{% endblock %}
+{% block title %}{{ tr.setup_title }} — MyVOICE's{% endblock %}
 {% block content %}
 <header class="setup-page-header">
-  <h1 class="setup-page-title">Settings</h1>
-  <p class="setup-page-desc">Авторы и продукты для комментариев. Сохраняйте каждый блок отдельно. Профиль автора можно настроить через интервью.</p>
+  <h1 class="setup-page-title">{{ tr.setup_title }}</h1>
+  <p class="setup-page-desc">{{ tr.setup_lead }}</p>
 </header>
 
 <div class="setup-grid">
@@ -11,33 +11,33 @@
     <section class="setup-section setup-section-author">
       <div class="setup-section-header">
         <span class="setup-section-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-        <h2 class="setup-section-title">Авторы</h2>
+        <h2 class="setup-section-title">{{ tr.setup_authors }}</h2>
       </div>
       <div id="saved-authors-section" class="setup-list-block">
-        <h3 class="saved-section-title">Сохранённые авторы</h3>
-        <div id="saved-authors-cards" class="saved-cards"><p class="saved-empty-msg">Нет сохранённых авторов.</p></div>
+        <h3 class="saved-section-title">{{ tr.setup_saved_authors }}</h3>
+        <div id="saved-authors-cards" class="saved-cards"><p class="saved-empty-msg">{{ tr.setup_no_authors }}</p></div>
       </div>
       <div class="setup-add-toolbar">
-        <button type="button" id="add-author" class="btn primary add-block-btn" aria-expanded="false"><span class="btn-add-icon">+</span> Добавить автора</button>
+        <button type="button" id="add-author" class="btn primary add-block-btn" aria-expanded="false"><span class="btn-add-icon">+</span> {{ tr.setup_add_author }}</button>
       </div>
       <div id="authors-form-wrap" class="setup-form-wrap" hidden>
         <div class="setup-form-panel">
           <div id="authors-wrap">
             <div class="author-block">
-              <label class="sub">Имя и фамилия</label>
-              <input name="author_full_name" type="text" placeholder="Имя Фамилия">
-              <label class="sub">Ссылка на LinkedIn</label>
+              <label class="sub">{{ tr.setup_author_name }}</label>
+              <input name="author_full_name" type="text" placeholder="{{ tr.setup_author_name }}">
+              <label class="sub">{{ tr.setup_author_linkedin }}</label>
               <input name="author_linkedin_url" type="text" placeholder="https://www.linkedin.com/in/...">
-              <label class="sub">Его роль</label>
-              <input name="author_role" type="text" placeholder="Должность, экспертиза...">
-              <label class="sub">Его история</label>
-              <textarea name="author_history" rows="4" placeholder="Опыт, бэкграунд, стиль общения — оттуда будет браться информация для комментариев"></textarea>
+              <label class="sub">{{ tr.setup_author_role }}</label>
+              <input name="author_role" type="text" placeholder="{{ tr.setup_author_role }}">
+              <label class="sub">{{ tr.setup_author_history }}</label>
+              <textarea name="author_history" rows="4" placeholder="{{ tr.setup_author_history_placeholder }}"></textarea>
             </div>
           </div>
           <div class="form-actions-inline">
-            <button type="button" id="save-authors" class="btn primary">Сохранить</button>
-            <button type="button" id="btn-author-interview" class="btn secondary">Пройти интервью</button>
-            <button type="button" id="authors-form-cancel" class="btn secondary">Отмена</button>
+            <button type="button" id="save-authors" class="btn primary">{{ tr.setup_save }}</button>
+            <button type="button" id="btn-author-interview" class="btn secondary">{{ tr.setup_interview }}</button>
+            <button type="button" id="authors-form-cancel" class="btn secondary">{{ tr.setup_cancel }}</button>
           </div>
           <p id="save-authors-msg" class="save-msg"></p>
         </div>
@@ -47,28 +47,28 @@
     <section class="setup-section setup-section-product">
       <div class="setup-section-header">
         <span class="setup-section-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></span>
-        <h2 class="setup-section-title">Продукты</h2>
+        <h2 class="setup-section-title">{{ tr.setup_products }}</h2>
       </div>
       <div id="saved-products-section" class="setup-list-block">
-        <h3 class="saved-section-title">Сохранённые продукты</h3>
-        <div id="saved-products-cards" class="saved-cards"><p class="saved-empty-msg">Нет сохранённых продуктов.</p></div>
+        <h3 class="saved-section-title">{{ tr.setup_saved_products }}</h3>
+        <div id="saved-products-cards" class="saved-cards"><p class="saved-empty-msg">{{ tr.setup_no_products }}</p></div>
       </div>
       <div class="setup-add-toolbar">
-        <button type="button" id="add-product" class="btn primary add-block-btn" aria-expanded="false"><span class="btn-add-icon">+</span> Добавить продукт</button>
+        <button type="button" id="add-product" class="btn primary add-block-btn" aria-expanded="false"><span class="btn-add-icon">+</span> {{ tr.setup_add_product }}</button>
       </div>
       <div id="products-form-wrap" class="setup-form-wrap" hidden>
         <div class="setup-form-panel">
           <div id="products-wrap">
             <div class="product-block">
-              <label class="sub">Название продукта</label>
-              <input name="product_name" type="text" placeholder="Например: CRM для малого бизнеса">
-              <label class="sub">Описание продукта</label>
-              <textarea name="product_desc" rows="2" placeholder="Краткое описание: что делает продукт, для кого, ценность"></textarea>
+              <label class="sub">{{ tr.setup_product_name }}</label>
+              <input name="product_name" type="text" placeholder="{{ tr.setup_product_name_placeholder }}">
+              <label class="sub">{{ tr.setup_product_desc }}</label>
+              <textarea name="product_desc" rows="2" placeholder="{{ tr.setup_product_desc_placeholder }}"></textarea>
             </div>
           </div>
           <div class="form-actions-inline">
-            <button type="button" id="save-products" class="btn primary">Сохранить</button>
-            <button type="button" id="products-form-cancel" class="btn secondary">Отмена</button>
+            <button type="button" id="save-products" class="btn primary">{{ tr.setup_save }}</button>
+            <button type="button" id="products-form-cancel" class="btn secondary">{{ tr.setup_cancel }}</button>
           </div>
           <p id="save-products-msg" class="save-msg"></p>
         </div>
@@ -78,38 +78,38 @@
     <section class="setup-section setup-section-icp">
       <div class="setup-section-header">
         <span class="setup-section-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-        <h2 class="setup-section-title">Портрет клиента (ICP)</h2>
+        <h2 class="setup-section-title">{{ tr.setup_icp }}</h2>
       </div>
       <div id="saved-icp-section" class="setup-list-block">
-        <h3 class="saved-section-title">Сохранённые портреты клиентов</h3>
-        <div id="saved-icp-cards" class="saved-cards"><p class="saved-empty-msg">Нет сохранённых портретов клиентов.</p></div>
+        <h3 class="saved-section-title">{{ tr.setup_saved_icp }}</h3>
+        <div id="saved-icp-cards" class="saved-cards"><p class="saved-empty-msg">{{ tr.setup_no_icp }}</p></div>
       </div>
       <div class="setup-add-toolbar">
-        <button type="button" id="add-icp" class="btn primary add-block-btn" aria-expanded="false"><span class="btn-add-icon">+</span> Добавить портрет клиента</button>
+        <button type="button" id="add-icp" class="btn primary add-block-btn" aria-expanded="false"><span class="btn-add-icon">+</span> {{ tr.setup_add_icp }}</button>
       </div>
       <div id="icp-form-wrap" class="setup-form-wrap" hidden>
         <div class="setup-form-panel">
           <div id="icp-wrap">
             <div class="icp-block">
-              <label class="sub">Название</label>
-              <input name="icp_name" type="text" placeholder="Название портрета клиента">
-              <label class="sub">Роли</label>
-              <input name="icp_roles" type="text" placeholder="Например: CEO, CTO, CFO">
-              <label class="sub">Индустрия</label>
-              <input name="icp_industry" type="text" placeholder="Например: Логистика, IT, Финансы">
-              <label class="sub">Размер</label>
-              <input name="icp_size" type="text" placeholder="Например: 50-200 сотрудников, Enterprise">
-              <label class="sub">Гео</label>
-              <input name="icp_geo" type="text" placeholder="Например: США, Европа, Россия">
-              <label class="sub">Продукты</label>
+              <label class="sub">{{ tr.setup_icp_name }}</label>
+              <input name="icp_name" type="text" placeholder="{{ tr.setup_icp_name_placeholder }}">
+              <label class="sub">{{ tr.setup_icp_roles }}</label>
+              <input name="icp_roles" type="text" placeholder="{{ tr.setup_icp_roles_placeholder }}">
+              <label class="sub">{{ tr.setup_icp_industry }}</label>
+              <input name="icp_industry" type="text" placeholder="{{ tr.setup_icp_industry_placeholder }}">
+              <label class="sub">{{ tr.setup_icp_size }}</label>
+              <input name="icp_size" type="text" placeholder="{{ tr.setup_icp_size_placeholder }}">
+              <label class="sub">{{ tr.setup_icp_geo }}</label>
+              <input name="icp_geo" type="text" placeholder="{{ tr.setup_icp_geo_placeholder }}">
+              <label class="sub">{{ tr.setup_icp_products }}</label>
               <div id="icp-products-checkboxes" class="icp-products-checkboxes" style="max-height: 12rem; overflow-y: auto; padding: var(--space-2); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg);">
-                <p style="margin: 0; color: var(--text-muted); font-size: var(--text-14);">Загрузка продуктов...</p>
+                <p style="margin: 0; color: var(--text-muted); font-size: var(--text-14);">{{ tr.setup_loading_products }}</p>
               </div>
             </div>
           </div>
           <div class="form-actions-inline">
-            <button type="button" id="save-icp" class="btn primary">Сохранить</button>
-            <button type="button" id="icp-form-cancel" class="btn secondary">Отмена</button>
+            <button type="button" id="save-icp" class="btn primary">{{ tr.setup_save }}</button>
+            <button type="button" id="icp-form-cancel" class="btn secondary">{{ tr.setup_cancel }}</button>
           </div>
           <p id="save-icp-msg" class="save-msg"></p>
         </div>
@@ -119,125 +119,125 @@
     <section class="setup-section setup-section-subreddits">
       <div class="setup-section-header">
         <span class="setup-section-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg></span>
-        <h2 class="setup-section-title">Сабреддиты</h2>
+        <h2 class="setup-section-title">{{ tr.setup_subreddits }}</h2>
       </div>
-      <p class="setup-section-desc">Список сабреддитов для раздела Reddit. Добавьте сюда все сабреддиты — в разделе Reddit посты будут подгружаться только из этого списка.</p>
+      <p class="setup-section-desc">{{ tr.setup_subreddits_desc }}</p>
       <div id="saved-subreddits-section" class="setup-list-block">
-        <h3 class="saved-section-title">Сохранённые сабреддиты</h3>
-        <div id="saved-subreddits-list" class="saved-subreddits-list"><p class="saved-empty-msg">Нет сабреддитов. Добавьте первый ниже.</p></div>
+        <h3 class="saved-section-title">{{ tr.setup_saved_subreddits }}</h3>
+        <div id="saved-subreddits-list" class="saved-subreddits-list"><p class="saved-empty-msg">{{ tr.setup_no_subreddits }}</p></div>
       </div>
       <div class="setup-add-toolbar" id="subreddit-add-toolbar">
-        <input type="text" id="subreddit-name-input" class="setup-subreddit-input" placeholder="Имя сабреддита (напр. python)" aria-label="Имя сабреддита" maxlength="128" autocomplete="off" onkeydown="if(event.key==='Enter'){ event.preventDefault(); var b=document.getElementById('add-subreddit'); if(b) b.click(); return false; }">
-        <button type="button" id="add-subreddit" class="btn primary add-block-btn"><span class="btn-add-icon">+</span> Добавить</button>
+        <input type="text" id="subreddit-name-input" class="setup-subreddit-input" placeholder="{{ tr.setup_subreddit_placeholder }}" aria-label="{{ tr.setup_subreddit_placeholder }}" maxlength="128" autocomplete="off" onkeydown="if(event.key==='Enter'){ event.preventDefault(); var b=document.getElementById('add-subreddit'); if(b) b.click(); return false; }">
+        <button type="button" id="add-subreddit" class="btn primary add-block-btn"><span class="btn-add-icon">+</span> {{ tr.setup_add }}</button>
       </div>
       <p id="save-subreddits-msg" class="save-msg"></p>
     </section>
   </form>
 </div>
 
-<!-- Подтверждение запуска интервью -->
+<!-- Interview confirm -->
 <div id="interview-confirm-modal" class="interview-modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="interview-confirm-title">
   <div class="interview-modal interview-confirm-box">
-    <h2 id="interview-confirm-title" class="interview-modal-title">Интервью для настройки профиля</h2>
-    <p class="interview-confirm-text">Я задам вопросы про твой опыт, тон и манеру общения. По итогу соберём чёткий профиль.<br>Обычно уходит около 30 минут. Готов(а) стартовать?</p>
+    <h2 id="interview-confirm-title" class="interview-modal-title">{{ tr.interview_title }}</h2>
+    <p class="interview-confirm-text">{{ tr.interview_intro|safe }}</p>
     <div class="interview-confirm-actions">
-      <button type="button" id="interview-confirm-yes" class="btn primary">Готов(а)</button>
-      <button type="button" id="interview-confirm-no" class="btn secondary">Не сейчас</button>
+      <button type="button" id="interview-confirm-yes" class="btn primary">{{ tr.interview_ready }}</button>
+      <button type="button" id="interview-confirm-no" class="btn secondary">{{ tr.interview_later }}</button>
     </div>
   </div>
 </div>
 
-<!-- Продолжить или пройти заново (если есть черновик) -->
+<!-- Interview resume -->
 <div id="interview-resume-modal" class="interview-modal-overlay" hidden aria-modal="true" role="dialog">
   <div class="interview-modal interview-confirm-box">
-    <h2 class="interview-modal-title">Сохранённый прогресс</h2>
-    <p id="interview-resume-text" class="interview-confirm-text">У вас есть сохранённые ответы. Продолжить с того места, где остановились, или пройти интервью заново?</p>
+    <h2 class="interview-modal-title">{{ tr.interview_resume_title }}</h2>
+    <p id="interview-resume-text" class="interview-confirm-text">{{ tr.interview_resume_text }}</p>
     <div class="interview-confirm-actions">
-      <button type="button" id="interview-resume-continue" class="btn primary">Продолжить</button>
-      <button type="button" id="interview-resume-restart" class="btn secondary">Пройти заново</button>
+      <button type="button" id="interview-resume-continue" class="btn primary">{{ tr.interview_continue }}</button>
+      <button type="button" id="interview-resume-restart" class="btn secondary">{{ tr.interview_restart }}</button>
     </div>
   </div>
 </div>
 
-<!-- Интервью: по одному вопросу + прогресс -->
+<!-- Interview: one question + progress -->
 <div id="interview-modal" class="interview-modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="interview-question-title">
   <div class="interview-modal interview-question-box">
     <div class="interview-progress-wrap">
       <div class="interview-progress-bar" id="interview-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><span class="fill" id="interview-progress-fill" style="width: 0%;"></span></div>
-      <p class="interview-progress-text" id="interview-progress-text">Вопрос 0 из 0</p>
+      <p class="interview-progress-text" id="interview-progress-text">{{ tr.interview_question_progress|replace('{0}', '0')|replace('{1}', '0') }}</p>
     </div>
     <h2 id="interview-section-label" class="interview-section-label"></h2>
     <p id="interview-question-title" class="interview-question-text"></p>
-    <textarea id="interview-answer-input" class="interview-answer-input" rows="4" placeholder="Ваш ответ..."></textarea>
+    <textarea id="interview-answer-input" class="interview-answer-input" rows="4" placeholder="{{ tr.interview_answer_placeholder }}" aria-label="{{ tr.interview_answer_placeholder }}"></textarea>
     <div class="interview-question-actions">
-      <button type="button" id="interview-close" class="btn secondary" style="margin-right: auto;">Закрыть (сохранить прогресс)</button>
-      <button type="button" id="interview-prev" class="btn secondary">Назад</button>
-      <button type="button" id="interview-next" class="btn primary">Далее</button>
+      <button type="button" id="interview-close" class="btn secondary" style="margin-right: auto;">{{ tr.interview_close_save }}</button>
+      <button type="button" id="interview-prev" class="btn secondary">{{ tr.interview_prev }}</button>
+      <button type="button" id="interview-next" class="btn primary">{{ tr.interview_next }}</button>
     </div>
   </div>
 </div>
 
-<!-- Панель просмотра автора -->
+<!-- Author view drawer -->
 <div id="author-view-drawer" class="setup-view-drawer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="author-view-drawer-title">
   <div class="setup-view-drawer-backdrop" id="author-view-drawer-backdrop"></div>
   <div class="setup-view-drawer-panel card">
     <div class="setup-view-drawer-header">
       <h2 id="author-view-drawer-title" class="setup-view-drawer-name"></h2>
-      <button type="button" id="author-view-drawer-close" class="setup-view-drawer-close btn-icon" title="Закрыть (Esc)" aria-label="Закрыть">×</button>
+      <button type="button" id="author-view-drawer-close" class="setup-view-drawer-close btn-icon" title="{{ tr.common_close_esc }}" aria-label="{{ tr.common_close }}">×</button>
     </div>
     <div class="setup-view-drawer-body">
       <dl class="setup-view-drawer-dl">
-        <dt>Имя</dt><dd id="author-view-full-name"></dd>
-        <dt>Роль</dt><dd id="author-view-role"></dd>
-        <dt>LinkedIn</dt><dd id="author-view-linkedin"></dd>
-        <dt>История / контекст</dt><dd id="author-view-history"></dd>
+        <dt>{{ tr.setup_name }}</dt><dd id="author-view-full-name"></dd>
+        <dt>{{ tr.setup_role }}</dt><dd id="author-view-role"></dd>
+        <dt>{{ tr.setup_linkedin }}</dt><dd id="author-view-linkedin"></dd>
+        <dt>{{ tr.setup_history }}</dt><dd id="author-view-history"></dd>
       </dl>
       <div class="setup-view-drawer-actions">
-        <button type="button" id="author-view-drawer-edit" class="btn secondary">Редактировать</button>
+        <button type="button" id="author-view-drawer-edit" class="btn secondary">{{ tr.setup_edit }}</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Панель просмотра продукта -->
+<!-- Product view drawer -->
 <div id="product-view-drawer" class="setup-view-drawer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="product-view-drawer-title">
   <div class="setup-view-drawer-backdrop" id="product-view-drawer-backdrop"></div>
   <div class="setup-view-drawer-panel card">
     <div class="setup-view-drawer-header">
       <h2 id="product-view-drawer-title" class="setup-view-drawer-name"></h2>
-      <button type="button" id="product-view-drawer-close" class="setup-view-drawer-close btn-icon" title="Закрыть (Esc)" aria-label="Закрыть">×</button>
+      <button type="button" id="product-view-drawer-close" class="setup-view-drawer-close btn-icon" title="{{ tr.common_close_esc }}" aria-label="{{ tr.common_close }}">×</button>
     </div>
     <div class="setup-view-drawer-body">
       <dl class="setup-view-drawer-dl">
-        <dt>Название</dt><dd id="product-view-name"></dd>
-        <dt>Описание</dt><dd id="product-view-desc"></dd>
+        <dt>{{ tr.setup_name }}</dt><dd id="product-view-name"></dd>
+        <dt>{{ tr.setup_description }}</dt><dd id="product-view-desc"></dd>
       </dl>
       <div class="setup-view-drawer-actions">
-        <button type="button" id="product-view-drawer-edit" class="btn secondary">Редактировать</button>
+        <button type="button" id="product-view-drawer-edit" class="btn secondary">{{ tr.setup_edit }}</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Панель просмотра ICP -->
+<!-- ICP view drawer -->
 <div id="icp-view-drawer" class="setup-view-drawer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="icp-view-drawer-title">
   <div class="setup-view-drawer-backdrop" id="icp-view-drawer-backdrop"></div>
   <div class="setup-view-drawer-panel card">
     <div class="setup-view-drawer-header">
       <h2 id="icp-view-drawer-title" class="setup-view-drawer-name"></h2>
-      <button type="button" id="icp-view-drawer-close" class="setup-view-drawer-close btn-icon" title="Закрыть (Esc)" aria-label="Закрыть">×</button>
+      <button type="button" id="icp-view-drawer-close" class="setup-view-drawer-close btn-icon" title="{{ tr.common_close_esc }}" aria-label="{{ tr.common_close }}">×</button>
     </div>
     <div class="setup-view-drawer-body">
       <dl class="setup-view-drawer-dl">
-        <dt>Название</dt><dd id="icp-view-name"></dd>
-        <dt>Роли</dt><dd id="icp-view-roles"></dd>
-        <dt>Индустрия</dt><dd id="icp-view-industry"></dd>
-        <dt>Размер</dt><dd id="icp-view-size"></dd>
-        <dt>Гео</dt><dd id="icp-view-geo"></dd>
-        <dt>Продукты</dt><dd id="icp-view-products"></dd>
+        <dt>{{ tr.setup_name }}</dt><dd id="icp-view-name"></dd>
+        <dt>{{ tr.setup_icp_roles }}</dt><dd id="icp-view-roles"></dd>
+        <dt>{{ tr.setup_icp_industry }}</dt><dd id="icp-view-industry"></dd>
+        <dt>{{ tr.setup_icp_size }}</dt><dd id="icp-view-size"></dd>
+        <dt>{{ tr.setup_icp_geo }}</dt><dd id="icp-view-geo"></dd>
+        <dt>{{ tr.setup_icp_products }}</dt><dd id="icp-view-products"></dd>
       </dl>
       <div class="setup-view-drawer-actions">
-        <button type="button" id="icp-view-drawer-edit" class="btn secondary">Редактировать</button>
+        <button type="button" id="icp-view-drawer-edit" class="btn secondary">{{ tr.setup_edit }}</button>
       </div>
     </div>
   </div>
@@ -246,7 +246,7 @@
 <style>
   /* --- Setup page layout --- */
   .setup-page-header { margin-bottom: var(--space-6); }
-  .setup-page-title { margin: 0 0 var(--space-2); font-size: 1.75rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+  .setup-page-title { margin: 0 0 var(--space-2); font-size: 1.25rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
   .setup-page-desc { margin: 0; font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; max-width: 42rem; }
 
   .setup-grid { display: grid; gap: var(--space-6); width: 100%; }
@@ -567,6 +567,7 @@
   }
 </style>
 <script>
+  const tr = window.__tr || {};
   let savedAuthorsList = [];
   let editingAuthorIndex = null;
   let savedProductsList = [];
@@ -634,11 +635,11 @@
     const container = document.getElementById('icp-products-checkboxes');
     if (!container) return;
     if (!savedProductsList || savedProductsList.length === 0) {
-      container.innerHTML = '<p style="margin: 0; color: var(--text-muted); font-size: var(--text-14);">Нет сохранённых продуктов. Добавьте продукты в разделе "Продукты".</p>';
+      container.innerHTML = '<p style="margin: 0; color: var(--text-muted); font-size: var(--text-14);">' + (tr.setup_no_products_add_in_section || 'No saved products. Add products in the Products section.') + '</p>';
       return;
     }
     container.innerHTML = savedProductsList.map((p, i) => {
-      const name = (p && p.name) || (p && p.title) || 'Без названия';
+      const name = (p && p.name) || (p && p.title) || (tr.setup_no_name || 'No name');
       const checkboxId = 'icp-product-' + i;
       return '<div class="icp-product-checkbox-item">' +
         '<input type="checkbox" name="icp_product" id="' + checkboxId + '" value="' + i + '">' +
@@ -650,25 +651,25 @@
     const container = document.getElementById('saved-icp-cards');
     if (!container) return;
     if (!savedIcpList || savedIcpList.length === 0) {
-      container.innerHTML = '<p class="saved-empty-msg">Нет сохранённых портретов клиентов.</p>';
+      container.innerHTML = '<p class="saved-empty-msg">' + (tr.setup_no_icp_msg || tr.setup_no_icp || 'No saved customer profiles.') + '</p>';
       return;
     }
     container.innerHTML = savedIcpList.map((icp, i) => {
       const isEditing = editingIcpIndex === i;
-      const name = (icp && icp.name) || (icp && icp.title) || 'Без названия';
+      const name = (icp && icp.name) || (icp && icp.title) || (tr.setup_no_name || 'No name');
       const productIds = (icp && icp.product_ids && Array.isArray(icp.product_ids)) ? icp.product_ids : [];
       const productNames = productIds.map(idx => {
         const p = savedProductsList[parseInt(idx, 10)];
-        return p ? ((p.name || p.title) || 'Без названия') : null;
+        return p ? ((p.name || p.title) || (tr.setup_no_name || 'No name')) : null;
       }).filter(Boolean);
       const productsText = productNames.length > 0 ? '<span style="font-size: var(--text-12); color: var(--text-muted); margin-left: var(--space-2);">· ' + productNames.join(', ') + '</span>' : '';
       return '<div class="saved-icp-card' + (isEditing ? ' editing' : '') + '" data-index="' + i + '">' +
         '<div style="flex: 1; min-width: 0;"><span class="saved-name">' + esc(name) + '</span>' + productsText + '</div>' +
         '<div class="actions kebab-wrap">' +
-        '<button type="button" class="btn-icon kebab-trigger" aria-label="Действия" aria-expanded="false" aria-haspopup="menu" title="Действия">' + kebabSvg + '</button>' +
+        '<button type="button" class="btn-icon kebab-trigger" aria-label="' + (tr.setup_actions || tr.companies_more_actions || 'Actions') + '" aria-expanded="false" aria-haspopup="menu" title="' + (tr.setup_actions || 'Actions') + '">' + kebabSvg + '</button>' +
         '<div class="kebab-menu" role="menu" hidden>' +
-        '<button type="button" class="kebab-item btn-edit-icp" role="menuitem">Редактировать</button>' +
-        '<button type="button" class="kebab-item btn-delete-icp danger" role="menuitem">Удалить</button>' +
+        '<button type="button" class="kebab-item btn-edit-icp" role="menuitem">' + (tr.setup_edit || 'Edit') + '</button>' +
+        '<button type="button" class="kebab-item btn-delete-icp danger" role="menuitem">' + (tr.companies_delete || 'Delete') + '</button>' +
         '</div></div></div>';
     }).join('');
     container.querySelectorAll('.kebab-trigger').forEach(btn => {
@@ -758,10 +759,10 @@
     const block = document.createElement('div');
     block.className = 'author-block';
     const a = list[0];
-    block.innerHTML = '<label class="sub">Имя и фамилия</label><input name="author_full_name" type="text" placeholder="Имя Фамилия" value="' + esc(a.full_name || '') + '">' +
-      '<label class="sub">Ссылка на LinkedIn</label><input name="author_linkedin_url" type="text" placeholder="https://www.linkedin.com/in/..." value="' + esc(a.linkedin_url || '') + '">' +
-      '<label class="sub">Его роль</label><input name="author_role" type="text" placeholder="Должность, экспертиза..." value="' + esc(a.role || '') + '">' +
-      '<label class="sub">Его история</label><textarea name="author_history" rows="4" placeholder="Опыт, бэкграунд, стиль общения...">' + esc(a.history || '') + '</textarea>';
+    block.innerHTML = '<label class="sub">' + (tr.setup_author_name || 'First and last name') + '</label><input name="author_full_name" type="text" placeholder="' + (tr.setup_author_name_short || 'First Last') + '" value="' + esc(a.full_name || '') + '">' +
+      '<label class="sub">' + (tr.setup_author_linkedin || 'LinkedIn link') + '</label><input name="author_linkedin_url" type="text" placeholder="https://www.linkedin.com/in/..." value="' + esc(a.linkedin_url || '') + '">' +
+      '<label class="sub">' + (tr.setup_author_role || 'Their role') + '</label><input name="author_role" type="text" placeholder="' + (tr.setup_role_placeholder || 'Position, expertise...') + '" value="' + esc(a.role || '') + '">' +
+      '<label class="sub">' + (tr.setup_author_history || 'Their background') + '</label><textarea name="author_history" rows="4" placeholder="' + (tr.setup_author_history_placeholder || 'Experience, background...') + '">' + esc(a.history || '') + '</textarea>';
     wrap.appendChild(block);
     setTimeout(resizeAllSetupTextareas, 0);
   }
@@ -769,19 +770,19 @@
     const container = document.getElementById('saved-authors-cards');
     if (!container) return;
     if (!savedAuthorsList || savedAuthorsList.length === 0) {
-      container.innerHTML = '<p class="saved-empty-msg">Нет сохранённых авторов.</p>';
+      container.innerHTML = '<p class="saved-empty-msg">' + (tr.setup_no_authors_msg || tr.setup_no_authors || 'No saved authors.') + '</p>';
       return;
     }
     container.innerHTML = savedAuthorsList.map((a, i) => {
       const isEditing = editingAuthorIndex === i;
-      const name = (a && (a.full_name || a.name)) || 'Без имени';
+      const name = (a && (a.full_name || a.name)) || (tr.setup_no_name_person || 'No name');
       return '<div class="saved-author-card' + (isEditing ? ' editing' : '') + '" data-index="' + i + '">' +
         '<span class="saved-name">' + esc(name) + '</span>' +
         '<div class="actions kebab-wrap">' +
-        '<button type="button" class="btn-icon kebab-trigger" aria-label="Действия" aria-expanded="false" aria-haspopup="menu" title="Действия">' + kebabSvg + '</button>' +
+        '<button type="button" class="btn-icon kebab-trigger" aria-label="' + (tr.setup_actions || tr.companies_more_actions || 'Actions') + '" aria-expanded="false" aria-haspopup="menu" title="' + (tr.setup_actions || 'Actions') + '">' + kebabSvg + '</button>' +
         '<div class="kebab-menu" role="menu" hidden>' +
-        '<button type="button" class="kebab-item btn-edit-author" role="menuitem">Редактировать</button>' +
-        '<button type="button" class="kebab-item btn-delete-author danger" role="menuitem">Удалить</button>' +
+        '<button type="button" class="kebab-item btn-edit-author" role="menuitem">' + (tr.setup_edit || 'Edit') + '</button>' +
+        '<button type="button" class="kebab-item btn-delete-author danger" role="menuitem">' + (tr.companies_delete || 'Delete') + '</button>' +
         '</div></div></div>';
     }).join('');
     container.querySelectorAll('.kebab-trigger').forEach(btn => {
@@ -834,19 +835,19 @@
     const container = document.getElementById('saved-products-cards');
     if (!container) return;
     if (!savedProductsList || savedProductsList.length === 0) {
-      container.innerHTML = '<p class="saved-empty-msg">Нет сохранённых продуктов.</p>';
+      container.innerHTML = '<p class="saved-empty-msg">' + (tr.setup_no_products || 'No saved products.') + '</p>';
       return;
     }
     container.innerHTML = savedProductsList.map((p, i) => {
       const isEditing = editingProductIndex === i;
-      const name = (p && p.name) || (p && p.title) || 'Без названия';
+      const name = (p && p.name) || (p && p.title) || (tr.setup_no_name || 'No name');
       return '<div class="saved-product-card' + (isEditing ? ' editing' : '') + '" data-index="' + i + '">' +
         '<span class="saved-name">' + esc(name) + '</span>' +
         '<div class="actions kebab-wrap">' +
-        '<button type="button" class="btn-icon kebab-trigger" aria-label="Действия" aria-expanded="false" aria-haspopup="menu" title="Действия">' + kebabSvg + '</button>' +
+        '<button type="button" class="btn-icon kebab-trigger" aria-label="' + (tr.setup_actions || tr.companies_more_actions || 'Actions') + '" aria-expanded="false" aria-haspopup="menu" title="' + (tr.setup_actions || 'Actions') + '">' + kebabSvg + '</button>' +
         '<div class="kebab-menu" role="menu" hidden>' +
-        '<button type="button" class="kebab-item btn-edit-product" role="menuitem">Редактировать</button>' +
-        '<button type="button" class="kebab-item btn-delete-product danger" role="menuitem">Удалить</button>' +
+        '<button type="button" class="kebab-item btn-edit-product" role="menuitem">' + (tr.setup_edit || 'Edit') + '</button>' +
+        '<button type="button" class="kebab-item btn-delete-product danger" role="menuitem">' + (tr.companies_delete || 'Delete') + '</button>' +
         '</div></div></div>';
     }).join('');
     container.querySelectorAll('.kebab-trigger').forEach(btn => {
@@ -910,7 +911,7 @@
     viewedAuthorIndex = i;
     const drawer = document.getElementById('author-view-drawer');
     if (!drawer) return;
-    document.getElementById('author-view-drawer-title').textContent = (a.full_name || a.name) || 'Без имени';
+    document.getElementById('author-view-drawer-title').textContent = (a.full_name || a.name) || (tr.setup_no_name_person || 'No name');
     document.getElementById('author-view-full-name').textContent = (a.full_name || a.name) || '—';
     document.getElementById('author-view-role').textContent = a.role || '—';
     const linkedinEl = document.getElementById('author-view-linkedin');
@@ -930,7 +931,7 @@
     viewedProductIndex = i;
     const drawer = document.getElementById('product-view-drawer');
     if (!drawer) return;
-    const name = (p.name || p.title) || 'Без названия';
+    const name = (p.name || p.title) || (tr.setup_no_name || 'No name');
     document.getElementById('product-view-drawer-title').textContent = name;
     document.getElementById('product-view-name').textContent = name;
     document.getElementById('product-view-desc').textContent = (p.description || p.desc || '') || '—';
@@ -948,7 +949,7 @@
     viewedIcpIndex = i;
     const drawer = document.getElementById('icp-view-drawer');
     if (!drawer) return;
-    const name = (icp.name || icp.title) || 'Без названия';
+    const name = (icp.name || icp.title) || (tr.setup_no_name || 'No name');
     document.getElementById('icp-view-drawer-title').textContent = name;
     document.getElementById('icp-view-name').textContent = name;
     document.getElementById('icp-view-roles').textContent = icp.roles || '—';
@@ -958,7 +959,7 @@
     const productIds = (icp && icp.product_ids && Array.isArray(icp.product_ids)) ? icp.product_ids : [];
     const productNames = productIds.map(idx => {
       const p = savedProductsList[parseInt(idx, 10)];
-      return p ? ((p.name || p.title) || 'Без названия') : null;
+      return p ? ((p.name || p.title) || (tr.setup_no_name || 'No name')) : null;
     }).filter(Boolean);
     document.getElementById('icp-view-products').textContent = productNames.length > 0 ? productNames.join(', ') : '—';
     drawer.classList.add('is-open');
@@ -986,20 +987,20 @@
       if (i === 0) {
         const block = document.createElement('div');
         block.className = 'product-block';
-        block.innerHTML = '<label class="sub">Название продукта</label>' +
-          '<input name="product_name" type="text" placeholder="Название продукта" value="' + esc(p.name) + '">' +
-          '<label class="sub">Описание продукта</label>' +
-          '<textarea name="product_desc" rows="2" placeholder="Описание...">' + esc(p.description) + '</textarea>';
+        block.innerHTML = '<label class="sub">' + (tr.setup_product_name || 'Product name') + '</label>' +
+          '<input name="product_name" type="text" placeholder="' + (tr.setup_product_name_placeholder || 'Product name') + '" value="' + esc(p.name) + '">' +
+          '<label class="sub">' + (tr.setup_product_desc || 'Product description') + '</label>' +
+          '<textarea name="product_desc" rows="2" placeholder="' + (tr.setup_description_placeholder || 'Description...') + '">' + esc(p.description) + '</textarea>';
         wrap.appendChild(block);
       } else {
         const row = document.createElement('div');
         row.className = 'product-row';
         row.innerHTML = '<div class="product-block">' +
-          '<label class="sub">Название продукта</label>' +
-          '<input name="product_name" type="text" placeholder="Название продукта" value="' + esc(p.name) + '">' +
-          '<label class="sub">Описание продукта</label>' +
-          '<textarea name="product_desc" rows="2" placeholder="Описание...">' + esc(p.description) + '</textarea>' +
-          '</div><button type="button" class="btn-remove btn-add" title="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+          '<label class="sub">' + (tr.setup_product_name || 'Product name') + '</label>' +
+          '<input name="product_name" type="text" placeholder="' + (tr.setup_product_name_placeholder || 'Product name') + '" value="' + esc(p.name) + '">' +
+          '<label class="sub">' + (tr.setup_product_desc || 'Product description') + '</label>' +
+          '<textarea name="product_desc" rows="2" placeholder="' + (tr.setup_description_placeholder || 'Description...') + '">' + esc(p.description) + '</textarea>' +
+          '</div><button type="button" class="btn-remove btn-add" title="' + (tr.companies_delete || 'Delete') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
         row.querySelector('.btn-remove').addEventListener('click', () => row.remove());
         wrap.appendChild(row);
       }
@@ -1127,7 +1128,9 @@
   });
   }
 
-  const INTERVIEW_QUESTIONS = [
+  // Локализация интервью: RU — всё на русском, EN — всё на английском (вопросы, кнопки, placeholder)
+  const INTERVIEW_LOCALE = (window.__locale || 'ru').toLowerCase().startsWith('en') ? 'en' : 'ru';
+  const INTERVIEW_QUESTIONS_RU = [
     { s: "1) Кто я по легенде (персонаж)", q: "Где ты родился и откуда ты «по вайбу»? (город/регион, 1 строка)" },
     { s: "1) Кто я по легенде (персонаж)", q: "Когда и почему переехал(а)? (год + 1-2 причины)" },
     { s: "1) Кто я по легенде (персонаж)", q: "Были ли страны/города, которые сильно повлияли? (где жил(а), сколько, что изменило)" },
@@ -1192,8 +1195,74 @@
     { s: "11) Резюме стиля одним абзацем", q: "Напиши один абзац: кто ты, как звучишь, что человек чувствует после твоего ответа." },
     { s: "11) Резюме стиля одним абзацем", q: "Укажи 5 обязательных правил, которые всегда должны соблюдаться в твоих текстах." }
   ];
+  const INTERVIEW_QUESTIONS_EN = [
+    { s: "1) Who I am by legend (character)", q: "Where were you born and where are you 'by vibe'? (city/region, 1 line)" },
+    { s: "1) Who I am by legend (character)", q: "When and why did you move? (year + 1-2 reasons)" },
+    { s: "1) Who I am by legend (character)", q: "Were there countries/cities that greatly influenced you? (where you lived, how long, what changed)" },
+    { s: "1) Who I am by legend (character)", q: "Where do you live now and how to refer to it safely? (city/region, acceptable formulations)" },
+    { s: "1) Who I am by legend (character)", q: "Main project/achievement that gives you the right to 'speak on the topic': what was it, what problem did you solve, how did it end? (briefly)" },
+    { s: "1) Who I am by legend (character)", q: "Was there an accelerator/program like YC? Which one and how to mention it correctly without flexing?" },
+    { s: "1) Who I am by legend (character)", q: "In which 3-5 topics are you a real expert? (list)" },
+    { s: "1) Who I am by legend (character)", q: "What do you do now? (project/company name, what it does, 1-2 sentences)" },
+    { s: "1) Who I am by legend (character)", q: "Age, family status, children, everyday life: what of this can be mentioned and how? (without deanon)" },
+    { s: "1) Who I am by legend (character)", q: "What 2-4 'human' details add depth? (hobbies, music, sports, games)" },
+    { s: "1) Who I am by legend (character)", q: "Practices/habits like meditation: do you have any? which? how to talk about it calmly?" },
+    { s: "1) Who I am by legend (character)", q: "Are there cultural things like festivals/communities (Burning Man): can you mention them, and how carefully?" },
+    { s: "1) Who I am by legend (character)", q: "What facts about yourself do you only mention when it's really relevant, not in every post/answer? (list). Examples: 'raised investment', 'was in YC', 'built a big product'." },
+    { s: "1) Who I am by legend (character)", q: "For 4 contexts (logistics/industry, startups/AI, life/burnout/family, music/games/hobbies): what 1-2 'experience anchors' do you insert in passing?" },
+    { s: "2) General tone: how I speak", q: "How would you describe your tone in 3 words?" },
+    { s: "2) General tone: how I speak", q: "What does 'conversational and warm' mean to you in text? (2-3 rules)" },
+    { s: "2) General tone: how I speak", q: "What sentence length is natural for you? (short/medium/sometimes long)" },
+    { s: "2) General tone: how I speak", q: "How direct are you on a scale of 1-10?" },
+    { s: "2) General tone: how I speak", q: "How do you keep respect when someone is struggling or burning? (2-3 tricks)" },
+    { s: "2) General tone: how I speak", q: "Humor: what kind of dry and calm humor is yours? (1-2 sentences)" },
+    { s: "2) General tone: how I speak", q: "How do you usually enter an answer? (2-3 typical openings)" },
+    { s: "2) General tone: how I speak", q: "Give 5 starter phrases that really sound like you (can be in English, as in the example)" },
+    { s: "3) What I never do", q: "What 5 things do you never write (style/intonation/position)?" },
+    { s: "3) What I never do", q: "What phrases or 'text smells' do you hate? (e.g. pomp, bureaucratese)" },
+    { s: "3) What I never do", q: "What topics do you never touch? (list)" },
+    { s: "3) What I never do", q: "How do you respond when someone pulls you into therapy/diagnoses? (2-3 safe formulations)" },
+    { s: "3) What I never do", q: "What words from 'business English' do you definitely not use? (list)" },
+    { s: "3) What I never do", q: "In what cases do you still mention status/experience, and how does it sound 'without flex'? (2-3 examples)" },
+    { s: "3) What I never do", q: "What 'generic answers' do you forbid yourself? (like It depends) And what do you replace them with?" },
+    { s: "4) Structure of a typical answer", q: "How many paragraphs usually? (range)" },
+    { s: "4) Structure of a typical answer", q: "Your standard order: what comes first, second, third? (scheme)" },
+    { s: "4) Structure of a typical answer", q: "How do you 'pick up on someone's emotion'? (2-3 example phrases)" },
+    { s: "4) Structure of a typical answer", q: "How do you add your experience so it's relevant? (1-2 rules)" },
+    { s: "4) Structure of a typical answer", q: "What counts as a 'concrete thought' for you? (example)" },
+    { s: "4) Structure of a typical answer", q: "When do you ask a question at the end, and when not? (rule)" },
+    { s: "5) Topics: logistics/trucks/supply chain", q: "How do you explain complex things simply? (2 rules)" },
+    { s: "5) Topics: logistics/trucks/supply chain", q: "What terms do you use, and which do you avoid?" },
+    { s: "5) Topics: logistics/trucks/supply chain", q: "Give 5 phrases you often insert in this topic (in the style of Happens all the time)" },
+    { s: "5) Topics: logistics/trucks/supply chain", q: "Give 1 mini image like the ice/trucks example (3-5 lines)" },
+    { s: "5) Topics: AI/automation/agents", q: "Your position: where does AI really work, and where is it hype? (3-5 points)" },
+    { s: "5) Topics: AI/automation/agents", q: "Your '3 thesis lines' as in the example (technology stays, bubble, data)" },
+    { s: "5) Topics: AI/automation/agents", q: "Give 2 short signature formulations in English, as in the examples (like bubble will pop…)" },
+    { s: "5) Topics: startups/career/adulthood", q: "Three theses on work and boundaries (loyalty, overload, health)" },
+    { s: "6) Humor and intonation", q: "Humor level 1-10: where are you?" },
+    { s: "6) Humor and intonation", q: "What topics can you joke about, and which not?" },
+    { s: "6) Humor and intonation", q: "Your humor is more: self-irony, over life, over industry? (choose)" },
+    { s: "6) Humor and intonation", q: "Write 3 short jokes in your style (like Excel/food/weather), 2-4 lines each" },
+    { s: "7) Life questions (personal)", q: "What is your 'one truth about life' that you often see? (2-4 lines)" },
+    { s: "7) Life questions (personal)", q: "What does 'doing well in life' mean to you? (2-4 lines)" },
+    { s: "7) Life questions (personal)", q: "Your position on friendship/relationships and boundaries (2-6 lines)" },
+    { s: "7) Life questions (personal)", q: "Give 3 examples of short honest answers to different life questions (you choose the questions)" },
+    { s: "8) How I respond in arguments", q: "What do you do to avoid aggression? (2-3 rules)" },
+    { s: "8) How I respond in arguments", q: "Your 'agree and add' link in your words: 3 phrase templates" },
+    { s: "8) How I respond in arguments", q: "What topic do you argue about most (AI/startups/industry)? And what's your typical argument?" },
+    { s: "8) How I respond in arguments", q: "Give an example of an argument response in 6-10 lines (like the bubble example)" },
+    { s: "9) Phrase palette (building blocks)", q: "Write 15-25 phrase 'bricks' that sound like you (no need to stamp)" },
+    { s: "9) Phrase palette (building blocks)", q: "What 10 phrases do you forbid because they're 'not you'?" },
+    { s: "10) How I interact with people", q: "How do you support someone when they're having a hard time, without sliding into therapy? (2-3 rules)" },
+    { s: "10) How I interact with people", q: "How do you avoid devaluing, even when the person is 'at fault'? (2-3 phrases)" },
+    { s: "10) How I interact with people", q: "How do you gently challenge someone's thought? (2-3 templates)" },
+    { s: "10) How I interact with people", q: "Give an example of a response to a toxic formulation (like the 'white trash friends' example), but in your style" },
+    { s: "11) Style summary in one paragraph", q: "Write one paragraph: who you are, how you sound, what a person feels after your answer." },
+    { s: "11) Style summary in one paragraph", q: "List 5 mandatory rules that must always be followed in your texts." }
+  ];
+  const INTERVIEW_QUESTIONS = INTERVIEW_LOCALE === 'en' ? INTERVIEW_QUESTIONS_EN : INTERVIEW_QUESTIONS_RU;
 
-  const INTERVIEW_DRAFT_KEY = 'myvoices_author_interview_draft';
+  const INTERVIEW_DRAFT_KEY = 'myvoices_author_interview_draft_' + INTERVIEW_LOCALE;
   let interviewIndex = 0;
   let interviewAnswers = [];
 
@@ -1229,8 +1298,9 @@
   function openInterviewResumeModal(draft) {
     const n = draft.index + 1;
     const total = INTERVIEW_QUESTIONS.length;
-    document.getElementById('interview-resume-text').textContent =
-      'У вас есть сохранённый прогресс (пройдено ' + n + ' из ' + total + ' вопросов). Продолжить с того места или пройти интервью заново?';
+    const fmt = (tr.interview_resume_progress || 'У вас есть сохранённый прогресс (пройдено {0} из {1} вопросов). Продолжить с того места или пройти интервью заново?')
+      .replace('{0}', n).replace('{1}', total);
+    document.getElementById('interview-resume-text').textContent = fmt;
     document.getElementById('interview-resume-modal').hidden = false;
   }
   function closeInterviewResumeModal() {
@@ -1284,13 +1354,19 @@
 
     const pct = total ? Math.round(((interviewIndex + 1) / total) * 100) : 0;
     if (progressFill) progressFill.style.width = pct + '%';
-    if (progressText) progressText.textContent = 'Вопрос ' + (interviewIndex + 1) + ' из ' + total + ' · осталось примерно ' + Math.max(0, Math.ceil((total - interviewIndex - 1) * (30 / total))) + ' мин';
+    const minsLeft = Math.max(0, Math.ceil((total - interviewIndex - 1) * (30 / total)));
+    const progressFmt = (tr.interview_question_progress_full || 'Вопрос {0} из {1} · осталось примерно {2} мин')
+      .replace('{0}', interviewIndex + 1).replace('{1}', total).replace('{2}', minsLeft);
+    if (progressText) progressText.textContent = progressFmt;
     if (sectionLabel) sectionLabel.textContent = item.s;
     if (questionEl) questionEl.textContent = item.q;
-    if (input) input.value = interviewAnswers[interviewIndex] || '';
+    if (input) {
+      input.value = interviewAnswers[interviewIndex] || '';
+      input.placeholder = tr.interview_answer_placeholder || 'Ваш ответ...';
+    }
 
     document.getElementById('interview-prev').hidden = interviewIndex === 0;
-    nextBtn.textContent = interviewIndex === total - 1 ? 'Завершить' : 'Далее';
+    nextBtn.textContent = interviewIndex === total - 1 ? (tr.interview_finish || 'Завершить') : (tr.interview_next || 'Далее');
   }
   function interviewNext() {
     saveCurrentAnswer();
@@ -1360,13 +1436,13 @@
       } else if (formAuthors.length > 0) {
         authors = savedAuthorsList.concat(formAuthors);
       } else {
-        if (msgEl) { msgEl.textContent = 'Укажите имя автора.'; msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000); }
+        if (msgEl) { msgEl.textContent = (tr.setup_author_name_required || 'Enter author name.'); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000); }
         return;
       }
       try {
         var res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'authors', value: authors }) });
         var data = await res.json().catch(function() { return {}; });
-        if (msgEl) { msgEl.textContent = data.ok ? 'Автор сохранён.' : (data.error || 'Ошибка'); msgEl.style.color = data.ok ? 'var(--primary)' : 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; msgEl.style.color = ''; }, 4000); }
+        if (msgEl) { msgEl.textContent = data.ok ? (tr.setup_author_saved || 'Author saved.') : (data.error || (tr.common_error || 'Error')); msgEl.style.color = data.ok ? 'var(--primary)' : 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; msgEl.style.color = ''; }, 4000); }
         if (data.ok) {
           savedAuthorsList = authors;
           editingAuthorIndex = null;
@@ -1375,7 +1451,7 @@
           setAuthorsToForm([{ full_name: '', linkedin_url: '', role: '', history: '' }]);
         }
       } catch (err) {
-        if (msgEl) { msgEl.textContent = 'Ошибка: ' + (err.message || 'сеть'); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 4000); }
+        if (msgEl) { msgEl.textContent = (tr.parse_error_prefix || 'Error: ') + (err.message || (tr.parse_error_network || 'network')); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 4000); }
       }
     });
     el = document.getElementById('save-products');
@@ -1390,16 +1466,16 @@
       } else if (formProducts.length > 0) {
         products = savedProductsList.concat(formProducts);
       } else {
-        if (msgEl) { msgEl.textContent = 'Добавьте название продукта.'; msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000); }
+        if (msgEl) { msgEl.textContent = (tr.setup_product_name_required || 'Add product name.'); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000); }
         return;
       }
       try {
         const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'products', value: products }) });
         const data = await res.json().catch(function() { return {}; });
         var errMsg = data.error || (data.detail ? (Array.isArray(data.detail) ? data.detail.map(function(d) { return d.msg || d.loc; }).join(' ') : data.detail) : null);
-        if (!res.ok && res.status === 404) errMsg = 'Маршрут не найден (404).';
-        else if (!res.ok && !errMsg) errMsg = 'Ошибка ' + res.status;
-        if (msgEl) { msgEl.textContent = data.ok ? 'Продукты сохранены.' : (errMsg || 'Ошибка'); msgEl.style.color = data.ok ? 'var(--primary)' : 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; msgEl.style.color = ''; }, 6000); }
+        if (!res.ok && res.status === 404) errMsg = (tr.setup_route_not_found || 'Route not found (404).');
+        else if (!res.ok && !errMsg) errMsg = (tr.common_error || 'Error') + ' ' + res.status;
+        if (msgEl) { msgEl.textContent = data.ok ? (tr.setup_products_saved || 'Products saved.') : (errMsg || (tr.common_error || 'Error')); msgEl.style.color = data.ok ? 'var(--primary)' : 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; msgEl.style.color = ''; }, 6000); }
         if (data.ok) {
           savedProductsList = products;
           editingProductIndex = null;
@@ -1409,7 +1485,7 @@
           fillIcpProductsSelect();
         }
       } catch (err) {
-        if (msgEl) { msgEl.textContent = 'Ошибка: ' + (err.message || 'сеть'); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 4000); }
+        if (msgEl) { msgEl.textContent = (tr.parse_error_prefix || 'Error: ') + (err.message || (tr.parse_error_network || 'network')); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 4000); }
       }
     });
     el = document.getElementById('save-icp');
@@ -1417,7 +1493,7 @@
       const msgEl = document.getElementById('save-icp-msg');
       const formIcp = getIcpFromForm();
       if (!formIcp.name) {
-        if (msgEl) { msgEl.textContent = 'Укажите название портрета клиента.'; msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000); }
+        if (msgEl) { msgEl.textContent = (tr.setup_icp_name_required || 'Enter customer profile name.'); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000); }
         return;
       }
       let icpList;
@@ -1431,7 +1507,7 @@
       try {
         const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'icp', value: icpList }) });
         const data = await res.json().catch(function() { return {}; });
-        if (msgEl) { msgEl.textContent = data.ok ? 'Портрет клиента сохранён.' : (data.error || 'Ошибка'); msgEl.style.color = data.ok ? 'var(--primary)' : 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; msgEl.style.color = ''; }, 4000); }
+        if (msgEl) { msgEl.textContent = data.ok ? (tr.setup_icp_saved || 'Customer profile saved.') : (data.error || (tr.common_error || 'Error')); msgEl.style.color = data.ok ? 'var(--primary)' : 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; msgEl.style.color = ''; }, 4000); }
         if (data.ok) {
           savedIcpList = icpList;
           editingIcpIndex = null;
@@ -1440,7 +1516,7 @@
           setIcpToForm({ name: '', roles: '', industry: '', size: '', geo: '', product_ids: [] });
         }
       } catch (err) {
-        if (msgEl) { msgEl.textContent = 'Ошибка: ' + (err && err.message || 'сеть'); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 4000); }
+        if (msgEl) { msgEl.textContent = (tr.parse_error_prefix || 'Error: ') + (err && err.message || (tr.parse_error_network || 'network')); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 4000); }
       }
     });
   }
@@ -1455,13 +1531,13 @@
     var container = document.getElementById('saved-subreddits-list');
     if (!container) return;
     if (!names || names.length === 0) {
-      container.innerHTML = '<p class="saved-empty-msg">Нет сабреддитов. Добавьте первый ниже.</p>';
+      container.innerHTML = '<p class="saved-empty-msg">' + (tr.setup_no_subreddits || 'No subreddits. Add the first one below.') + '</p>';
       return;
     }
     container.innerHTML = names.map(function(name) {
       return '<span class="subreddit-chip" data-name="' + escapeHtmlSetup(name) + '">' +
         '<span class="subreddit-chip-name">r/' + escapeHtmlSetup(name) + '</span>' +
-        '<button type="button" class="subreddit-chip-remove" aria-label="Удалить r/' + escapeHtmlSetup(name) + '">×</button>' +
+        '<button type="button" class="subreddit-chip-remove" aria-label="' + (tr.reddit_remove_tag || 'Remove r/{}').replace('{}', escapeHtmlSetup(name)) + '">×</button>' +
       '</span>';
     }).join('');
     container.querySelectorAll('.subreddit-chip-remove').forEach(function(btn) {
@@ -1472,9 +1548,9 @@
         fetch('/setup/subreddits/' + encodeURIComponent(name), { method: 'DELETE' })
           .then(function(r) {
             if (r.ok || r.status === 204) loadSavedSubreddits();
-            else if (typeof window.toast === 'function') window.toast('Не удалось удалить', 'error');
+            else if (typeof window.toast === 'function') window.toast(tr.admin_error_delete || 'Failed to delete', 'error');
           })
-          .catch(function() { if (typeof window.toast === 'function') window.toast('Ошибка сети', 'error'); });
+          .catch(function() { if (typeof window.toast === 'function') window.toast(tr.news_error_connect || 'Failed to connect', 'error'); });
       });
     });
   }
@@ -1491,9 +1567,14 @@
     renderSavedProductsCards();
     renderSavedIcpCards();
     loadSavedSubreddits();
-    fetch('/setup/draft')
+    fetch('/setup/draft', { credentials: 'same-origin' })
       .then(function(r) {
-        if (!r.ok) return {};
+        if (!r.ok) {
+          if (r.status === 401 && typeof window.toast === 'function') {
+            window.toast(tr.required_login || 'Требуется вход. Обновите страницу или войдите снова.', 'error');
+          }
+          return {};
+        }
         try { return r.json(); } catch (e) { return {}; }
       })
       .then(function(draft) {
@@ -1530,7 +1611,7 @@
       var msgEl = document.getElementById('save-subreddits-msg');
       var name = (input && input.value || '').trim().replace(/^\/?r\//, '');
       if (!name) {
-        if (msgEl) { msgEl.textContent = 'Введите имя сабреддита.'; msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000); }
+        if (msgEl) { msgEl.textContent = (tr.setup_subreddit_required || 'Enter subreddit name.'); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 3000); }
         return;
       }
       addBtn.disabled = true;
@@ -1546,14 +1627,14 @@
         .then(function(data) {
           var ok = data && data.ok === true;
           if (msgEl) {
-            msgEl.textContent = ok ? (data.message || 'Сабреддит добавлен.') : (data.detail || (data._status ? 'Ошибка ' + data._status : 'Ошибка'));
+            msgEl.textContent = ok ? (data.message || (tr.setup_subreddit_added || 'Subreddit added.')) : (data.detail || (data._status ? (tr.common_error || 'Error') + ' ' + data._status : (tr.common_error || 'Error')));
             msgEl.style.color = ok ? 'var(--primary)' : 'var(--danger)';
             setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 4000);
           }
           if (ok) { if (input) input.value = ''; loadSavedSubreddits(); }
         })
         .catch(function(err) {
-          if (msgEl) { msgEl.textContent = 'Ошибка: ' + (err && err.message || 'сеть'); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 4000); }
+          if (msgEl) { msgEl.textContent = (tr.parse_error_prefix || 'Error: ') + (err && err.message || (tr.parse_error_network || 'network')); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 4000); }
         })
         .finally(function() { addBtn.disabled = false; });
     });

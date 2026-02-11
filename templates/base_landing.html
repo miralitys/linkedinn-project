@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{% if locale == 'en' %}en{% else %}ru{% endif %}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -91,6 +91,20 @@
     .landing-nav a:hover { color: var(--text); text-decoration: none; }
     .landing-nav a.landing-cta { color: #fff; }
     .landing-nav a.landing-cta:hover { color: #fff; text-decoration: none; }
+    .landing-lang {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--text-14);
+      color: var(--text-muted);
+    }
+    .landing-lang a {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .landing-lang a:hover { color: var(--text); text-decoration: none; }
+    .landing-lang .landing-lang-active { color: var(--text); font-weight: 600; pointer-events: none; }
+    .landing-lang span { color: var(--border); user-select: none; }
     .landing-cta {
       display: inline-block;
       background: var(--primary);
@@ -135,15 +149,28 @@
 </head>
 <body>
   <header class="landing-header">
-    <a href="/" class="landing-logo">
+    <a href="{% if locale == 'en' %}/en{% else %}/{% endif %}" class="landing-logo">
       <span class="landing-logo-icon">V</span>
       <span>MyVOICE's</span>
     </a>
     <nav class="landing-nav">
+      {% if locale == 'en' %}
+      <span class="landing-lang">
+        <a href="/">RU</a><span>|</span><span class="landing-lang-active">EN</span>
+      </span>
+      <a href="/en#how">How it works</a>
+      <a href="/en#features">Who it's for</a>
+      <a href="/en#faq">FAQ</a>
+      <a href="/login" class="landing-cta">Log in</a>
+      {% else %}
+      <span class="landing-lang">
+        <span class="landing-lang-active">RU</span><span>|</span><a href="/en">EN</a>
+      </span>
       <a href="/#how">Как работает</a>
       <a href="/#features">Кому подходит</a>
       <a href="/#faq">Вопросы</a>
       <a href="/login" class="landing-cta">Вход</a>
+      {% endif %}
     </nav>
   </header>
 
@@ -154,9 +181,15 @@
   <footer class="landing-footer">
     <span>© 2026 MyVOICE's</span>
     <div class="landing-footer-nav">
+      {% if locale == 'en' %}
+      <a href="/en">Home</a>
+      <a href="/en#features">Features</a>
+      <a href="/login">Log in</a>
+      {% else %}
       <a href="/">Главная</a>
       <a href="/#features">Возможности</a>
       <a href="/login">Вход</a>
+      {% endif %}
     </div>
   </footer>
 </body>

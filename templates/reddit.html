@@ -1,46 +1,46 @@
 {% extends "base.html" %}
-{% block title %}Reddit — MyVOICE's{% endblock %}
+{% block title %}{{ tr.reddit_title }} — MyVOICE's{% endblock %}
 {% block content %}
 <div class="news-page-wrap">
 <header class="news-page-header">
   <div class="news-header-top">
-    <h1 class="news-page-title">Reddit</h1>
-    <button type="button" id="reddit-refresh-btn" class="btn primary btn-icon-text news-refresh-btn" aria-label="Обновить" title="Обновить"><span aria-hidden="true">↻</span> Обновить</button>
+    <h1 class="news-page-title">{{ tr.reddit_title }}</h1>
+    <button type="button" id="reddit-refresh-btn" class="btn primary btn-icon-text news-refresh-btn" aria-label="{{ tr.reddit_refresh }}" title="{{ tr.reddit_refresh }}"><span aria-hidden="true">↻</span> {{ tr.reddit_refresh }}</button>
   </div>
-  <p class="news-header-desc">Посты из сабреддитов. Список сабреддитов настраивается в <a href="/ui/setup">Settings</a>. Выберите сабреддит ниже или найдите в поиске. Открывайте пост и переписывайте его в пост для LinkedIn.</p>
+  <p class="news-header-desc">{{ tr.reddit_lead }}</p>
   <div class="news-toolbar-row news-toolbar-row-reddit">
     <div class="reddit-subreddit-block">
-      <label class="news-toolbar-label" for="reddit-subreddit-search">Сабреддит</label>
+      <label class="news-toolbar-label" for="reddit-subreddit-search">{{ tr.reddit_subreddit }}</label>
       <div class="reddit-subreddit-search-wrap">
-        <input type="text" id="reddit-subreddit-search" class="reddit-subreddit-search" placeholder="выбор нескольких" aria-label="Выбор сабреддитов" autocomplete="off" aria-autocomplete="list" aria-expanded="false" aria-controls="reddit-subreddit-autocomplete">
+        <input type="text" id="reddit-subreddit-search" class="reddit-subreddit-search" placeholder="{{ tr.reddit_subreddit_placeholder }}" aria-label="{{ tr.reddit_subreddit }}" autocomplete="off" aria-autocomplete="list" aria-expanded="false" aria-controls="reddit-subreddit-autocomplete">
         <span class="reddit-subreddit-search-chevron" aria-hidden="true">▼</span>
         <div id="reddit-subreddit-autocomplete" class="reddit-subreddit-autocomplete" role="listbox" aria-hidden="true"></div>
       </div>
       <div id="reddit-subreddit-tags" class="reddit-subreddit-tags"></div>
     </div>
     <div class="news-toolbar-field">
-      <label class="news-toolbar-label" for="reddit-score-filter">Score</label>
-      <select id="reddit-score-filter" class="news-toolbar-select" aria-label="Фильтр по релевантности">
-        <option value="">Все</option>
-        <option value="blue">Синий (81+)</option>
-        <option value="green">Зелёный (61–80)</option>
-        <option value="yellow">Жёлтый (31–60)</option>
-        <option value="red">Красный (0–30)</option>
+      <label class="news-toolbar-label" for="reddit-score-filter">{{ tr.reddit_score }}</label>
+      <select id="reddit-score-filter" class="news-toolbar-select" aria-label="{{ tr.reddit_score }}">
+        <option value="">{{ tr.reddit_score_all }}</option>
+        <option value="blue">{{ tr.reddit_score_blue }}</option>
+        <option value="green">{{ tr.reddit_score_green }}</option>
+        <option value="yellow">{{ tr.reddit_score_yellow }}</option>
+        <option value="red">{{ tr.reddit_score_red }}</option>
       </select>
     </div>
     <div class="news-toolbar-field">
-      <label class="news-toolbar-label" for="reddit-sort">Сортировка</label>
-      <select id="reddit-sort" class="news-toolbar-select" aria-label="Сортировка">
-        <option value="desc">Сначала новые</option>
-        <option value="asc">Сначала старые</option>
+      <label class="news-toolbar-label" for="reddit-sort">{{ tr.reddit_sort }}</label>
+      <select id="reddit-sort" class="news-toolbar-select" aria-label="{{ tr.reddit_sort }}">
+        <option value="desc">{{ tr.posts_newest_first }}</option>
+        <option value="asc">{{ tr.posts_oldest_first }}</option>
       </select>
     </div>
     <div class="news-toolbar-field">
-      <label class="news-toolbar-label" for="reddit-period">Период</label>
-      <select id="reddit-period" class="news-toolbar-select" aria-label="Период">
-        <option value="">Все время</option>
-        <option value="week">Неделя</option>
-        <option value="month">Месяц</option>
+      <label class="news-toolbar-label" for="reddit-period">{{ tr.reddit_period }}</label>
+      <select id="reddit-period" class="news-toolbar-select" aria-label="{{ tr.reddit_period }}">
+        <option value="">{{ tr.posts_all_time }}</option>
+        <option value="week">{{ tr.posts_week }}</option>
+        <option value="month">{{ tr.posts_month }}</option>
       </select>
     </div>
   </div>
@@ -54,14 +54,14 @@
   </div>
   <div id="reddit-list"></div>
   <div id="reddit-empty" class="news-empty-state" style="display: none;">
-    <p class="news-empty-title">Нет постов</p>
-    <p class="news-empty-desc" id="reddit-empty-desc">Добавьте сабреддиты в <a href="/ui/setup">Settings</a>, затем нажмите «Обновить» — посты подгрузятся. Можно выбрать сабреддит в фильтре выше.</p>
-    <button type="button" id="reddit-empty-retry" class="btn primary">Обновить</button>
+    <p class="news-empty-title">{{ tr.reddit_empty_title }}</p>
+    <p class="news-empty-desc" id="reddit-empty-desc">{{ tr.reddit_empty_desc }}</p>
+    <button type="button" id="reddit-empty-retry" class="btn primary">{{ tr.reddit_refresh }}</button>
   </div>
   <div id="reddit-error" class="news-error-state" style="display: none;">
-    <p class="news-error-text">Не удалось загрузить посты.</p>
+    <p class="news-error-text">{{ tr.reddit_error }}</p>
     <p id="reddit-error-detail" class="news-error-detail"></p>
-    <button type="button" id="reddit-error-retry" class="btn secondary">Повторить</button>
+    <button type="button" id="reddit-error-retry" class="btn secondary">{{ tr.reddit_retry }}</button>
   </div>
 </div>
 </div>
@@ -73,16 +73,16 @@
       <div class="news-view-header-top">
         <span class="news-view-header-label" aria-hidden="true">Reddit</span>
         <div class="news-view-header-actions">
-          <a id="view-reddit-link-header" href="#" target="_blank" rel="noopener" class="news-view-open-link link-tertiary" title="Открыть оригинал" aria-label="Открыть оригинал" style="display: none;">Открыть оригинал <span aria-hidden="true">↗</span></a>
-          <button type="button" class="news-view-close" id="view-reddit-drawer-close" aria-label="Закрыть">×</button>
+          <a id="view-reddit-link-header" href="#" target="_blank" rel="noopener" class="news-view-open-link link-tertiary" title="{{ tr.open_original }}" aria-label="{{ tr.open_original }}" style="display: none;">{{ tr.open_original }} <span aria-hidden="true">↗</span></a>
+          <button type="button" class="news-view-close" id="view-reddit-drawer-close" aria-label="{{ tr.common_close }}">×</button>
         </div>
       </div>
       <h2 id="view-reddit-modal-title" class="news-view-title"></h2>
     </div>
     <div class="news-view-meta" id="view-reddit-meta-row">
       <span id="view-reddit-score-wrap" style="display: none; margin-left: var(--space-3);">
-        <span id="view-reddit-score" class="news-card-score-loading" title="Оценка релевантности...">—</span>
-        <button type="button" id="view-reddit-score-refresh" class="news-score-refresh-btn" title="Обновить оценку релевантности" style="display: none; margin-left: var(--space-2);" aria-label="Обновить score">
+        <span id="view-reddit-score" class="news-card-score-loading" title="{{ tr.news_relevance_loading }}">—</span>
+        <button type="button" id="view-reddit-score-refresh" class="news-score-refresh-btn" title="{{ tr.news_refresh_score }}" style="display: none; margin-left: var(--space-2);" aria-label="{{ tr.news_refresh_score }}">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="23 4 23 10 17 10"></polyline>
             <polyline points="1 20 1 14 7 14"></polyline>
@@ -96,34 +96,34 @@
       <div id="view-reddit-content" class="news-view-body"></div>
       <div class="view-post-rewrite-block">
       <div class="view-post-rewrite-header">
-        <h3 class="view-post-rewrite-title">Переписать этот пост</h3>
-        <p class="view-post-rewrite-desc">Выберите автора и цель — AI переформулирует пост Reddit в пост для LinkedIn.</p>
+        <h3 class="view-post-rewrite-title">{{ tr.reddit_rewrite_title }}</h3>
+        <p class="view-post-rewrite-desc">{{ tr.reddit_rewrite_desc }}</p>
       </div>
       <div class="view-post-rewrite-form">
         <div class="view-post-rewrite-fields">
           <div class="view-post-rewrite-field">
-            <label for="view-reddit-author-select">От лица автора</label>
-            <select id="view-reddit-author-select" aria-label="Автор"><option value="">— Загрузка… —</option></select>
+            <label for="view-reddit-author-select">{{ tr.reddit_as_author }}</label>
+            <select id="view-reddit-author-select" aria-label="{{ tr.reddit_author }}"><option value="">{{ tr.reddit_loading }}</option></select>
           </div>
           <div class="view-post-rewrite-field">
-            <label for="view-reddit-goal">Цель</label>
-            <select id="view-reddit-goal" aria-label="Цель"><option value="network">Network</option><option value="native_ads">Нативная реклама</option><option value="full_ads">Сто процентов рекламы</option></select>
+            <label for="view-reddit-goal">{{ tr.reddit_goal }}</label>
+            <select id="view-reddit-goal" aria-label="{{ tr.reddit_goal }}"><option value="network">Network</option><option value="native_ads">{{ tr.reddit_goal_native }}</option><option value="full_ads">{{ tr.reddit_goal_full }}</option></select>
           </div>
           <div class="view-post-rewrite-field">
-            <label for="view-reddit-length">Длина поста</label>
-            <select id="view-reddit-length" aria-label="Длина поста"><option value="short">Короткий (600–900 знаков)</option><option value="medium" selected>Средний (900–1400 знаков)</option><option value="long">Длинный (1400–2200 знаков)</option></select>
+            <label for="view-reddit-length">{{ tr.reddit_length }}</label>
+            <select id="view-reddit-length" aria-label="{{ tr.reddit_length }}"><option value="short">{{ tr.reddit_length_short }}</option><option value="medium" selected>{{ tr.reddit_length_medium }}</option><option value="long">{{ tr.reddit_length_long }}</option></select>
           </div>
-          <button type="button" id="view-reddit-rewrite-btn" class="btn primary view-post-rewrite-btn" aria-label="Переписать пост">Переписать</button>
+          <button type="button" id="view-reddit-rewrite-btn" class="btn primary view-post-rewrite-btn" aria-label="{{ tr.reddit_rewrite_btn }}">{{ tr.reddit_rewrite_btn }}</button>
         </div>
         <div class="view-post-rewrite-output">
           <div class="view-post-rewrite-output-header">
-            <span class="view-post-rewrite-result-label">Результат</span>
+            <span class="view-post-rewrite-result-label">{{ tr.reddit_result }}</span>
             <div style="display: flex; align-items: center; gap: var(--space-2);">
               <span id="view-reddit-char-count" class="view-post-char-count" style="font-size: var(--text-12); color: var(--text-muted);"></span>
-              <button type="button" id="view-reddit-copy-btn" class="btn secondary btn-sm view-post-copy-btn">Копировать</button>
+              <button type="button" id="view-reddit-copy-btn" class="btn secondary btn-sm view-post-copy-btn">{{ tr.reddit_copy }}</button>
             </div>
           </div>
-          <textarea id="view-reddit-write-textarea" rows="4" placeholder="Результат появится здесь…"></textarea>
+          <textarea id="view-reddit-write-textarea" rows="4" placeholder="{{ tr.reddit_result_placeholder }}"></textarea>
         </div>
       </div>
     </div>
@@ -356,6 +356,7 @@
 </style>
 <script>
 (function() {
+  const tr = window.__tr || {};
   const DISPLAY_TZ = {{ display_timezone|tojson|safe }};
   function formatDate(d) {
     if (!d) return '—';
@@ -375,15 +376,15 @@
     if (isNaN(dt.getTime())) return '—';
     const now = new Date();
     const sec = Math.floor((now - dt) / 1000);
-    if (sec < 60) return 'только что';
+    if (sec < 60) return tr.reddit_time_just_now || 'just now';
     const min = Math.floor(sec / 60);
-    if (min < 60) return min === 1 ? '1 мин назад' : min + ' мин назад';
+    if (min < 60) return min === 1 ? (tr.reddit_time_1_min_ago || '1 min ago') : (tr.reddit_time_min_ago || '{} min ago').replace('{}', min);
     const hr = Math.floor(min / 60);
-    if (hr < 24) return hr === 1 ? '1 час назад' : hr < 5 ? hr + ' часа назад' : hr + ' часов назад';
+    if (hr < 24) return hr === 1 ? (tr.reddit_time_1_hr_ago || '1 hour ago') : (tr.reddit_time_hr_ago || '{} hours ago').replace('{}', hr);
     const day = Math.floor(hr / 24);
-    if (day === 1) return 'вчера';
-    if (day < 7) return day + ' дн. назад';
-    if (day < 30) return Math.floor(day / 7) === 1 ? 'неделю назад' : Math.floor(day / 7) + ' нед. назад';
+    if (day === 1) return tr.reddit_time_yesterday || 'yesterday';
+    if (day < 7) return (tr.reddit_time_days_ago || '{} days ago').replace('{}', day);
+    if (day < 30) return Math.floor(day / 7) === 1 ? (tr.reddit_time_week_ago || '1 week ago') : (tr.reddit_time_weeks_ago || '{} weeks ago').replace('{}', Math.floor(day / 7));
     return formatDate(d);
   }
   function escapeHtml(s) {
@@ -403,7 +404,7 @@
   const scoreFilterSelect = document.getElementById('reddit-score-filter');
   redditLoading.style.display = 'block';
 
-  const REDDIT_STATUS_LABELS = { new: 'Новый', in_progress: 'В работе', done: 'Готово', hidden: 'Скрыт' };
+  const REDDIT_STATUS_LABELS = { new: tr.reddit_status_new || 'New', in_progress: tr.reddit_status_in_progress || 'In progress', done: tr.reddit_status_done || 'Done', hidden: tr.reddit_status_hidden || 'Hidden' };
 
   let savedSubredditNames = [];
   let selectedSubreddits = [];
@@ -425,7 +426,7 @@
   function renderSubredditTags() {
     if (!subredditTags) return;
     subredditTags.innerHTML = selectedSubreddits.map(function(n) {
-      return '<span class="reddit-subreddit-tag">r/' + escapeHtml(n) + '<button type="button" aria-label="Убрать r/' + escapeHtml(n) + '" data-name="' + escapeHtml(n) + '">×</button></span>';
+      return '<span class="reddit-subreddit-tag">r/' + escapeHtml(n) + '<button type="button" aria-label="' + ((tr.reddit_remove_tag || 'Remove r/{}').replace('{}', n)) + '" data-name="' + escapeHtml(n) + '">×</button></span>';
     }).join('');
     subredditTags.querySelectorAll('.reddit-subreddit-tag button').forEach(function(btn) {
       btn.addEventListener('click', function() {
@@ -439,7 +440,7 @@
       savedSubredditNames = Array.isArray(names) ? names : [];
       var emptyDesc = document.getElementById('reddit-empty-desc');
       if (emptyDesc && savedSubredditNames.length === 0) {
-        emptyDesc.innerHTML = 'Сначала добавьте сабреддиты в <a href="/ui/setup">Settings</a>, затем нажмите «Обновить».';
+        emptyDesc.innerHTML = tr.reddit_empty_add_first || 'Add subreddits in <a href="/ui/setup">Settings</a> first, then click Refresh.';
       }
     }).catch(function() { savedSubredditNames = []; });
   }
@@ -458,7 +459,7 @@
     const q = (query || '').trim().toLowerCase();
     const matches = q ? savedSubredditNames.filter(function(n) { return n.toLowerCase().indexOf(q) >= 0; }) : savedSubredditNames.slice();
     if (!matches.length) {
-      subredditAutocomplete.innerHTML = '<div role="option" class="reddit-ac-no-results" aria-selected="false">Нет совпадений</div>';
+      subredditAutocomplete.innerHTML = '<div role="option" class="reddit-ac-no-results" aria-selected="false">' + (tr.reddit_no_matches || 'No matches') + '</div>';
     } else {
       subredditAutocomplete.innerHTML = matches.slice(0, 15).map(function(name) {
         var checked = selectedSubreddits.indexOf(name.toLowerCase()) >= 0;
@@ -537,10 +538,10 @@
     if (periodSelect.value) params.set('period', periodSelect.value);
     selectedSubreddits.forEach(function(s) { params.append('subreddit', s); });
     fetch('/reddit/posts?' + params).then(r => {
-      if (!r.ok) throw new Error(r.status === 401 ? 'Требуется вход. Войдите снова.' : 'Ошибка загрузки (HTTP ' + r.status + ')');
+      if (!r.ok) throw new Error(r.status === 401 ? (window.__tr && window.__tr.required_login) || 'Login required' : (window.__tr && window.__tr.load_error) || 'Load error (HTTP ' + r.status + ')');
       return r.json();
     }).then(list => {
-      if (!Array.isArray(list)) throw new Error('Неверный ответ сервера');
+      if (!Array.isArray(list)) throw new Error((window.__tr && window.__tr.server_error) || 'Invalid response');
       redditLoading.style.display = 'none';
       const scoreRange = (scoreFilterSelect && scoreFilterSelect.value) ? scoreFilterSelect.value : '';
       const filteredList = !scoreRange ? list : list.filter(function(p) {
@@ -567,20 +568,21 @@
         const metaStr = metaParts.join(' · ');
         var statusVal = (p.status && REDDIT_STATUS_LABELS[p.status]) ? p.status : 'new';
         if (statusVal === 'new' && p.reply_variants && typeof p.reply_variants.post === 'string' && p.reply_variants.post.trim()) statusVal = 'in_progress';
-        const statusLabel = REDDIT_STATUS_LABELS[statusVal] || 'Новый';
+        const statusLabel = REDDIT_STATUS_LABELS[statusVal] || (tr.reddit_status_new || 'New');
         const relevanceScore = p.relevance_score !== undefined && p.relevance_score !== null ? p.relevance_score : null;
         const scoreColorClass = relevanceScore !== null ? getScoreColorClass(relevanceScore) : '';
         const scoreHtml = relevanceScore !== null
-          ? '<span class="news-card-score ' + scoreColorClass + '" data-score="' + relevanceScore + '" title="Релевантность: ' + relevanceScore + '/100">' + relevanceScore + '</span>'
+          ? '<span class="news-card-score ' + scoreColorClass + '" data-score="' + relevanceScore + '" title="' + (tr.reddit_relevance || 'Relevance: {}').replace('{}', relevanceScore) + '/100">' + relevanceScore + '</span>'
           : '<span class="news-card-score-loading" data-post-id="' + p.id + '" data-index="' + idx + '">—</span>';
-        const titleText = (p.title || (p.content || '').trim() || 'Без заголовка').trim();
+        const titleText = (p.title || (p.content || '').trim() || (tr.post_no_title || 'No title')).trim();
         const title = escapeHtml(titleText);
         const content = (p.content || '').trim();
         const sentences = content ? content.split(/(?<=[.!?])\s+/).filter(Boolean) : [];
         const desc = sentences.length ? escapeHtml(sentences.slice(0, 3).join(' ') + (sentences.length > 3 ? '…' : '')) : '';
         const upvotes = p.score != null ? p.score : '—';
         const comments = p.num_comments != null ? p.num_comments : '—';
-        const openRedditLink = p.post_url ? '<a href="' + escapeHtml(p.post_url) + '" target="_blank" rel="noopener" class="news-card-open-reddit" title="Открыть на Reddit" aria-label="Открыть на Reddit" onclick="event.stopPropagation()">Открыть на Reddit <span aria-hidden="true">↗</span></a>' : '';
+        const openOnReddit = tr.reddit_open_on_reddit || 'Open on Reddit';
+        const openRedditLink = p.post_url ? '<a href="' + escapeHtml(p.post_url) + '" target="_blank" rel="noopener" class="news-card-open-reddit" title="' + openOnReddit + '" aria-label="' + openOnReddit + '" onclick="event.stopPropagation()">' + openOnReddit + ' <span aria-hidden="true">↗</span></a>' : '';
         const statusOpts = ['new','in_progress','done','hidden'].map(s => '<button type="button" class="reddit-status-opt" data-status="' + s + '">' + (REDDIT_STATUS_LABELS[s] || s) + '</button>').join('');
         const statusBadge = '<div class="reddit-status-wrap"><button type="button" class="reddit-status-badge status-' + statusVal + '" data-id="' + p.id + '" data-status="' + statusVal + '" aria-haspopup="true" aria-expanded="false" onclick="event.stopPropagation()">' + statusLabel + '</button><div class="reddit-status-dropdown" role="menu">' + statusOpts + '</div></div>';
         return '<article class="news-card" data-id="' + p.id + '" role="button" tabindex="0">' +
@@ -596,12 +598,12 @@
             '<div class="news-card-footer-left">' +
               '<span aria-hidden="true">▲ ' + upvotes + '</span>' +
               '<span aria-hidden="true">💬 ' + comments + '</span>' +
-              '<button type="button" class="news-card-read-more btn-reddit-read-full" data-id="' + p.id + '" onclick="event.stopPropagation()">Развернуть</button>' +
+              '<button type="button" class="news-card-read-more btn-reddit-read-full" data-id="' + p.id + '" onclick="event.stopPropagation()">' + (tr.news_expand || 'Expand') + '</button>' +
             '</div>' +
             '<div class="news-card-actions">' +
               statusBadge +
               scoreHtml +
-              '<button type="button" class="btn primary btn-sm btn-generate-post" data-id="' + p.id + '" onclick="event.stopPropagation()">Сделать пост</button>' +
+              '<button type="button" class="btn primary btn-sm btn-generate-post" data-id="' + p.id + '" onclick="event.stopPropagation()">' + (tr.news_make_post || 'Make post') + '</button>' +
             '</div>' +
           '</div>' +
         '</article>';
@@ -667,7 +669,7 @@
       const errEl = document.getElementById('reddit-error');
       errEl.style.display = 'block';
       const detailEl = document.getElementById('reddit-error-detail');
-      if (detailEl) detailEl.textContent = err && err.message ? err.message : 'Ошибка загрузки';
+      if (detailEl) detailEl.textContent = err && err.message ? err.message : (tr.load_error || 'Load error');
     });
   }
 
@@ -707,14 +709,14 @@
             if (badge) {
               badge.dataset.status = 'in_progress';
               badge.className = 'reddit-status-badge status-in_progress';
-              badge.textContent = 'В работе';
+              badge.textContent = tr.reddit_status_in_progress || 'In progress';
             }
           })
           .catch(() => {});
       }
       currentViewContent = p.content || '';
       currentViewUrl = p.post_url || '#';
-      document.getElementById('view-reddit-modal-title').textContent = p.title || 'Пост';
+      document.getElementById('view-reddit-modal-title').textContent = p.title || (tr.reddit_post_default || 'Post');
       const metaParts = [formatDate(p.posted_at)];
       if (p.author || p.subreddit) metaParts.push((p.author ? 'u/' + p.author : '') + (p.subreddit ? ' r/' + p.subreddit : ''));
       if (p.score != null) metaParts.push('↑ ' + p.score);
@@ -736,7 +738,7 @@
           scoreEl.className = 'news-card-score ' + colorClass;
           scoreEl.setAttribute('data-score', relevanceScore);
           scoreEl.textContent = 'Score: ' + relevanceScore;
-          scoreEl.title = 'Релевантность: ' + relevanceScore + '/100';
+          scoreEl.title = (tr.reddit_relevance || 'Relevance: {}').replace('{}', relevanceScore) + '/100';
           if (scoreRefreshBtn) {
             scoreRefreshBtn.style.display = 'inline-flex';
             scoreRefreshBtn.onclick = function(e) {
@@ -747,7 +749,7 @@
         } else {
           scoreEl.className = 'news-card-score-loading';
           scoreEl.textContent = '—';
-          scoreEl.title = 'Оценка релевантности...';
+          scoreEl.title = tr.news_relevance_loading || 'Relevance score...';
           if (scoreRefreshBtn) {
             scoreRefreshBtn.style.display = 'inline-flex';
             scoreRefreshBtn.onclick = function(e) {
@@ -765,10 +767,10 @@
       const sourceRow = document.getElementById('view-reddit-source-row');
       if (sourceRow && currentViewUrl && currentViewUrl !== '#') {
         sourceRow.style.display = 'block';
-        sourceRow.innerHTML = 'Источник: <a href="' + escapeHtml(currentViewUrl) + '" target="_blank" rel="noopener">Reddit</a>';
+        sourceRow.innerHTML = (tr.reddit_source || 'Source:') + ' <a href="' + escapeHtml(currentViewUrl) + '" target="_blank" rel="noopener">Reddit</a>';
       } else if (sourceRow) sourceRow.style.display = 'none';
       const contentEl = document.getElementById('view-reddit-content');
-      contentEl.textContent = currentViewContent || '(нет текста)';
+      contentEl.textContent = currentViewContent || (tr.reddit_no_text || '(no text)');
       contentEl.style.whiteSpace = 'pre-wrap';
       const linkHeader = document.getElementById('view-reddit-link-header');
       linkHeader.href = currentViewUrl;
@@ -784,7 +786,7 @@
     const ta = document.getElementById('view-reddit-write-textarea');
     const text = ta ? ta.value : '';
     if (!text) return;
-    navigator.clipboard.writeText(text).then(() => { if (typeof window.toast === 'function') window.toast('Скопировано', 'success'); });
+    navigator.clipboard.writeText(text).then(() => { if (typeof window.toast === 'function') window.toast(tr.reddit_copied || 'Copied', 'success'); });
   });
 
   function updateRedditCharCount() {
@@ -803,14 +805,14 @@
     const range = ranges[length] || ranges.medium;
     const isValid = charCount >= range.min && charCount <= range.max;
     const status = isValid ? 'valid' : (charCount < range.min ? 'too-short' : 'too-long');
-    countEl.textContent = charCount + ' / ' + range.min + '–' + range.max + ' знаков';
+    countEl.textContent = charCount + ' / ' + range.min + '–' + range.max + ' ' + (tr.reddit_chars || 'chars');
     countEl.className = 'view-post-char-count view-post-char-count-' + status;
   }
 
   document.getElementById('view-reddit-rewrite-btn').addEventListener('click', async () => {
     const postText = (currentViewContent || '').trim() || (document.getElementById('view-reddit-content').textContent || '').trim();
-    if (!postText || postText === '(нет текста)') {
-      if (typeof window.toast === 'function') window.toast('Дождитесь загрузки поста или обновите страницу', 'error');
+    if (!postText || postText === (tr.reddit_no_text || '(no text)')) {
+      if (typeof window.toast === 'function') window.toast(tr.reddit_wait_load || 'Wait for post to load or refresh the page', 'error');
       return;
     }
     const goal = document.getElementById('view-reddit-goal').value;
@@ -823,8 +825,8 @@
     const btn = document.getElementById('view-reddit-rewrite-btn');
     const ta = document.getElementById('view-reddit-write-textarea');
     btn.disabled = true;
-    btn.textContent = 'Генерация…';
-    if (ta) ta.value = 'Генерация…';
+    btn.textContent = tr.reddit_generating || 'Generating…';
+    if (ta) ta.value = tr.reddit_generating || 'Generating…';
     updateRedditCharCount();
     try {
       const res = await fetch('/agents/news_post_agent/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ payload }) });
@@ -834,18 +836,18 @@
         if (text) {
           try { var errJson = JSON.parse(text); errMsg = errJson.detail || errJson.message || text.slice(0, 300); } catch (_) { errMsg = text.slice(0, 300); }
         }
-        if (ta) ta.value = 'Ошибка сервера (' + res.status + '): ' + errMsg;
+        if (ta) ta.value = (tr.server_error || 'Server error') + ' (' + res.status + '): ' + errMsg;
         updateRedditCharCount();
         return;
       }
       var data;
       try { data = JSON.parse(text); } catch (parseErr) {
-        if (ta) ta.value = 'Ошибка: ответ не JSON. ' + (text ? text.slice(0, 200) : '');
+        if (ta) ta.value = (tr.load_error || 'Error') + ': response is not JSON. ' + (text ? text.slice(0, 200) : '');
         updateRedditCharCount();
         return;
       }
       const postResult = data.result && data.result.post ? data.result.post : '';
-      if (ta) ta.value = (postResult || '').trim() || 'Не удалось сгенерировать пост.';
+      if (ta) ta.value = (postResult || '').trim() || (tr.reddit_generate_failed || 'Failed to generate post.');
       updateRedditCharCount();
       if (currentViewId != null && postResult) {
         fetch('/reddit/posts/' + currentViewId, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reply_variants: { post: postResult.trim() }, status: 'in_progress' }) })
@@ -856,17 +858,17 @@
             if (badge) {
               badge.dataset.status = 'in_progress';
               badge.className = 'reddit-status-badge status-in_progress';
-              badge.textContent = 'В работе';
+              badge.textContent = tr.reddit_status_in_progress || 'In progress';
             }
           })
           .catch(() => {});
       }
     } catch (err) {
-      if (ta) ta.value = 'Ошибка: ' + (err && err.message ? err.message : 'Не удалось подключиться к серверу.');
+      if (ta) ta.value = (tr.load_error || 'Error') + ': ' + (err && err.message ? err.message : 'Failed to connect to server.');
       updateRedditCharCount();
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Переписать';
+      btn.textContent = tr.reddit_rewrite_btn || 'Rewrite';
     }
   });
 
@@ -885,11 +887,11 @@
     sel.innerHTML = '';
     viewAuthorsList = Array.isArray(authors) ? authors : [];
     if (!viewAuthorsList.length) {
-      sel.appendChild(new Option('— Добавьте авторов в Settings —', ''));
+      sel.appendChild(new Option(tr.reddit_add_authors_first || '— Add authors in Settings —', ''));
       return;
     }
     viewAuthorsList.forEach((a, i) => {
-      sel.appendChild(new Option(a.full_name || ('Автор ' + (i + 1)), String(i)));
+      sel.appendChild(new Option(a.full_name || (tr.reddit_author_n || 'Author {}').replace('{}', i + 1), String(i)));
     });
   }
   fetch('/setup/draft').then(r => r.json()).then(d => {
@@ -901,7 +903,7 @@
     const btn = document.getElementById('reddit-refresh-btn');
     const origText = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'Обновление…';
+    btn.textContent = tr.reddit_updating || 'Updating…';
     var refreshAbort = new AbortController();
     var refreshTimeout = setTimeout(function() { refreshAbort.abort(); }, 90000);
     fetch('/reddit/refresh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: refreshAbort.signal })
@@ -912,15 +914,15 @@
         if (typeof window.toast === 'function') {
           var subCount = (data && data.subreddits != null) ? data.subreddits : -1;
           var added = (data && data.added != null) ? data.added : -1;
-          if (subCount === 0) window.toast('Сначала добавьте сабреддиты в Настройках (Settings)');
-          else if (added !== -1) window.toast(added > 0 ? 'Добавлено постов: ' + added : 'Посты обновлены');
-          else window.toast('Посты обновлены');
+          if (subCount === 0) window.toast(tr.reddit_add_subreddits_first || 'Add subreddits in Settings first');
+          else if (added !== -1) window.toast(added > 0 ? (tr.reddit_posts_added || 'Added posts: {}').replace('{}', added) : (tr.reddit_posts_updated || 'Posts updated'));
+          else window.toast(tr.reddit_posts_updated || 'Posts updated');
         }
       })
       .catch(function(err) {
         clearTimeout(refreshTimeout);
         loadRedditPosts();
-        if (typeof window.toast === 'function') window.toast('Не удалось обновить посты. Проверьте интернет или попробуйте позже.');
+        if (typeof window.toast === 'function') window.toast(tr.reddit_update_failed || 'Failed to update posts. Check connection or try later.');
       })
       .finally(function() { btn.disabled = false; btn.textContent = origText; });
   });
@@ -988,7 +990,7 @@
     scoreEl.className = 'news-card-score ' + colorClass;
     scoreEl.setAttribute('data-score', score);
     scoreEl.textContent = 'Score: ' + score;
-    scoreEl.title = 'Релевантность: ' + score + '/100';
+    scoreEl.title = (tr.reddit_relevance || 'Relevance: {}').replace('{}', score) + '/100';
     
     // Обновляем score в детальном виде, если он открыт
     if (Number(currentViewId) === Number(postId)) {
@@ -998,7 +1000,7 @@
         detailScoreEl.className = 'news-card-score ' + colorClass;
         detailScoreEl.setAttribute('data-score', score);
         detailScoreEl.textContent = 'Score: ' + score;
-        detailScoreEl.title = 'Релевантность: ' + score + '/100';
+        detailScoreEl.title = (tr.reddit_relevance || 'Relevance: {}').replace('{}', score) + '/100';
         if (scoreRefreshBtn) {
           scoreRefreshBtn.style.display = 'inline-flex';
           scoreRefreshBtn.onclick = function(e) {
@@ -1014,7 +1016,7 @@
     var scoreRefreshBtn = document.getElementById('view-reddit-score-refresh');
     if (scoreEl) {
       scoreEl.textContent = '…';
-      scoreEl.title = 'Обновление оценки...';
+      scoreEl.title = tr.reddit_score_updating || 'Updating score...';
     }
     if (scoreRefreshBtn) scoreRefreshBtn.disabled = true;
     try {
@@ -1054,7 +1056,7 @@
           scoreEl.className = 'news-card-score ' + colorClass;
           scoreEl.setAttribute('data-score', score);
           scoreEl.textContent = 'Score: ' + score;
-          scoreEl.title = 'Релевантность: ' + score + '/100';
+          scoreEl.title = (tr.reddit_relevance || 'Relevance: {}').replace('{}', score) + '/100';
         }
         if (scoreRefreshBtn) {
           scoreRefreshBtn.style.display = 'inline-flex';
@@ -1066,14 +1068,14 @@
       } else {
         if (scoreEl) {
           scoreEl.textContent = '—';
-          scoreEl.title = 'Не удалось получить оценку';
+          scoreEl.title = tr.reddit_score_failed || 'Failed to get score';
         }
       }
     } catch (e) {
       console.error('Scoring error:', e);
       if (scoreEl) {
         scoreEl.textContent = '—';
-        scoreEl.title = 'Ошибка обновления';
+        scoreEl.title = tr.reddit_score_error || 'Update error';
       }
     } finally {
       if (scoreRefreshBtn) scoreRefreshBtn.disabled = false;

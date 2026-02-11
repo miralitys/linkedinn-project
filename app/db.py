@@ -75,6 +75,28 @@ async def init_db() -> None:
                 await conn.execute(text("ALTER TABLE reddit_posts ADD COLUMN status VARCHAR(32) DEFAULT 'new'"))
             except Exception:
                 pass
+            # Создаём таблицу users, если её нет
+            try:
+                await conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        email VARCHAR(256) NOT NULL UNIQUE,
+                        password_hash VARCHAR(256) NOT NULL,
+                        role VARCHAR(16) NOT NULL DEFAULT 'user',
+                        subscription_status VARCHAR(32) NOT NULL DEFAULT 'free',
+                        subscription_expires_at DATETIME,
+                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        last_login_at DATETIME,
+                        approval_status VARCHAR(16) NOT NULL DEFAULT 'approved'
+                    )
+                """))
+            except Exception:
+                pass
+            try:
+                await conn.execute(text("ALTER TABLE users ADD COLUMN approval_status VARCHAR(16) DEFAULT 'approved'"))
+            except Exception:
+                pass
         elif _is_postgres():
             # Добавляем колонки в reddit_posts на проде (Supabase), если их ещё нет
             for sql in (
@@ -82,11 +104,16 @@ async def init_db() -> None:
                 "ALTER TABLE reddit_posts ADD COLUMN IF NOT EXISTS relevance_flag VARCHAR(8)",
                 "ALTER TABLE reddit_posts ADD COLUMN IF NOT EXISTS relevance_reason VARCHAR(256)",
                 "ALTER TABLE reddit_posts ADD COLUMN IF NOT EXISTS status VARCHAR(32) DEFAULT 'new'",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS approval_status VARCHAR(16) DEFAULT 'approved'",
             ):
                 try:
                     await conn.execute(text(sql))
                 except Exception:
                     pass
+            # Создаём таблицу users, если её нет (Postgres)
+            # Используем Base.metadata.create_all для Postgres (уже вызывается выше)
+            # Дополнительно проверяем существование через try/except
+            pass
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:

@@ -1,6 +1,12 @@
-# Деплой: Supabase + Render.com
+# Деплой MyVOICE's
 
-Проект настроен на связку **Supabase** (Postgres) и **Render.com** (хостинг приложения).
+## Как устроен деплой
+
+- **База данных:** Supabase (Postgres) — облако
+- **Хостинг:** Render.com — облако
+- **Деплой:** push в Git → Render автоматически подтягивает и деплоит
+
+---
 
 ## 1. Supabase (база данных)
 
@@ -31,6 +37,8 @@
    | `DATABASE_URL`  | Вставь Connection string из Supabase (URI, см. выше). |
    | `SESSION_SECRET`| Сгенерируй случайную строку (например `openssl rand -hex 32`) или нажми **Generate** в Render. |
    | `OPENAI_API_KEY`| Твой ключ OpenAI (для агентов). |
+   | `AUTH_ADMIN_EMAIL` | Email для входа админа. |
+   | `AUTH_ADMIN_PASSWORD` | Пароль для входа админа. |
 
    При необходимости добавь остальные из `.env.example` (LinkedIn OAuth, RapidAPI, Playwright path и т.д.).
 
@@ -117,3 +125,15 @@
    ```
 4. Скрипт читает данные из `./lfas.db` (или из `LOCAL_DATABASE_URL`, если задан) и записывает их в БД из `DATABASE_URL` (Supabase). После этого обнови страницу настроек на проде — данные появятся.
 5. Для дальнейшей локальной разработки с SQLite можно снова убрать или изменить `DATABASE_URL` в `.env`.
+
+---
+
+## Альтернатива: деплой на свой сервер (SSH)
+
+Если нужен свой VPS вместо Render:
+
+1. Создай `.deploy.conf` из примера: `cp .deploy.conf.example .deploy.conf`
+2. Укажи `REMOTE=user@сервер.com` и `REMOTE_PATH=/var/www/myvoices`
+3. Запускай: `./scripts/deploy.sh`
+
+На сервере должен быть `.env` с `DATABASE_URL` (Supabase или SQLite), `SESSION_SECRET`, `AUTH_ADMIN_EMAIL`, `AUTH_ADMIN_PASSWORD`.

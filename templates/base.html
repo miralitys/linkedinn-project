@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="{% if locale == 'en' %}en{% else %}ru{% endif %}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -211,7 +211,10 @@
     .card li { margin-bottom: 0.35rem; }
     .card li a { font-weight: 500; }
 
+    .modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: var(--space-4); }
     .modal[hidden] { display: none !important; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: -1; }
+    .modal-content { position: relative; z-index: 1; max-width: 90vw; max-height: 90vh; overflow-y: auto; }
     .loading-state { color: var(--text-secondary); font-size: var(--text-14); margin: 0; }
     .empty-state { color: var(--text-secondary); font-size: var(--text-14); margin: 0.5rem 0 0 0; }
     .form-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
@@ -295,7 +298,7 @@
     /* ——— Shared UI: PageHeader, Toolbar, SplitLayout, DataTable, EmptyState, LoadingState ——— */
     .page-header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-6); }
     .page-header-text { min-width: 0; }
-    .page-header h1 { margin: 0 0 var(--space-2); font-size: 1.75rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+    .page-header h1 { margin: 0 0 var(--space-2); font-size: 1.25rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
     .page-header .page-header-desc { margin: 0; font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; max-width: 42rem; }
     .page-header-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); flex-shrink: 0; }
     .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: var(--space-4); }
@@ -331,6 +334,43 @@
     .confirm-modal-title { margin: 0 0 var(--space-2); font-size: var(--text-20); font-weight: 600; }
     .confirm-modal-message { margin: 0 0 var(--space-4); font-size: var(--text-14); color: var(--text); }
 
+    .nav-locale-wrap {
+      margin-top: auto;
+      padding: var(--space-3) 0 var(--space-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nav-locale-pill {
+      display: inline-flex;
+      align-items: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 2px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .nav-locale-pill a,
+    .nav-locale-pill .nav-lang-active {
+      display: inline-block;
+      padding: var(--space-1) var(--space-3);
+      font-size: var(--text-12);
+      font-weight: 500;
+      border-radius: var(--radius-pill);
+      text-decoration: none;
+      color: var(--text-muted);
+      transition: background var(--motion-fast), color var(--motion-fast);
+    }
+    .nav-locale-pill a:hover {
+      color: var(--primary);
+      background: var(--primary-soft);
+    }
+    .nav-locale-pill .nav-lang-active {
+      background: var(--primary);
+      color: white;
+      cursor: default;
+    }
+
     @media (max-width: 768px) {
       body { justify-content: stretch; }
       .app-layout { max-width: none; flex-direction: column; }
@@ -343,49 +383,70 @@
   </style>
 </head>
 <body>
+  <script>window.__tr = {{ (tr|tojson|safe) if tr is defined and tr else '{}' }}; window.__locale = "{{ locale if locale is defined else 'ru' }}";</script>
   <div class="app-layout">
   <aside class="layout-sidebar">
     <a href="/ui/posts" class="logo">
       <span class="logo-icon">V</span>
       <span>MyVOICE's</span>
     </a>
-    <a href="/ui/posts" class="nav-link {% if request.url.path == '/ui/posts' %}active{% endif %}" aria-current="{% if request.url.path == '/ui/posts' %}page{% else %}false{% endif %}">
+    <a href="/ui/posts" class="nav-link {% if request and request.url.path == '/ui/posts' %}active{% endif %}" aria-current="{% if request and request.url.path == '/ui/posts' %}page{% else %}false{% endif %}">
       <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-      Комментарии
+      {{ tr.nav_comments }}
     </a>
-    <a href="/ui/reddit" class="nav-link {% if request.url.path == '/ui/reddit' %}active{% endif %}" aria-current="{% if request.url.path == '/ui/reddit' %}page{% else %}false{% endif %}">
+    <a href="/ui/reddit" class="nav-link {% if request and request.url.path == '/ui/reddit' %}active{% endif %}" aria-current="{% if request and request.url.path == '/ui/reddit' %}page{% else %}false{% endif %}">
       <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
-      Reddit
+      {{ tr.nav_reddit }}
     </a>
-    <a href="/ui/news" class="nav-link {% if request.url.path == '/ui/news' %}active{% endif %}" aria-current="{% if request.url.path == '/ui/news' %}page{% else %}false{% endif %}">
+    <a href="/ui/news" class="nav-link {% if request and request.url.path == '/ui/news' %}active{% endif %}" aria-current="{% if request and request.url.path == '/ui/news' %}page{% else %}false{% endif %}">
       <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
-      Новости
+      {{ tr.nav_news }}
     </a>
-    <a href="/ui/people" class="nav-link {% if request.url.path == '/ui/people' %}active{% endif %}" aria-current="{% if request.url.path == '/ui/people' %}page{% else %}false{% endif %}">
+    <a href="/ui/people" class="nav-link {% if request and request.url.path == '/ui/people' %}active{% endif %}" aria-current="{% if request and request.url.path == '/ui/people' %}page{% else %}false{% endif %}">
       <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-      Контакты
+      {{ tr.nav_contacts }}
     </a>
-    <a href="/ui/companies" class="nav-link {% if request.url.path == '/ui/companies' %}active{% endif %}" aria-current="{% if request.url.path == '/ui/companies' %}page{% else %}false{% endif %}">
+    <a href="/ui/companies" class="nav-link {% if request and request.url.path == '/ui/companies' %}active{% endif %}" aria-current="{% if request and request.url.path == '/ui/companies' %}page{% else %}false{% endif %}">
       <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-      Компании
+      {{ tr.nav_companies }}
     </a>
-    <a href="/ui/setup" class="nav-link {% if request.url.path == '/ui/setup' %}active{% endif %}" aria-current="{% if request.url.path == '/ui/setup' %}page{% else %}false{% endif %}">
+    <a href="/ui/setup" class="nav-link {% if request and request.url.path == '/ui/setup' %}active{% endif %}" aria-current="{% if request and request.url.path == '/ui/setup' %}page{% else %}false{% endif %}">
       <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      Settings
+      {{ tr.nav_settings }}
     </a>
+    {% if request %}
+      {% set user_role = request.session.get('user_role') if request.session else None %}
+      {% if user_role == 'admin' %}
+      <a href="/admin/users" class="nav-link {% if request.url.path == '/admin/users' %}active{% endif %}" aria-current="{% if request.url.path == '/admin/users' %}page{% else %}false{% endif %}">
+        <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        {{ (tr.nav_users if tr else 'Пользователи') }}
+      </a>
+      {% endif %}
+    {% endif %}
     <a href="/docs" class="nav-link nav-link-api" style="display: none;" aria-hidden="true">
       <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
       API
     </a>
-    <a href="/logout" class="nav-link" style="margin-top: auto;">
+    <a href="/logout" class="nav-link">
       <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-      Выйти
+      {{ tr.nav_logout }}
     </a>
+    <div class="nav-locale-wrap" role="group" aria-label="Language">
+      <div class="nav-locale-pill">
+        {% if locale is defined and locale == 'en' %}
+          <a href="/set-locale?locale=ru&next={{ request.url.path if request and request.url.path else '/ui/posts' }}">RU</a>
+          <span class="nav-lang-active" aria-current="true">EN</span>
+        {% else %}
+          <span class="nav-lang-active" aria-current="true">RU</span>
+          <a href="/set-locale?locale=en&next={{ request.url.path if request and request.url.path else '/ui/posts' }}">EN</a>
+        {% endif %}
+      </div>
+    </div>
   </aside>
   <div class="main-wrap">
     <main>{% block content %}{% endblock %}</main>
   </div>
-  <div id="toast-container" class="toast-container" role="region" aria-label="Уведомления"></div>
+  <div id="toast-container" class="toast-container" role="region" aria-label="{{ tr.toast_region }}"></div>
   </div>
   <script>
     window.toast = function(message, type) {
