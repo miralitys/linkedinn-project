@@ -1,6 +1,7 @@
 # app/routers/auth.py — вход по email и паролю, регистрация
 import bcrypt
 import hmac
+import logging
 from datetime import datetime
 from typing import Optional
 
@@ -15,6 +16,7 @@ from app.db import get_session
 from app.models import User, UserRole, UserApprovalStatus
 from app.translations import get_locale_from_cookie, get_tr
 
+logger = logging.getLogger(__name__)
 router = APIRouter(tags=["auth"])
 _templates = Jinja2Templates(directory=str(settings.base_dir / "templates"))
 
@@ -132,6 +134,7 @@ async def login_submit(
         await session.commit()
         request.session["authenticated"] = True
         request.session["user_id"] = user.id
+        logger.info("auth.login.success user_id=%s email=%s", user.id, user.email)
         request.session["user"] = user.email
         # Email из .env всегда админ, даже если в БД роль user
         admin_email = (settings.auth_admin_email or "").strip().lower()
@@ -146,6 +149,7 @@ async def login_submit(
     
     # Fallback на .env для обратной совместимости
     if _check_credentials_env(email, password):
+        logger.info("auth.login.success env_admin email=%s", email.strip())
         request.session["authenticated"] = True
         request.session["user"] = email.strip()
         request.session["user_role"] = UserRole.ADMIN.value  # .env админ
@@ -176,6 +180,7 @@ async def login_submit(
         from app.translations import RU
         locale = "ru"
         tr = RU
+    logger.warning("auth.login.failed email=%s reason=%s", email.strip() if email else "", cred_error or "bad_credentials")
     return _templates.TemplateResponse(
         request,
         "login.html",
@@ -275,11 +280,13 @@ async def register_submit(
         )
     
     # Создание пользователя (статус «ожидает подтверждения»)
+    from app.plans import DEFAULT_PLAN
     user = User(
         email=email,
         password_hash=_hash_password(password),
         role=UserRole.USER.value,
         approval_status=UserApprovalStatus.PENDING.value,
+        plan_name=DEFAULT_PLAN,
     )
     session.add(user)
     await session.commit()
@@ -292,6 +299,9 @@ async def register_submit(
 @router.get("/logout")
 @router.post("/logout")
 async def logout(request: Request):
+    uid = request.session.get("user_id")
+    if uid is not None:
+        logger.info("auth.logout user_id=%s", uid)
     request.session.clear()
     locale = get_locale_from_cookie(request.cookies)
     return RedirectResponse(url="/en" if locale == "en" else "/", status_code=302)

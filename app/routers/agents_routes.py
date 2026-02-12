@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db import get_session
 from app.deps import get_current_user_id
 from app.models import Draft, DraftStatus, DraftType, KnowledgeBase, SalesAvatar
+from app.plans import get_plan
+from app.services.usage import GENERATION_AGENTS, check_generation_limit, increment_usage
 from app.routers.setup import _kb_key
 from app.schemas import AgentRunPayload, AgentRunResponse
 from agents.registry import AGENTS, run_agent
@@ -39,6 +41,15 @@ async def run_agent_endpoint(
     if agent_name not in AGENTS:
         raise HTTPException(404, f"Unknown agent: {agent_name}")
     payload = body.payload or {}
+
+    # Проверка лимита генераций для content-агентов
+    if agent_name in GENERATION_AGENTS:
+        ok, current, limit = await check_generation_limit(session, user_id, agent_name)
+        if not ok:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Limit reached: {current}/{limit} this month. Upgrade your plan.",
+            )
 
     # Inject shared memory (Sales Avatar) when needed
     if agent_name in ("content_agent", "comment_agent", "news_post_agent", "outreach_sequencer", "qa_guard"):
@@ -139,6 +150,7 @@ async def run_agent_endpoint(
     if agent_name == "content_agent" and result.get("content"):
         c = result["content"]
         draft = Draft(
+            user_id=user_id,
             type=DraftType.POST.value,
             content=c.get("draft", ""),
             source_agent=agent_name,
@@ -152,6 +164,7 @@ async def run_agent_endpoint(
         comm = result["comments"]
         text = comm.get("medium") or comm.get("short") or comm.get("long") or ""
         draft = Draft(
+            user_id=user_id,
             type=DraftType.COMMENT.value,
             content=text,
             source_agent=agent_name,
@@ -163,6 +176,7 @@ async def run_agent_endpoint(
         draft_id = draft.id
     elif agent_name == "news_post_agent" and result.get("post"):
         draft = Draft(
+            user_id=user_id,
             type=DraftType.POST.value,
             content=result["post"],
             source_agent=agent_name,
@@ -174,6 +188,7 @@ async def run_agent_endpoint(
         draft_id = draft.id
     elif agent_name == "outreach_sequencer" and result.get("sequencer", {}).get("draft_message"):
         draft = Draft(
+            user_id=user_id,
             type=DraftType.DM.value,
             content=result["sequencer"]["draft_message"],
             source_agent=agent_name,
@@ -184,5 +199,9 @@ async def run_agent_endpoint(
         session.add(draft)
         await session.flush()
         draft_id = draft.id
+
+    # Учёт генерации
+    if agent_name in GENERATION_AGENTS:
+        await increment_usage(session, user_id, agent_name, 1)
 
     return AgentRunResponse(agent_name=agent_name, result=result, draft_id=draft_id)

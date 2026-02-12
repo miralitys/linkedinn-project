@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
+from app.deps import get_current_user_id
 from app.models import Draft, DraftStatus, SalesAvatar
 from app.schemas import DraftApproveRequest, DraftQARequest, DraftRead
 from agents.registry import run_agent
@@ -24,8 +25,9 @@ async def list_drafts(
     status: Optional[str] = None,
     type: Optional[str] = None,
     session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
 ):
-    q = select(Draft).order_by(Draft.created_at.desc())
+    q = select(Draft).where((Draft.user_id == user_id) | (Draft.user_id.is_(None))).order_by(Draft.created_at.desc())
     if status:
         q = q.where(Draft.status == status)
     if type:
@@ -35,9 +37,11 @@ async def list_drafts(
 
 
 @router.get("/{id}", response_model=DraftRead)
-async def get_draft(id: int, session: AsyncSession = Depends(get_session)):
+async def get_draft(id: int, session: AsyncSession = Depends(get_session), user_id: int = Depends(get_current_user_id)):
     d = await session.get(Draft, id)
     if not d:
+        raise HTTPException(404, "Draft not found")
+    if d.user_id is not None and d.user_id != user_id:
         raise HTTPException(404, "Draft not found")
     return d
 
@@ -47,14 +51,17 @@ async def run_qa_on_draft(
     id: int,
   body: DraftQARequest,
   session: AsyncSession = Depends(get_session),
+  user_id: int = Depends(get_current_user_id),
 ):
     """Run QA/Risk Guard on draft; store result in draft.qa_result."""
     d = await session.get(Draft, id)
     if not d:
         raise HTTPException(404, "Draft not found")
+    if d.user_id is not None and d.user_id != user_id:
+        raise HTTPException(404, "Draft not found")
     if not body.run_qa:
         return {"draft_id": id, "qa_run": False}
-    r = await session.execute(select(SalesAvatar).limit(1))
+    r = await session.execute(select(SalesAvatar).where((SalesAvatar.user_id == user_id) | (SalesAvatar.user_id.is_(None))).limit(1))
     avatar = r.scalar_one_or_none()
     context = _avatar_str(avatar)
     result = await run_agent(
@@ -78,10 +85,13 @@ async def approve_draft(
     id: int,
     body: DraftApproveRequest,
     session: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_id),
 ):
     """Mark draft as approved or rejected."""
     d = await session.get(Draft, id)
     if not d:
+        raise HTTPException(404, "Draft not found")
+    if d.user_id is not None and d.user_id != user_id:
         raise HTTPException(404, "Draft not found")
     d.status = DraftStatus.APPROVED.value if body.approved else DraftStatus.REJECTED.value
     if body.note and d.meta is None:

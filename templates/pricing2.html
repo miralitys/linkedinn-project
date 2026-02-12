@@ -1,0 +1,412 @@
+{% extends "base_landing.html" %}
+{% block title %}{% if locale == 'en' %}Pricing - MyVOICE's{% else %}Тарифы - MyVOICE's{% endif %}{% endblock %}
+{% block head %}
+  <meta name="description" content="{% if locale == 'en' %}LinkedIn visibility without hours in the feed. Watchlist, new posts, comments in your voice.{% else %}Заметность в LinkedIn без часов в ленте. Watchlist, новые посты, комментарии своим голосом.{% endif %}">
+{% endblock %}
+
+{% block content %}
+<style>
+  .p2-hero { text-align: center; padding: var(--space-4) 0; max-width: 780px; margin: 0 auto; }
+  .p2-hero h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 700; margin: 0 0 var(--space-4); line-height: 1.2; letter-spacing: -0.02em; }
+  .p2-hero .sub { font-size: var(--text-18); color: var(--text-muted); margin-bottom: var(--space-4); line-height: 1.5; }
+  .p2-steps { display: flex; justify-content: center; gap: var(--space-6); flex-wrap: wrap; margin: var(--space-4) 0; }
+  .p2-step { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-14); color: var(--text-muted); }
+  .p2-step-icon { width: 32px; height: 32px; background: var(--primary-soft); color: var(--primary); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+  .p2-hero-key { background: var(--surface-alt); border-radius: var(--radius-lg); padding: var(--space-5); margin: var(--space-4) 0; text-align: left; font-size: var(--text-16); line-height: 1.6; color: var(--text); border-left: 4px solid var(--primary); }
+
+  .p2-trust { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border); margin-bottom: var(--space-4); }
+  .p2-trust-badge { font-size: var(--text-12); padding: 6px 12px; background: var(--surface-alt); border-radius: var(--radius-pill); color: var(--text-muted); font-weight: 500; white-space: nowrap; }
+  .p2-trust-badge::before { content: '✓ '; color: var(--success); font-weight: 700; }
+
+  .p2-choose { max-width: 680px; margin: 0 auto var(--space-5); text-align: center; }
+  .p2-choose h2 { font-size: var(--text-24); font-weight: 700; margin: 0 0 var(--space-4); }
+  .p2-choose-segments { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin: var(--space-4) 0; }
+  .p2-choose-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-5); text-align: left; }
+  .p2-choose-card h3 { font-size: var(--text-16); font-weight: 600; margin: 0 0 var(--space-2); }
+  .p2-choose-card p { font-size: var(--text-14); color: var(--text-muted); margin: 0 0 var(--space-2); }
+  .p2-choose-card .rec { font-size: var(--text-13); font-weight: 600; color: var(--primary); }
+  .p2-choose-example { font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-3); font-style: italic; }
+
+  .p2-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin: var(--space-4) 0; align-items: stretch; }
+  .p2-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-8); display: flex; flex-direction: column; position: relative; }
+  .p2-card.popular { border-color: var(--primary); background: rgba(99, 102, 241, 0.03); box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12); }
+  .p2-card .badge { position: absolute; top: var(--space-4); right: var(--space-4); font-size: var(--text-11); font-weight: 600; padding: 4px 10px; border-radius: var(--radius-pill); background: var(--primary); color: white; }
+  .p2-card h3 { font-size: var(--text-20); font-weight: 700; margin: 0 0 var(--space-2); }
+  .p2-card .for-who { font-size: var(--text-14); color: var(--text-muted); margin-bottom: var(--space-4); }
+  .p2-card .value-bullets { list-style: none; padding: 0; margin: 0 0 var(--space-4); }
+  .p2-card .value-bullets li { display: flex; align-items: flex-start; gap: var(--space-2); font-size: var(--text-14); margin-bottom: var(--space-2); }
+  .p2-card .value-bullets li::before { content: '✓'; color: var(--success); font-weight: 700; flex-shrink: 0; }
+  .p2-card .diff { font-size: var(--text-13); font-weight: 600; color: var(--primary); margin: var(--space-2) 0; }
+  .p2-card .price-row { margin: var(--space-4) 0; }
+  .p2-card .price { font-size: var(--text-28); font-weight: 700; }
+  .p2-card .price-unit { font-size: var(--text-14); color: var(--text-muted); }
+  .p2-card .price-note { font-size: var(--text-12); color: var(--text-muted); margin-top: 2px; }
+  .p2-card .limits-toggle { font-size: var(--text-12); color: var(--primary); cursor: pointer; margin: var(--space-3) 0; }
+  .p2-card .limits-toggle:hover { text-decoration: underline; }
+  .p2-card .limits { font-size: var(--text-12); color: var(--text-muted); line-height: 1.6; display: none; }
+  .p2-card .limits.is-open { display: block; }
+  .p2-card .btn { display: block; text-align: center; padding: 0.75rem 1.5rem; border-radius: var(--radius-pill); font-weight: 500; font-size: var(--text-14); text-decoration: none; margin-top: auto; transition: all var(--motion-fast); }
+  .p2-card .btn-primary { background: var(--primary); color: white; border: 1px solid var(--primary); }
+  .p2-card .btn-primary:hover { background: var(--primary-hover); color: white; text-decoration: none; }
+  .p2-card .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .p2-card .btn-outline:hover { border-color: var(--primary); color: var(--primary); text-decoration: none; }
+  .p2-card .btn-secondary { background: var(--text); color: white; border: 1px solid var(--text); }
+  .p2-card .btn-secondary:hover { opacity: 0.9; color: white; text-decoration: none; }
+  .p2-card .btn-note { font-size: var(--text-12); color: var(--text-muted); margin-top: var(--space-2); text-align: center; }
+
+  .p2-generation { max-width: 560px; margin: 0 auto var(--space-5); padding: var(--space-5); background: var(--surface-alt); border-radius: var(--radius-lg); }
+  .p2-generation h2 { font-size: var(--text-20); font-weight: 700; margin: 0 0 var(--space-4); }
+  .p2-generation p { font-size: var(--text-14); color: var(--text-muted); margin: 0; line-height: 1.6; }
+  .p2-generation .example { font-size: var(--text-13); margin-top: var(--space-3); padding: var(--space-3); background: var(--surface); border-radius: var(--radius); }
+
+  .p2-compare { margin: var(--space-5) 0; }
+  .p2-compare h2 { font-size: var(--text-24); font-weight: 700; margin: 0 0 var(--space-4); text-align: center; }
+  .p2-compare-intro { text-align: center; font-size: var(--text-14); color: var(--text-muted); margin-bottom: var(--space-4); max-width: 480px; margin-left: auto; margin-right: auto; }
+  .p2-compare-section { margin-bottom: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .p2-compare-section-head { padding: var(--space-4); background: var(--surface-alt); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+  .p2-compare-section-head::after { content: ''; width: 12px; height: 12px; border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted); transform: rotate(45deg); transition: transform var(--motion-fast); }
+  .p2-compare-section.is-open .p2-compare-section-head::after { transform: rotate(-135deg); }
+  .p2-compare-section-body { padding: var(--space-4); display: none; }
+  .p2-compare-section.is-open .p2-compare-section-body { display: block; }
+  .p2-compare-table { width: 100%; font-size: var(--text-14); border-collapse: collapse; }
+  .p2-compare-table th, .p2-compare-table td { padding: var(--space-2) var(--space-3); text-align: left; border-bottom: 1px solid var(--border); }
+  .p2-compare-table tr:last-child td { border-bottom: none; }
+  .p2-compare-table .col-pro { background: rgba(99, 102, 241, 0.04); }
+  .p2-compare-table .yes { color: var(--success); font-weight: 600; }
+  .p2-compare-showall { font-size: var(--text-12); color: var(--primary); cursor: pointer; margin-top: var(--space-2); }
+  .p2-compare-showall:hover { text-decoration: underline; }
+
+  .p2-social { margin: var(--space-5) 0; }
+  .p2-social h2 { font-size: var(--text-24); font-weight: 700; margin: 0 0 var(--space-4); text-align: center; }
+  .p2-social-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); max-width: 800px; margin: 0 auto; }
+  .p2-social-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6); }
+  .p2-social-card h3 { font-size: var(--text-16); font-weight: 600; margin: 0 0 var(--space-4); }
+  .p2-social-metrics { display: flex; gap: var(--space-6); flex-wrap: wrap; }
+  .p2-social-metric { }
+  .p2-social-metric .label { font-size: var(--text-12); color: var(--text-muted); }
+  .p2-social-metric .value { font-size: var(--text-18); font-weight: 700; color: var(--success); }
+  .p2-social-card p { font-size: var(--text-14); color: var(--text-muted); margin: var(--space-4) 0 0; line-height: 1.5; }
+
+  .p2-security { max-width: 560px; margin: 0 auto var(--space-4); padding: var(--space-5); background: var(--surface-alt); border-radius: var(--radius-lg); }
+  .p2-security h3 { font-size: var(--text-16); font-weight: 600; margin: 0 0 var(--space-4); }
+  .p2-security ul { list-style: none; padding: 0; margin: 0; font-size: var(--text-14); color: var(--text-muted); }
+  .p2-security li { display: flex; gap: var(--space-2); margin-bottom: var(--space-2); }
+  .p2-security li::before { content: '✓'; color: var(--success); font-weight: 700; }
+
+  .p2-faq { margin: var(--space-5) 0; max-width: 680px; margin-left: auto; margin-right: auto; }
+  .p2-faq h2 { font-size: var(--text-24); font-weight: 700; margin: 0 0 var(--space-4); text-align: center; }
+  .p2-faq-list { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+  .p2-faq-item { border-bottom: 1px solid var(--border); }
+  .p2-faq-item:last-child { border-bottom: none; }
+  .p2-faq-item dt { padding: var(--space-4) var(--space-5); font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  .p2-faq-item dt::after { content: ''; width: 10px; height: 10px; border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted); transform: rotate(45deg); flex-shrink: 0; transition: transform var(--motion-fast); }
+  .p2-faq-item.is-open dt { background: var(--surface-alt); }
+  .p2-faq-item.is-open dt::after { transform: rotate(-135deg); }
+  .p2-faq-item dd { padding: 0 var(--space-5) var(--space-4); font-size: var(--text-14); color: var(--text-muted); line-height: 1.6; display: none; }
+  .p2-faq-item.is-open dd { display: block; padding-top: 0; margin: 0; }
+
+  .p2-cta { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-8); margin: var(--space-5) 0; text-align: center; box-shadow: var(--elevation-2); }
+  .p2-cta h2 { font-size: var(--text-24); font-weight: 700; margin: 0 0 var(--space-3); }
+  .p2-cta p { font-size: var(--text-16); color: var(--text-muted); margin: 0 0 var(--space-4); }
+  .p2-cta-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-4); margin-bottom: var(--space-4); }
+  .p2-cta-btns .btn { padding: 0.75rem 1.5rem; border-radius: var(--radius-pill); font-weight: 500; font-size: var(--text-14); text-decoration: none; transition: all var(--motion-fast); }
+  .p2-cta-btns .btn-primary { background: var(--primary); color: white; }
+  .p2-cta-btns .btn-primary:hover { background: var(--primary-hover); color: white; text-decoration: none; }
+  .p2-cta-btns .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .p2-cta-btns .btn-secondary:hover { border-color: var(--primary); color: var(--primary); text-decoration: none; }
+  .p2-cta-guarantees { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-6); font-size: var(--text-14); color: var(--text-muted); }
+
+  @media (max-width: 900px) {
+    .p2-cards { grid-template-columns: 1fr; }
+    .p2-choose-segments { grid-template-columns: 1fr; }
+    .p2-social-cards { grid-template-columns: 1fr; }
+    .p2-steps { flex-direction: column; align-items: center; }
+  }
+</style>
+
+<!-- Hero -->
+<section class="p2-hero">
+  <h1>{% if locale == 'en' %}LinkedIn visibility without hours in the feed{% else %}Заметность в LinkedIn без часов в ленте{% endif %}</h1>
+  <p class="sub">{% if locale == 'en' %}Add people to your watchlist, get new posts and generate 3 comment variants for each.{% else %}Добавь людей в watchlist, получай новые посты и генерируй 3 варианта комментария под каждый.{% endif %}</p>
+  <div class="p2-steps">
+    <span class="p2-step"><span class="p2-step-icon">1</span> Watchlist</span>
+    <span class="p2-step"><span class="p2-step-icon">2</span> {% if locale == 'en' %}New posts{% else %}Новые посты{% endif %}</span>
+    <span class="p2-step"><span class="p2-step-icon">3</span> {% if locale == 'en' %}3 comments in your voice{% else %}3 коммента в твоём стиле{% endif %}</span>
+  </div>
+  <div class="p2-hero-key">
+    {% if locale == 'en' %}Follow key people on LinkedIn and reply first with normal comments - as if you wrote them yourself.{% else %}Следи за ключевыми людьми в LinkedIn и отвечай первым нормальными комментариями, как будто писал ты.{% endif %}
+  </div>
+</section>
+
+<!-- Trust strip -->
+<div class="p2-trust">
+  <span class="p2-trust-badge">{% if locale == 'en' %}No autoposting: you control every word{% else %}Без автопостинга: ты контролируешь каждое слово{% endif %}</span>
+  <span class="p2-trust-badge">{% if locale == 'en' %}Cancel anytime{% else %}Отмена в любой момент{% endif %}</span>
+  <span class="p2-trust-badge">{% if locale == 'en' %}Secure payments (Stripe){% else %}Оплата безопасно (Stripe){% endif %}</span>
+  <span class="p2-trust-badge">{% if locale == 'en' %}Data isolation{% else %}Данные пользователей изолированы{% endif %}</span>
+  <span class="p2-trust-badge">RU/EN</span>
+</div>
+
+<!-- How to choose -->
+<section class="p2-choose">
+  <h2>{% if locale == 'en' %}How to choose a plan in 10 seconds{% else %}Как выбрать план за 10 секунд{% endif %}</h2>
+  <div class="p2-choose-segments">
+    <div class="p2-choose-card">
+      <h3>{% if locale == 'en' %}Solo{% else %}Solo{% endif %}</h3>
+      <p>{% if locale == 'en' %}Just want to try{% else %}Хочешь просто попробовать{% endif %}</p>
+      <span class="rec">→ Starter (7 дней)</span>
+    </div>
+    <div class="p2-choose-card">
+      <h3>{% if locale == 'en' %}Small team{% else %}Малая команда{% endif %}</h3>
+      <p>{% if locale == 'en' %}Lead LinkedIn regularly, up to 50 key profiles{% else %}Ведешь LinkedIn регулярно и у тебя до 50 ключевых профилей{% endif %}</p>
+      <span class="rec">→ Pro</span>
+    </div>
+    <div class="p2-choose-card">
+      <h3>{% if locale == 'en' %}Growth{% else %}Рост{% endif %}</h3>
+      <p>{% if locale == 'en' %}Need multiple voices, control, import, inbox, support{% else %}Нужны несколько голосов, контроль, импорт, inbox и поддержка{% endif %}</p>
+      <span class="rec">→ Enterprise</span>
+    </div>
+  </div>
+  <p class="p2-choose-example">{% if locale == 'en' %}Usually 1 person = 1–3 comments/day → 100/month is enough for a working rhythm.{% else %}Обычно 1 человек = 1–3 коммента в день → 100/мес хватает на рабочий ритм.{% endif %}</p>
+  <p class="p2-choose-example">{% if locale == 'en' %}If you have 20–50 key profiles → Pro{% else %}Если у тебя 20–50 ключевых профилей → Pro{% endif %}</p>
+</section>
+
+<!-- Pricing cards -->
+<div class="p2-cards">
+  <div class="p2-card">
+    <h3>Starter</h3>
+    <p class="for-who">{% if locale == 'en' %}Check how your voice sounds and if the format works{% else %}Проверить, как звучит твой голос и зайдет ли формат{% endif %}</p>
+    <ul class="value-bullets">
+      <li>{% if locale == 'en' %}Track 10 profiles and don't miss new posts{% else %}Следишь за 10 профилями и не пропускаешь новые посты{% endif %}</li>
+      <li>{% if locale == 'en' %}3 quick comment variants for each post{% else %}3 быстрых варианта комментария под каждый пост{% endif %}</li>
+      <li>{% if locale == 'en' %}Try posts from Reddit/RSS in parallel{% else %}Параллельно пробуешь посты из Reddit/RSS{% endif %}</li>
+      <li>{% if locale == 'en' %}7 days history to see progress{% else %}История на 7 дней, чтобы видеть прогресс{% endif %}</li>
+    </ul>
+    <div class="diff">{% if locale == 'en' %}Free trial 7 days{% else %}Free trial 7 дней{% endif %}</div>
+    <div class="price-row">
+      <span class="price">{% if locale == 'en' %}7 days free{% else %}7 дней бесплатно{% endif %}</span>
+    </div>
+    <p class="price-note">{% if locale == 'en' %}Card not required to start{% else %}Карта не нужна для начала{% endif %}</p>
+    <a href="#" class="limits-toggle">{% if locale == 'en' %}Show limits{% else %}Показать лимиты{% endif %} ▼</a>
+    <div class="limits">10 LinkedIn, 3 приоритетных, обновление до 5ч, 30 комментов/7д, 10 постов/7д, 2 RSS, 3 Reddit</div>
+    <a href="/login" class="btn btn-outline">{% if locale == 'en' %}Start 7 days free{% else %}Начать 7 дней бесплатно{% endif %}</a>
+    <p class="btn-note">{% if locale == 'en' %}Cancel anytime. (Card needed/not needed). We'll remind 24h before charge.{% else %}Отмена в любой момент. (Карта нужна/не нужна). Напомним за 24ч до списания.{% endif %}</p>
+  </div>
+
+  <div class="p2-card popular">
+    <span class="badge">{% if locale == 'en' %}Best start for 90%{% else %}Лучший старт для 90%{% endif %}</span>
+    <h3>Pro</h3>
+    <p class="for-who">{% if locale == 'en' %}If LinkedIn is really needed for leads and connections{% else %}Если LinkedIn реально нужен для лидов и знакомств{% endif %}</p>
+    <ul class="value-bullets">
+      <li>{% if locale == 'en' %}20 key people in priority: react faster{% else %}20 ключевых людей в приоритете: реагируешь быстрее{% endif %}</li>
+      <li>{% if locale == 'en' %}2 personas: e.g. founder + sales (different tone and tasks){% else %}2 персоны: например фаундер + sales (разный тон и задачи){% endif %}</li>
+      <li>{% if locale == 'en' %}100 comments/month - steady rhythm without burnout{% else %}100 комментариев/мес - стабильный ритм без «сдулся»{% endif %}</li>
+      <li>{% if locale == 'en' %}Basic analytics: what you commented, what worked{% else %}Базовая аналитика: что комментил/что зашло{% endif %}</li>
+      <li>{% if locale == 'en' %}180 days history - see dynamics, not just today{% else %}История 180 дней - видно динамику, не только сегодня{% endif %}</li>
+    </ul>
+    <div class="diff">{% if locale == 'en' %}2 personas{% else %}2 персоны{% endif %}</div>
+    <div class="price-row">
+      <span class="price">$99</span>
+      <span class="price-unit">/{% if locale == 'en' %}mo{% else %}мес{% endif %}</span>
+    </div>
+    <p class="price-note">{% if locale == 'en' %}Enough for daily rhythm: 3–5 comments on work days{% else %}Хватает на ежедневный ритм: 3–5 комментариев в рабочие дни{% endif %}</p>
+    <a href="#" class="limits-toggle">{% if locale == 'en' %}Show limits{% else %}Показать лимиты{% endif %} ▼</a>
+    <div class="limits">50 LinkedIn, 20 приоритетных, до 3ч, 100 комментов/мес, 30 постов/мес, 2 персоны, 5 RSS, 10 Reddit, 180 дней</div>
+    <a href="/login" class="btn btn-primary">{% if locale == 'en' %}Choose Pro{% else %}Выбрать Pro{% endif %}</a>
+    <p class="btn-note">{% if locale == 'en' %}Upgrade/downgrade anytime, no data loss{% else %}Апгрейд/даунгрейд в любой момент, без потери данных{% endif %}</p>
+  </div>
+
+  <div class="p2-card">
+    <span class="badge">{% if locale == 'en' %}For teams{% else %}Для команд{% endif %}</span>
+    <h3>Enterprise</h3>
+    <p class="for-who">{% if locale == 'en' %}Team, multiple directions, need control and process{% else %}Команда, несколько направлений, нужен контроль и процесс{% endif %}</p>
+    <ul class="value-bullets">
+      <li>{% if locale == 'en' %}Inbox: don't lose replies to your comments{% else %}Inbox: не теряешь ответы на свои комментарии{% endif %}</li>
+      <li>{% if locale == 'en' %}Import/export and team training{% else %}Импорт/экспорт и обучение команды{% endif %}</li>
+      <li>{% if locale == 'en' %}Extended analytics + priority support{% else %}Расширенная аналитика + приоритетная поддержка{% endif %}</li>
+      <li>{% if locale == 'en' %}5 personas: different products/ICP/tone{% else %}5 персон: разные продукты/ICP/тон{% endif %}</li>
+      <li>{% if locale == 'en' %}Priority updates up to 1h{% else %}Обновление приоритетных до 1ч{% endif %}</li>
+    </ul>
+    <div class="diff">{% if locale == 'en' %}Inbox + training + import{% else %}Inbox + обучение + импорт{% endif %}</div>
+    <div class="price-row">
+      <span class="price">$499</span>
+      <span class="price-unit">/{% if locale == 'en' %}mo{% else %}мес{% endif %}</span>
+    </div>
+    <a href="#" class="limits-toggle">{% if locale == 'en' %}Show limits{% else %}Показать лимиты{% endif %} ▼</a>
+    <div class="limits">100 LinkedIn, 50 приоритетных, до 1ч, 300 комментов/мес, 100 постов/мес, 5 персон, 20 RSS, 20 Reddit, 730 дней, inbox, обучение, экспорт/импорт</div>
+    <a href="mailto:sales@example.com?subject=Demo%20Request" class="btn btn-secondary">{% if locale == 'en' %}Request demo{% else %}Запросить демо{% endif %}</a>
+    <p class="btn-note">{% if locale == 'en' %}Invoice, team terms, onboarding help{% else %}Инвойс, условия для команды, помощь с внедрением{% endif %}</p>
+  </div>
+</div>
+
+<!-- What counts as generation -->
+<section class="p2-generation">
+  <h2>{% if locale == 'en' %}What counts as a generation?{% else %}Что считается генерацией?{% endif %}</h2>
+  <p>{% if locale == 'en' %}1 generation = 1 Generate click for one post (even if you get 3 short/medium/long variants).{% else %}1 генерация = 1 нажатие Generate для одного поста (даже если получаешь 3 варианта short/medium/long).{% endif %}</p>
+  <div class="example">{% if locale == 'en' %}Example: clicked Generate on 1 post, got 3 variants → 1 generation.{% else %}Пример: нажал Generate на 1 пост, получил 3 варианта → 1 генерация.{% endif %}</div>
+</section>
+
+<!-- Compare (accordions) -->
+<section class="p2-compare">
+  <h2>{% if locale == 'en' %}Compare features{% else %}Сравнить фичи{% endif %}</h2>
+  <p class="p2-compare-intro">{% if locale == 'en' %}Not sure? Here are 3 things that really distinguish plans: priority profiles, number of personas, inbox/import.{% else %}Не уверен? Вот 3 вещи, которые реально отличают планы: приоритетные профили, число персон, inbox/импорт.{% endif %}</p>
+  <div class="p2-compare-section is-open">
+    <div class="p2-compare-section-head">{% if locale == 'en' %}Monitoring{% else %}Мониторинг{% endif %}</div>
+    <div class="p2-compare-section-body">
+      <table class="p2-compare-table">
+        <tr><th></th><th>Starter</th><th class="col-pro">Pro</th><th>Enterprise</th></tr>
+        <tr><td>{% if locale == 'en' %}LinkedIn accounts{% else %}Аккаунты LinkedIn{% endif %}</td><td>10</td><td class="col-pro">50</td><td>100</td></tr>
+        <tr><td>{% if locale == 'en' %}Priority profiles{% else %}Приоритетные профили{% endif %}</td><td>3</td><td class="col-pro">20</td><td>50</td></tr>
+        <tr><td>{% if locale == 'en' %}Update frequency{% else %}Обновление{% endif %}</td><td>{% if locale == 'en' %}up to 5h{% else %}до 5ч{% endif %}</td><td class="col-pro">{% if locale == 'en' %}up to 3h{% else %}до 3ч{% endif %}</td><td>{% if locale == 'en' %}up to 1h{% else %}до 1ч{% endif %}</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="p2-compare-section">
+    <div class="p2-compare-section-head">{% if locale == 'en' %}Generations & Personas{% else %}Генерации и персоны{% endif %}</div>
+    <div class="p2-compare-section-body">
+      <table class="p2-compare-table">
+        <tr><th></th><th>Starter</th><th class="col-pro">Pro</th><th>Enterprise</th></tr>
+        <tr><td>{% if locale == 'en' %}Comments/month{% else %}Комментов/мес{% endif %}</td><td>30/7д</td><td class="col-pro">100/мес</td><td>300/мес</td></tr>
+        <tr><td>{% if locale == 'en' %}Posts/month{% else %}Постов/мес{% endif %}</td><td>10/7д</td><td class="col-pro">30/мес</td><td>100/мес</td></tr>
+        <tr><td>{% if locale == 'en' %}Personas{% else %}Персоны{% endif %}</td><td>-</td><td class="col-pro">2</td><td>5</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="p2-compare-section">
+    <div class="p2-compare-section-head">{% if locale == 'en' %}Team features{% else %}Командные фичи{% endif %}</div>
+    <div class="p2-compare-section-body">
+      <table class="p2-compare-table">
+        <tr><th></th><th>Starter</th><th class="col-pro">Pro</th><th>Enterprise</th></tr>
+        <tr><td>Inbox / {% if locale == 'en' %}Training{% else %}Обучение{% endif %}</td><td>-</td><td class="col-pro">-</td><td class="yes">✓</td></tr>
+        <tr><td>{% if locale == 'en' %}Export / Import{% else %}Экспорт / Импорт{% endif %}</td><td>-</td><td class="col-pro">-</td><td class="yes">✓</td></tr>
+        <tr><td>{% if locale == 'en' %}Priority support{% else %}Приоритетная поддержка{% endif %}</td><td>-</td><td class="col-pro">-</td><td class="yes">✓</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Social proof -->
+<section class="p2-social">
+  <h2>{% if locale == 'en' %}Results{% else %}Результаты{% endif %}</h2>
+  <div class="p2-social-cards">
+    <div class="p2-social-card">
+      <h3>{% if locale == 'en' %}Beta user - Founder{% else %}Бета-пользователь - Фаундер{% endif %}</h3>
+      <div class="p2-social-metrics">
+        <div class="p2-social-metric"><span class="label">{% if locale == 'en' %}Comments/week{% else %}Комментов/нед{% endif %}</span><br><span class="value">12 → 28</span></div>
+        <div class="p2-social-metric"><span class="label">{% if locale == 'en' %}Reaction speed{% else %}Скорость реакции{% endif %}</span><br><span class="value">~2ч</span></div>
+      </div>
+      <p>{% if locale == 'en' %}Before: "I missed posts, commented late." Now: "I see new posts in the morning, 3 variants ready."{% else %}До: «Пропускал посты, комментировал с опозданием». После: «Вижу новые посты утром, 3 варианта готовы».{% endif %}</p>
+    </div>
+    <div class="p2-social-card">
+      <h3>{% if locale == 'en' %}Beta user - Sales{% else %}Бета-пользователь - Sales{% endif %}</h3>
+      <div class="p2-social-metrics">
+        <div class="p2-social-metric"><span class="label">{% if locale == 'en' %}% replies{% else %}% ответов{% endif %}</span><br><span class="value">+40%</span></div>
+        <div class="p2-social-metric"><span class="label">{% if locale == 'en' %}Comments/week{% else %}Комментов/нед{% endif %}</span><br><span class="value">5 → 18</span></div>
+      </div>
+      <p>{% if locale == 'en' %}"Different tone for founder vs sales - 2 personas solved it."{% else %}«Разный тон для фаундера и sales - 2 персоны решили».{% endif %}</p>
+    </div>
+  </div>
+</section>
+
+<!-- Security -->
+<div class="p2-security">
+  <h3>{% if locale == 'en' %}Security{% else %}Безопасность{% endif %}</h3>
+  <ul>
+    <li>{% if locale == 'en' %}We don't publish for you{% else %}Мы не публикуем за вас{% endif %}</li>
+    <li>{% if locale == 'en' %}We don't store passwords/tokens in plain text{% else %}Не храним (пароли/токены) в открытом виде{% endif %}</li>
+    <li>{% if locale == 'en' %}Data can be deleted on request{% else %}Можно удалить данные по запросу{% endif %}</li>
+  </ul>
+</div>
+
+<!-- FAQ -->
+<section class="p2-faq">
+  <h2>{% if locale == 'en' %}FAQ{% else %}Вопросы{% endif %}</h2>
+  <dl class="p2-faq-list">
+    <div class="p2-faq-item">
+      <dt>{% if locale == 'en' %}Can I change plans later?{% else %}Можно ли сменить план позже?{% endif %}</dt>
+      <dd>{% if locale == 'en' %}Yes. Upgrade anytime, difference is prorated. Downgrade applies from next billing.{% else %}Да. Апгрейд можно сделать в любой момент, разница считается пропорционально. Даунгрейд применится со следующего биллинга.{% endif %}</dd>
+    </div>
+    <div class="p2-faq-item">
+      <dt>{% if locale == 'en' %}What counts as a generation?{% else %}Что считается генерацией?{% endif %}</dt>
+      <dd>{% if locale == 'en' %}1 generation = 1 AI request for one post (even if you get 3 short/medium/long variants).{% else %}1 генерация = 1 запрос к AI для одного поста (даже если ты получаешь 3 варианта short/medium/long).{% endif %}</dd>
+    </div>
+    <div class="p2-faq-item">
+      <dt>{% if locale == 'en' %}What is a "persona"?{% else %}Что такое «персона»?{% endif %}</dt>
+      <dd>{% if locale == 'en' %}A persona is a separate voice: tone, style, prohibitions, reactions. Useful if you write "as founder" and "as sales" differently.{% else %}Персона - это отдельный голос внутри аккаунта: тон, стиль, запреты, реакции. Удобно, если пишешь «как фаундер» и «как sales» по-разному.{% endif %}</dd>
+    </div>
+    <div class="p2-faq-item">
+      <dt>{% if locale == 'en' %}What are priority profiles and why faster updates?{% else %}Что такое «приоритетные профили» и почему обновление быстрее?{% endif %}</dt>
+      <dd>{% if locale == 'en' %}The list of most important people. We check their posts more often so you can react earlier.{% else %}Это список самых важных людей. Мы проверяем их посты чаще, чтобы ты реагировал раньше.{% endif %}</dd>
+    </div>
+    <div class="p2-faq-item">
+      <dt>{% if locale == 'en' %}Can I post/comment directly from the service?{% else %}Я могу публиковать/комментировать прямо из сервиса?{% endif %}</dt>
+      <dd>{% if locale == 'en' %}No. We specifically don't do autoposting or autocommenting. You copy and paste yourself.{% else %}Нет. Мы специально не делаем автопостинг и автокомментинг. Ты копируешь текст и вставляешь сам.{% endif %}</dd>
+    </div>
+    <div class="p2-faq-item">
+      <dt>{% if locale == 'en' %}Do I need to give my LinkedIn password?{% else %}Мне нужно давать пароль от LinkedIn?{% endif %}</dt>
+      <dd>{% if locale == 'en' %}No, we don't ask for your password. Connection via secure OAuth, we don't store passwords.{% else %}Нет, мы не просим пароль. Подключение через безопасный OAuth, пароль не храним.{% endif %}</dd>
+    </div>
+    <div class="p2-faq-item">
+      <dt>{% if locale == 'en' %}What payment methods do you accept?{% else %}Какие способы оплаты принимаются?{% endif %}</dt>
+      <dd>{% if locale == 'en' %}Cards (Visa/Mastercard). For Enterprise - invoice on request.{% else %}Карты (Visa/Mastercard). Для Enterprise - инвойс по запросу.{% endif %}</dd>
+    </div>
+    <div class="p2-faq-item">
+      <dt>{% if locale == 'en' %}Is there a free trial?{% else %}Есть ли бесплатный пробный период?{% endif %}</dt>
+      <dd>{% if locale == 'en' %}Yes, Starter for 7 days. No card required to start. Charged after, can cancel before.{% else %}Да, Starter на 7 дней. Карта не нужна для начала. Списания после окончания, можно отменить раньше.{% endif %}</dd>
+    </div>
+    <div class="p2-faq-item">
+      <dt>{% if locale == 'en' %}What if I run out of generations?{% else %}Что если лимит генераций закончился?{% endif %}</dt>
+      <dd>{% if locale == 'en' %}Wait for next period, buy extra pack (if planned), or upgrade to Pro/Enterprise.{% else %}Можно дождаться следующего периода или докупить пакет (если планируешь), либо апгрейднуться на Pro/Enterprise.{% endif %}</dd>
+    </div>
+    <div class="p2-faq-item">
+      <dt>{% if locale == 'en' %}Can I use for multiple languages?{% else %}Можно ли использовать для нескольких языков?{% endif %}</dt>
+      <dd>{% if locale == 'en' %}Yes. Interface RU/EN, text language follows the source post.{% else %}Да. Интерфейс RU/EN, а язык текста подстраивается под язык исходного поста.{% endif %}</dd>
+    </div>
+    <div class="p2-faq-item">
+      <dt>{% if locale == 'en' %}How fast do new posts appear?{% else %}Как быстро появляются новые посты?{% endif %}</dt>
+      <dd>{% if locale == 'en' %}Depends on plan and profile priority. Priority profiles update more often (see plan limits).{% else %}Зависит от плана и приоритета профиля. Приоритетные обновляются чаще (см. лимиты в плане).{% endif %}</dd>
+    </div>
+    <div class="p2-faq-item">
+      <dt>{% if locale == 'en' %}Are there refunds?{% else %}Возвраты есть?{% endif %}</dt>
+      <dd>{% if locale == 'en' %}If the charge was accidental - write to us, we'll figure it out.{% else %}Если списание было случайным - напишите, решим.{% endif %}</dd>
+    </div>
+  </dl>
+</section>
+
+<!-- Bottom CTA -->
+<div class="p2-cta">
+  <h2>{% if locale == 'en' %}Ready to start?{% else %}Готовы начать?{% endif %}</h2>
+  <p>{% if locale == 'en' %}Join companies using MyVOICE's for LinkedIn visibility.{% else %}Присоединяйтесь к компаниям, использующим MyVOICE's для заметности в LinkedIn.{% endif %}</p>
+  <div class="p2-cta-btns">
+    <a href="/login" class="btn btn-primary">{% if locale == 'en' %}Start 7 days free{% else %}Начать 7 дней бесплатно{% endif %}</a>
+    <a href="mailto:sales@example.com?subject=Demo%20Request" class="btn btn-secondary">{% if locale == 'en' %}Request demo{% else %}Запросить демо/счет{% endif %}</a>
+  </div>
+  <div class="p2-cta-guarantees">
+    <span>{% if locale == 'en' %}Start in 3 minutes{% else %}Старт за 3 минуты{% endif %}</span>
+    <span>{% if locale == 'en' %}Cancel anytime{% else %}Отмена в любой момент{% endif %}</span>
+    <span>{% if locale == 'en' %}Support responds within 24h{% else %}Поддержка отвечает в течение 24 часов{% endif %}</span>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.p2-faq-item dt').forEach(function(dt) {
+  dt.addEventListener('click', function() {
+    var item = this.closest('.p2-faq-item');
+    item.classList.toggle('is-open');
+  });
+});
+document.querySelectorAll('.p2-compare-section-head').forEach(function(head) {
+  head.addEventListener('click', function() {
+    this.closest('.p2-compare-section').classList.toggle('is-open');
+  });
+});
+document.querySelectorAll('.p2-card .limits-toggle').forEach(function(tog) {
+  tog.addEventListener('click', function(e) {
+    e.preventDefault();
+    var limits = this.nextElementSibling;
+    limits.classList.toggle('is-open');
+    this.textContent = limits.classList.contains('is-open') ? '{% if locale == "en" %}Hide limits{% else %}Скрыть лимиты{% endif %} ▲' : '{% if locale == "en" %}Show limits{% else %}Показать лимиты{% endif %} ▼';
+  });
+});
+</script>
+{% endblock %}

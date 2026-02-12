@@ -16,6 +16,8 @@ from sqlalchemy.orm import selectinload
 
 from app.db import get_session
 from app.deps import get_current_user_id
+from app.models import User
+from app.plans import get_plan
 from app.models import ContactPost, Person
 from app.schemas import (
     ContactPostCreate,
@@ -87,12 +89,18 @@ async def list_posts(
     )
     if person_id is not None:
         q = q.where(ContactPost.person_id == person_id)
+    # Фильтр по периоду + лимит истории плана
+    user = await session.get(User, user_id)
+    plan = get_plan(user.plan_name if user else None)
+    history_days = plan.get("history_days", 7)
     if period == "week":
-        since = datetime.utcnow() - timedelta(days=7)
-        q = q.where(ContactPost.posted_at >= since)
+        days = min(7, history_days)
     elif period == "month":
-        since = datetime.utcnow() - timedelta(days=30)
-        q = q.where(ContactPost.posted_at >= since)
+        days = min(30, history_days)
+    else:
+        days = history_days
+    since = datetime.utcnow() - timedelta(days=days)
+    q = q.where(ContactPost.posted_at >= since)
     # Обрабатываем archived как строку для корректной работы с query параметрами
     if archived is not None:
         archived_bool = archived.lower() in ("true", "1", "yes") if isinstance(archived, str) else bool(archived)

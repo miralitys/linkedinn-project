@@ -739,9 +739,13 @@ async def get_news_merged(
 
 async def _run_scoring_for_pending_news() -> None:
     """Фоновая задача: проставить score всем новостям, у которых relevance_score ещё не задан."""
+    from app.models import User
     async with session_scope() as session:
         try:
-            setup = await get_setup_for_scoring(session, 1)  # News: используют setup user_id=1 (новости глобальные)
+            r = await session.execute(select(User.id).limit(1))
+            row = r.first()
+            user_id = row[0] if row else 1
+            setup = await get_setup_for_scoring(session, user_id)
             r = await session.execute(
                 select(NewsItem).where(NewsItem.relevance_score.is_(None)).order_by(NewsItem.id.asc())
             )

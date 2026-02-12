@@ -7,9 +7,6 @@
     <p class="page-header-desc">{{ (tr.admin_users_desc if tr else 'Список всех зарегистрированных пользователей') }}</p>
   </div>
   <div class="page-header-actions" style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
-    <button type="button" id="btn-clear-posts" class="btn secondary" aria-label="{{ (tr.admin_clear_posts if tr else 'Очистить посты') }}" title="{{ (tr.admin_clear_posts_desc if tr else 'Удалить все посты в разделе Комментарии') }}">
-      {{ (tr.admin_clear_posts if tr else 'Очистить посты') }}
-    </button>
     <button type="button" id="btn-add-user" class="btn primary" aria-label="{{ (tr.admin_add_user if tr else 'Добавить пользователя') }}">
       <span style="font-size: 1.25rem; line-height: 1; margin-right: var(--space-2);" aria-hidden="true">+</span> {{ (tr.admin_add_user if tr else 'Добавить пользователя') }}
     </button>
@@ -47,6 +44,7 @@
           <th>{{ (tr.admin_email if tr else 'Email') }}</th>
           <th>{{ (tr.admin_status if tr else 'Статус') }}</th>
           <th>{{ (tr.admin_role if tr else 'Роль') }}</th>
+          <th>{{ (tr.admin_plan if tr else 'План') }}</th>
           <th>{{ (tr.admin_subscription if tr else 'Подписка') }}</th>
           <th>{{ (tr.admin_subscription_expires if tr else 'Истекает') }}</th>
           <th>{{ (tr.admin_created_at if tr else 'Зарегистрирован') }}</th>
@@ -73,6 +71,9 @@
             {% else %}
             <span class="badge badge-muted">{{ (tr.admin_role_user if tr else 'Пользователь') }}</span>
             {% endif %}
+          </td>
+          <td>
+            <span class="badge badge-muted">{{ (user.plan_name or 'starter') }}</span>
           </td>
           <td>
             {% if user.subscription_status == 'active' %}
@@ -115,7 +116,7 @@
         {% endfor %}
         {% if not users %}
         <tr>
-          <td colspan="8" style="text-align: center; padding: var(--space-8); color: var(--text-muted);">
+          <td colspan="9" style="text-align: center; padding: var(--space-8); color: var(--text-muted);">
             {{ (tr.admin_no_users if tr else 'Пользователей пока нет') }}
           </td>
         </tr>
@@ -150,6 +151,16 @@
         <select id="add-user-role" name="role" style="width: 100%; padding: 0.6rem 0.75rem; font-size: var(--text-16); border: 1px solid var(--border); border-radius: var(--radius);">
           <option value="user">{{ (tr.admin_role_user if tr else 'Пользователь') }}</option>
           <option value="admin">{{ (tr.admin_role_admin if tr else 'Админ') }}</option>
+        </select>
+      </div>
+      <div style="margin-bottom: var(--space-4);">
+        <label for="add-user-plan" style="display: block; font-size: var(--text-14); font-weight: 500; margin-bottom: var(--space-2); color: var(--text);">
+          {{ (tr.admin_plan if tr else 'План') }}
+        </label>
+        <select id="add-user-plan" name="plan_name" style="width: 100%; padding: 0.6rem 0.75rem; font-size: var(--text-16); border: 1px solid var(--border); border-radius: var(--radius);">
+          {% for plan_key in plans %}
+          <option value="{{ plan_key }}">{{ plan_key|title }}</option>
+          {% endfor %}
         </select>
       </div>
       <div style="margin-bottom: var(--space-4);">
@@ -199,6 +210,16 @@
         <select id="edit-user-role" name="role" style="width: 100%; padding: 0.6rem 0.75rem; font-size: var(--text-16); border: 1px solid var(--border); border-radius: var(--radius);">
           <option value="user">{{ (tr.admin_role_user if tr else 'Пользователь') }}</option>
           <option value="admin">{{ (tr.admin_role_admin if tr else 'Админ') }}</option>
+        </select>
+      </div>
+      <div style="margin-bottom: var(--space-4);">
+        <label for="edit-user-plan" style="display: block; font-size: var(--text-14); font-weight: 500; margin-bottom: var(--space-2); color: var(--text);">
+          {{ (tr.admin_plan if tr else 'План') }}
+        </label>
+        <select id="edit-user-plan" name="plan_name" style="width: 100%; padding: 0.6rem 0.75rem; font-size: var(--text-16); border: 1px solid var(--border); border-radius: var(--radius);">
+          {% for plan_key in plans %}
+          <option value="{{ plan_key }}">{{ plan_key|title }}</option>
+          {% endfor %}
         </select>
       </div>
       <div style="margin-bottom: var(--space-4);">
@@ -290,26 +311,6 @@
   if (addUserBtn) {
     addUserBtn.addEventListener('click', openAddUserModal);
   }
-  const clearPostsBtn = document.getElementById('btn-clear-posts');
-  if (clearPostsBtn) {
-    clearPostsBtn.addEventListener('click', async function() {
-      if (!confirm(window.__tr && window.__tr.admin_clear_posts_confirm ? window.__tr.admin_clear_posts_confirm : 'Удалить все посты в разделе Комментарии? Это действие нельзя отменить.')) return;
-      clearPostsBtn.disabled = true;
-      try {
-        const r = await fetch('/admin/clear-posts', { method: 'POST', credentials: 'include' });
-        const data = await r.json().catch(function() { return {}; });
-        if (r.ok && data.ok) {
-          if (typeof window.toast === 'function') window.toast(data.message || (window.__tr && window.__tr.admin_posts_cleared) || 'Посты очищены', 'success');
-        } else {
-          if (typeof window.toast === 'function') window.toast(data.detail || (window.__tr && window.__tr.common_error) || 'Ошибка', 'error');
-        }
-      } catch (e) {
-        if (typeof window.toast === 'function') window.toast((window.__tr && window.__tr.parse_error_network) || 'Ошибка сети', 'error');
-      } finally {
-        clearPostsBtn.disabled = false;
-      }
-    });
-  }
   if (addUserCancel) {
     addUserCancel.addEventListener('click', closeAddUserModal);
   }
@@ -332,6 +333,7 @@
       const email = document.getElementById('add-user-email').value.trim();
       const password = document.getElementById('add-user-password').value;
       const role = document.getElementById('add-user-role').value;
+      const plan_name = document.getElementById('add-user-plan').value;
       const subscription_status = document.getElementById('add-user-subscription').value;
 
       if (!email || !password) {
@@ -354,7 +356,7 @@
         const response = await fetch('/admin/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, role, subscription_status })
+          body: JSON.stringify({ email, password, role, plan_name, subscription_status })
         });
 
         const data = await response.json();
@@ -427,6 +429,7 @@
     document.getElementById('edit-user-email').value = u.email || '';
     document.getElementById('edit-user-password').value = '';
     document.getElementById('edit-user-role').value = u.role || 'user';
+    document.getElementById('edit-user-plan').value = u.plan_name || 'starter';
     document.getElementById('edit-user-subscription').value = u.subscription_status || 'free';
     document.getElementById('edit-user-expires').value = toIsoDate(u.subscription_expires_at);
     editUserError.style.display = 'none';
@@ -467,6 +470,7 @@
       const email = document.getElementById('edit-user-email').value.trim();
       const password = document.getElementById('edit-user-password').value;
       const role = document.getElementById('edit-user-role').value;
+      const plan_name = document.getElementById('edit-user-plan').value;
       const subscription_status = document.getElementById('edit-user-subscription').value;
       const subscription_expires_at = document.getElementById('edit-user-expires').value;
       if (!email || email.indexOf('@') === -1) {
@@ -483,7 +487,7 @@
       submitBtn.disabled = true;
       submitBtn.textContent = tr.admin_saving || 'Сохранение...';
       try {
-        const body = { email, role, subscription_status };
+        const body = { email, role, plan_name, subscription_status };
         if (password) body.password = password;
         body.subscription_expires_at = subscription_expires_at || '';
         const res = await fetch('/admin/users/' + userId, {

@@ -6,14 +6,17 @@
     <h1>{{ tr.people_title }}</h1>
     <p class="page-header-desc">{{ tr.people_lead }}</p>
   </div>
-  <div class="page-header-actions">
+  <div class="page-header-actions" id="people-add-actions">
     <button type="button" id="btn-toggle-add" class="btn primary btn-add-contact" aria-expanded="false" aria-label="{{ tr.people_add_contact }}" title="{{ tr.people_add_contact }}">
       <span class="btn-add-icon" aria-hidden="true">+</span> {{ tr.people_add_contact }}
     </button>
   </div>
 </header>
 <div class="card people-card">
-  <h2 class="section-title">{{ tr.people_list_title }}</h2>
+  <h2 class="section-title section-title-with-limit">
+    {{ tr.people_list_title }}
+    <span id="people-limit-badge" class="people-limit-badge" aria-hidden="true"></span>
+  </h2>
   <div class="people-toolbar">
     <div class="people-search-wrap">
       <input type="text" id="people-search" class="people-search-input" placeholder="{{ tr.people_search_placeholder }}" autocomplete="off" aria-label="{{ tr.people_search_label }}">
@@ -131,6 +134,9 @@
 </div>
 <style>
   .section-title { margin: 0 0 var(--space-3); font-size: var(--text-16); font-weight: 600; color: var(--text); }
+  .section-title-with-limit { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+  .people-limit-badge { font-size: var(--text-12); font-weight: 500; color: var(--text-muted); }
+  .people-limit-badge.at-limit { color: var(--warning, #f59e0b); }
   .people-card { padding: var(--space-6); border-radius: var(--radius); box-shadow: var(--elevation-1); border: 1px solid var(--border); }
   .people-card .btn-add-contact { margin: 0; }
   .people-card .btn-add-contact:focus-visible { outline: none; box-shadow: var(--focus-ring); }
@@ -345,8 +351,34 @@
   });
 
   let companiesList = [];
-  fetch('/companies').then(r => r.json()).then(companies => {
+  let planUsage = {};
+  function updatePeopleLimitBadge() {
+    const badge = document.getElementById('people-limit-badge');
+    const addActions = document.getElementById('people-add-actions');
+    const emptyCta = document.getElementById('people-empty-cta');
+    if (!badge) return;
+    const limit = planUsage.people_limit;
+    if (limit == null) {
+      badge.textContent = ''; badge.hidden = true;
+      if (addActions) addActions.style.display = '';
+      if (emptyCta) emptyCta.style.display = '';
+      return;
+    }
+    const fmt = (window.__tr && window.__tr.setup_limit_of) || '{0} of {1}';
+    const count = lastPeopleList.length;
+    badge.textContent = fmt.replace('{0}', count).replace('{1}', limit);
+    badge.classList.toggle('at-limit', count >= limit);
+    badge.hidden = false;
+    const atLimit = count >= limit;
+    if (addActions) addActions.style.display = atLimit ? 'none' : '';
+    if (emptyCta) emptyCta.style.display = atLimit ? 'none' : '';
+  }
+  Promise.all([
+    fetch('/companies', { credentials: 'include' }).then(r => r.json()).catch(() => []),
+    fetch('/plans/current', { credentials: 'include' }).then(r => r.ok ? r.json() : {}).catch(() => ({}))
+  ]).then(([companies, plansData]) => {
     companiesList = companies || [];
+    planUsage = (plansData && plansData.usage) ? plansData.usage : {};
     loadPeople();
   }).catch(() => { loadPeople(); });
 
@@ -494,6 +526,7 @@
       (companiesList || []).forEach(c => { companyMap[c.id] = c.name || ''; });
       lastCompanyMap = companyMap;
       lastPeopleList = people || [];
+      updatePeopleLimitBadge();
       if (!lastPeopleList.length) {
         if (peopleEmpty) peopleEmpty.style.display = 'block';
         if (peopleSearchEmpty) peopleSearchEmpty.style.display = 'none';

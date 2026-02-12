@@ -14,10 +14,13 @@
         <h2 class="setup-section-title">{{ tr.setup_authors }}</h2>
       </div>
       <div id="saved-authors-section" class="setup-list-block">
-        <h3 class="saved-section-title">{{ tr.setup_saved_authors }}</h3>
+        <h3 class="saved-section-title saved-section-title-with-limit">
+          {{ tr.setup_saved_authors }}
+          <span id="authors-limit-badge" class="setup-limit-badge" aria-hidden="true"></span>
+        </h3>
         <div id="saved-authors-cards" class="saved-cards"><p class="saved-empty-msg">{{ tr.setup_no_authors }}</p></div>
       </div>
-      <div class="setup-add-toolbar">
+      <div class="setup-add-toolbar" id="authors-add-toolbar">
         <button type="button" id="add-author" class="btn primary add-block-btn" aria-expanded="false"><span class="btn-add-icon">+</span> {{ tr.setup_add_author }}</button>
       </div>
       <div id="authors-form-wrap" class="setup-form-wrap" hidden>
@@ -124,7 +127,10 @@
       </div>
       <p class="setup-section-desc">{{ tr.setup_subreddits_desc }}</p>
       <div id="saved-subreddits-section" class="setup-list-block">
-        <h3 class="saved-section-title">{{ tr.setup_saved_subreddits }}</h3>
+        <h3 class="saved-section-title saved-section-title-with-limit">
+          {{ tr.setup_saved_subreddits }}
+          <span id="subreddits-limit-badge" class="setup-limit-badge" aria-hidden="true"></span>
+        </h3>
         <div id="saved-subreddits-list" class="saved-subreddits-list"><p class="saved-empty-msg">{{ tr.setup_no_subreddits }}</p></div>
       </div>
       <div class="setup-add-toolbar" id="subreddit-add-toolbar">
@@ -251,6 +257,9 @@
 
   .setup-list-block { margin-bottom: var(--space-3); }
   .saved-section-title { margin: 0 0 var(--space-2); font-size: var(--text-12); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
+  .saved-section-title-with-limit { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+  .setup-limit-badge { font-size: var(--text-12); font-weight: 500; color: var(--text-muted); }
+  .setup-limit-badge.at-limit { color: var(--warning, #f59e0b); }
   .saved-cards { display: flex; flex-direction: column; gap: var(--space-2); min-height: 2rem; }
   .saved-empty-msg { margin: 0; padding: var(--space-4); font-size: var(--text-14); color: var(--text-muted); text-align: center; background: var(--bg); border-radius: var(--radius-sm); border: 1px dashed var(--border); }
   .setup-section-desc { margin: 0 0 var(--space-3); font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; }
@@ -512,6 +521,8 @@
   const tr = window.__tr || {};
   let savedAuthorsList = [];
   let editingAuthorIndex = null;
+  let subredditNamesList = [];
+  let planUsage = {};
   let savedProductsList = [];
   let editingProductIndex = null;
   let savedIcpList = [];
@@ -761,6 +772,7 @@
           if (editingAuthorIndex === i) { editingAuthorIndex = null; setAuthorsFormVisible(false); }
           else if (editingAuthorIndex > i) editingAuthorIndex--;
           renderSavedAuthorsCards();
+          updateSetupLimitBadges();
           if (savedAuthorsList.length === 0) setAuthorsToForm([{ full_name: '', linkedin_url: '', role: '', history: '' }]);
         }
       });
@@ -1097,6 +1109,7 @@
           setAuthorsFormVisible(false);
           renderSavedAuthorsCards();
           setAuthorsToForm([{ full_name: '', linkedin_url: '', role: '', history: '' }]);
+          updateSetupLimitBadges();
         }
       } catch (err) {
         if (msgEl) { msgEl.textContent = (tr.parse_error_prefix || 'Error: ') + (err.message || (tr.parse_error_network || 'network')); msgEl.style.color = 'var(--danger)'; setTimeout(function() { if (msgEl) msgEl.textContent = ''; }, 4000); }
@@ -1176,6 +1189,7 @@
     return div.innerHTML;
   }
   function renderSavedSubredditsList(names) {
+    subredditNamesList = names || [];
     var container = document.getElementById('saved-subreddits-list');
     if (!container) return;
     if (!names || names.length === 0) {
@@ -1195,7 +1209,7 @@
         if (!name) return;
         fetch('/setup/subreddits/' + encodeURIComponent(name), { method: 'DELETE', credentials: 'include' })
           .then(function(r) {
-            if (r.ok || r.status === 204) loadSavedSubreddits();
+            if (r.ok || r.status === 204) { loadSavedSubreddits(); updateSetupLimitBadges(); }
             else if (typeof window.toast === 'function') window.toast(tr.admin_error_delete || 'Failed to delete', 'error');
           })
           .catch(function() { if (typeof window.toast === 'function') window.toast(tr.news_error_connect || 'Failed to connect', 'error'); });
@@ -1205,8 +1219,32 @@
   function loadSavedSubreddits() {
     fetch('/setup/subreddits', { credentials: 'include' })
       .then(function(r) { return r.ok ? r.json() : []; })
-      .then(function(names) { renderSavedSubredditsList(names || []); })
-      .catch(function() { renderSavedSubredditsList([]); });
+      .then(function(names) { renderSavedSubredditsList(names || []); updateSetupLimitBadges(); })
+      .catch(function() { renderSavedSubredditsList([]); updateSetupLimitBadges(); });
+  }
+
+  function updateSetupLimitBadges() {
+    var fmt = tr.setup_limit_of || '{0} of {1}';
+    var authorsBadge = document.getElementById('authors-limit-badge');
+    var subredditsBadge = document.getElementById('subreddits-limit-badge');
+    var authorsToolbar = document.getElementById('authors-add-toolbar');
+    var subredditsToolbar = document.getElementById('subreddit-add-toolbar');
+    if (planUsage.personas_limit != null && authorsBadge) {
+      var a = savedAuthorsList.length;
+      var limit = planUsage.personas_limit;
+      authorsBadge.textContent = fmt.replace('{0}', a).replace('{1}', limit);
+      authorsBadge.classList.toggle('at-limit', a >= limit);
+      authorsBadge.hidden = false;
+      if (authorsToolbar) authorsToolbar.style.display = a >= limit ? 'none' : '';
+    } else if (authorsBadge) { authorsBadge.textContent = ''; authorsBadge.hidden = true; if (authorsToolbar) authorsToolbar.style.display = ''; }
+    if (planUsage.reddit_sources_limit != null && subredditsBadge) {
+      var s = subredditNamesList.length;
+      var limit = planUsage.reddit_sources_limit;
+      subredditsBadge.textContent = fmt.replace('{0}', s).replace('{1}', limit);
+      subredditsBadge.classList.toggle('at-limit', s >= limit);
+      subredditsBadge.hidden = false;
+      if (subredditsToolbar) subredditsToolbar.style.display = s >= limit ? 'none' : '';
+    } else if (subredditsBadge) { subredditsBadge.textContent = ''; subredditsBadge.hidden = true; if (subredditsToolbar) subredditsToolbar.style.display = ''; }
   }
 
   // Загрузка списков из того же API, что и страница Комментарии (GET /setup/draft)
@@ -1215,6 +1253,13 @@
     renderSavedProductsCards();
     renderSavedIcpCards();
     loadSavedSubreddits();
+    fetch('/plans/current', { credentials: 'include' })
+      .then(function(r) { return r.ok ? r.json() : {}; })
+      .then(function(data) {
+        planUsage = (data && data.usage) ? data.usage : {};
+        updateSetupLimitBadges();
+      })
+      .catch(function() { planUsage = {}; });
     fetch('/setup/draft', { credentials: 'include' })
       .then(function(r) {
         if (!r.ok) {
@@ -1240,6 +1285,7 @@
         renderSavedAuthorsCards();
         renderSavedProductsCards();
         renderSavedIcpCards();
+        updateSetupLimitBadges();
       })
       .catch(function() {
         savedAuthorsList = [];
@@ -1249,6 +1295,7 @@
         renderSavedAuthorsCards();
         renderSavedProductsCards();
         renderSavedIcpCards();
+        updateSetupLimitBadges();
       });
   }
   function attachSubredditListeners() {

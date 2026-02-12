@@ -123,6 +123,7 @@ class User(Base):
     approval_status: Mapped[str] = mapped_column(String(16), default=UserApprovalStatus.APPROVED.value, nullable=False)
     subscription_status: Mapped[str] = mapped_column(String(32), default=SubscriptionStatus.FREE.value, nullable=False)
     subscription_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    plan_name: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)  # starter, pro, enterprise, tester, admin
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_login_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
@@ -361,6 +362,7 @@ class Draft(Base):
     __tablename__ = "drafts"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"), nullable=True)  # владелец (multi-tenant)
     type: Mapped[str] = mapped_column(String(32), nullable=False)  # DraftType
     content: Mapped[str] = mapped_column(Text, nullable=False)
     source_agent: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
@@ -396,3 +398,16 @@ class LinkedInDailyMetric(Base):
     metric_type: Mapped[str] = mapped_column(String(32), nullable=False)
     count: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class Usage(Base):
+    """Учёт генераций (комментарии/посты) по пользователю и месяцу."""
+    __tablename__ = "usage"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    year_month: Mapped[str] = mapped_column(String(7), nullable=False)  # YYYY-MM
+    agent_name: Mapped[str] = mapped_column(String(64), nullable=False)  # comment, post, etc.
+    count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

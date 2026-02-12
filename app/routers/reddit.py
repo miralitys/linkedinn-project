@@ -12,7 +12,10 @@ from sqlalchemy.orm import selectinload
 
 from app.db import get_session, session_scope
 from app.deps import get_current_user_id
-from app.models import KnowledgeBase, Person, RedditPost, SavedSubreddit
+from app.models import KnowledgeBase, Person, RedditPost, SavedSubreddit, User
+from app.plans import get_plan
+from app.plans import get_plan
+from app.services.limits import get_reddit_sources_count, get_sources_count
 from app.routers.setup import _kb_key, get_setup_for_scoring
 from app.schemas import RedditPostCreate, RedditPostRead, RedditPostUpdate, SavedSubredditAdd
 from app.services.reddit_feed import fetch_subreddit_posts
@@ -130,12 +133,18 @@ async def list_reddit_posts(
                 q = q.where(RedditPost.subreddit.in_(subs))
         if status_filter and status_filter in ("new", "in_progress", "done", "hidden"):
             q = q.where(RedditPost.status == status_filter)
+        # Фильтр по периоду + лимит истории плана
+        user = await session.get(User, user_id)
+        plan = get_plan(user.plan_name if user else None)
+        history_days = plan.get("history_days", 7)
         if period == "week":
-            since = datetime.utcnow() - timedelta(days=7)
-            q = q.where(RedditPost.posted_at >= since)
+            days = min(7, history_days)
         elif period == "month":
-            since = datetime.utcnow() - timedelta(days=30)
-            q = q.where(RedditPost.posted_at >= since)
+            days = min(30, history_days)
+        else:
+            days = history_days
+        since = datetime.utcnow() - timedelta(days=days)
+        q = q.where(RedditPost.posted_at >= since)
         order = RedditPost.posted_at.desc() if sort == "desc" else RedditPost.posted_at.asc()
         q = q.order_by(order)
         r = await session.execute(q)
@@ -314,6 +323,23 @@ async def add_saved_subreddit(
     )
     if r.scalar_one_or_none() is not None:
         return {"ok": True, "name": sub, "message": "Уже в списке"}
+    # Лимит Reddit-источников (Starter: reddit_sources, Pro/Enterprise: sources)
+    user = await session.get(User, user_id)
+    plan = get_plan(user.plan_name if user else None)
+    if plan.get("reddit_sources") is not None:
+        reddit_count = await get_reddit_sources_count(session, user_id)
+        if reddit_count >= plan.get("reddit_sources", 3):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Limit reached: {reddit_count}/{plan.get('reddit_sources')} Reddit sources. Upgrade your plan.",
+            )
+    else:
+        sources_count = await get_sources_count(session, user_id)
+        if sources_count >= plan.get("sources", 10):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Limit reached: {sources_count}/{plan.get('sources')} sources. Upgrade your plan.",
+            )
     session.add(SavedSubreddit(user_id=user_id, name=sub))
     await session.commit()
     return {"ok": True, "name": sub}

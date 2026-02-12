@@ -109,19 +109,17 @@
             <label for="view-reddit-goal">{{ tr.reddit_goal }}</label>
             <select id="view-reddit-goal" aria-label="{{ tr.reddit_goal }}"><option value="network">Network</option><option value="native_ads">{{ tr.reddit_goal_native }}</option><option value="full_ads">{{ tr.reddit_goal_full }}</option></select>
           </div>
-          <div class="view-post-rewrite-field">
+          <div class="view-post-rewrite-field view-post-rewrite-field-length">
             <label for="view-reddit-length">{{ tr.reddit_length }}</label>
             <select id="view-reddit-length" aria-label="{{ tr.reddit_length }}"><option value="short">{{ tr.reddit_length_short }}</option><option value="medium" selected>{{ tr.reddit_length_medium }}</option><option value="long">{{ tr.reddit_length_long }}</option></select>
           </div>
           <button type="button" id="view-reddit-rewrite-btn" class="btn primary view-post-rewrite-btn" aria-label="{{ tr.reddit_rewrite_btn }}">{{ tr.reddit_rewrite_btn }}</button>
+          <button type="button" id="view-reddit-copy-btn" class="btn secondary btn-sm view-post-copy-btn view-post-rewrite-btn">{{ tr.reddit_copy }}</button>
         </div>
         <div class="view-post-rewrite-output">
           <div class="view-post-rewrite-output-header">
             <span class="view-post-rewrite-result-label">{{ tr.reddit_result }}</span>
-            <div style="display: flex; align-items: center; gap: var(--space-2);">
-              <span id="view-reddit-char-count" class="view-post-char-count" style="font-size: var(--text-12); color: var(--text-muted);"></span>
-              <button type="button" id="view-reddit-copy-btn" class="btn secondary btn-sm view-post-copy-btn">{{ tr.reddit_copy }}</button>
-            </div>
+            <span id="view-reddit-char-count" class="view-post-char-count" style="font-size: var(--text-12); color: var(--text-muted);"></span>
           </div>
           <textarea id="view-reddit-write-textarea" rows="4" placeholder="{{ tr.reddit_result_placeholder }}"></textarea>
         </div>
@@ -239,13 +237,16 @@
   .view-post-rewrite-title { margin: 0 0 var(--space-1); font-size: var(--text-14); font-weight: 600; color: var(--text); }
   .view-post-rewrite-desc { margin: 0; font-size: var(--text-12); color: var(--text-muted); line-height: 1.45; }
   .view-post-rewrite-form { display: flex; flex-direction: column; gap: var(--space-2); }
-  .view-post-rewrite-fields { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-2); }
-  .view-post-rewrite-field { flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 2px; }
+  .view-post-rewrite-fields { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+  .view-post-rewrite-field { flex: 1 1 0; min-width: 95px; max-width: 170px; display: flex; flex-direction: column; gap: 2px; }
+  .view-post-rewrite-field-length { max-width: 210px; }
   .view-post-rewrite-field label { font-size: var(--text-12); font-weight: 500; color: var(--text-muted); margin: 0; }
-  .view-post-rewrite-field select { height: 2.25rem; padding: 0 var(--space-2); font-size: var(--text-14); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); box-sizing: border-box; transition: border-color var(--motion-fast), box-shadow var(--motion-fast); }
+  .view-post-rewrite-field select { height: 2.25rem; padding: 0 var(--space-2); font-size: var(--text-14); border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); box-sizing: border-box; max-width: 100%; transition: border-color var(--motion-fast), box-shadow var(--motion-fast); }
   .view-post-rewrite-field select:hover { border-color: var(--text-muted); }
   .view-post-rewrite-field select:focus { outline: none; border-color: var(--primary); box-shadow: var(--focus-ring); }
-  .view-post-rewrite-btn { height: 2.25rem; padding: 0 var(--space-4); font-weight: 600; }
+  .view-post-rewrite-btn { height: 2.25rem; padding: 0 var(--space-4); font-weight: 600; flex-shrink: 0; }
+  .view-post-rewrite-btn.view-post-copy-btn { height: 2.25rem; padding: 0 var(--space-3); }
+  #view-reddit-rewrite-btn { margin-left: auto; }
   .view-post-rewrite-output { display: flex; flex-direction: column; gap: var(--space-1); }
   .view-post-rewrite-output-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
   .view-post-rewrite-result-label { font-size: var(--text-12); font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
@@ -807,6 +808,22 @@
     const status = isValid ? 'valid' : (charCount < range.min ? 'too-short' : 'too-long');
     countEl.textContent = charCount + ' / ' + range.min + '–' + range.max + ' ' + (tr.reddit_chars || 'chars');
     countEl.className = 'view-post-char-count view-post-char-count-' + status;
+    updateRedditRewriteButtonsState();
+  }
+  function updateRedditRewriteButtonsState() {
+    const ta = document.getElementById('view-reddit-write-textarea');
+    const copyBtn = document.getElementById('view-reddit-copy-btn');
+    const rewriteBtn = document.getElementById('view-reddit-rewrite-btn');
+    if (!ta || !copyBtn || !rewriteBtn) return;
+    const text = (ta.value || '').trim();
+    const hasContent = text.length > 0 && text !== (tr.reddit_generating || 'Generating…');
+    if (hasContent) {
+      copyBtn.classList.remove('secondary'); copyBtn.classList.add('primary');
+      rewriteBtn.classList.remove('primary'); rewriteBtn.classList.add('secondary');
+    } else {
+      copyBtn.classList.remove('primary'); copyBtn.classList.add('secondary');
+      rewriteBtn.classList.remove('secondary'); rewriteBtn.classList.add('primary');
+    }
   }
 
   document.getElementById('view-reddit-rewrite-btn').addEventListener('click', async () => {

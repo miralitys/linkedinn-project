@@ -9,7 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
 from app.deps import get_current_user_id
-from app.models import KnowledgeBase, LeadMagnet, Offer, SalesAvatar, Segment
+from app.models import KnowledgeBase, LeadMagnet, Offer, SalesAvatar, Segment, User
+from app.plans import get_plan
+from app.services.limits import get_reddit_sources_count, get_sources_count
 from app.schemas import (
     LeadMagnetRead,
     OfferRead,
@@ -299,6 +301,23 @@ async def add_setup_subreddit(
     names = await _get_subreddits_list(session, user_id)
     if raw in names:
         return {"ok": True, "name": raw, "message": "Уже в списке"}
+    # Лимит Reddit-источников (Starter: reddit_sources, Pro/Enterprise: sources)
+    user = await session.get(User, user_id)
+    plan = get_plan(user.plan_name if user else None)
+    if plan.get("reddit_sources") is not None:
+        reddit_count = await get_reddit_sources_count(session, user_id)
+        if reddit_count >= plan.get("reddit_sources", 3):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Limit reached: {reddit_count}/{plan.get('reddit_sources')} Reddit sources. Upgrade your plan.",
+            )
+    else:
+        sources_count = await get_sources_count(session, user_id)
+        if sources_count >= plan.get("sources", 10):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Limit reached: {sources_count}/{plan.get('sources')} sources. Upgrade your plan.",
+            )
     names.append(raw)
     await _save_subreddits_list(session, user_id, sorted(set(names)))
     return {"ok": True, "name": raw}
@@ -331,6 +350,17 @@ async def save_setup_section(
     try:
         if body.section not in SETUP_KEYS:
             return {"ok": False, "error": "Unknown section"}
+
+        # Лимит персон (авторов)
+        if body.section == "authors" and body.value is not None and isinstance(body.value, list):
+            user = await session.get(User, user_id)
+            plan = get_plan(user.plan_name if user else None)
+            personas_limit = plan.get("personas")
+            if personas_limit is not None and len(body.value) > personas_limit:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Limit reached: {len(body.value)}/{personas_limit} personas. Upgrade your plan.",
+                )
         base_key = SETUP_KEYS[body.section]
         key = _kb_key(base_key, user_id)
         if body.section == "authors":

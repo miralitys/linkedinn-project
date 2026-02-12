@@ -97,14 +97,18 @@ async def init_db() -> None:
                 await conn.execute(text("ALTER TABLE users ADD COLUMN approval_status VARCHAR(16) DEFAULT 'approved'"))
             except Exception:
                 pass
-            # Multi-tenant: user_id для companies, people, segments, reddit_posts, saved_subreddits, sales_avatar, offers, lead_magnets
-            for table in ("companies", "people", "segments", "reddit_posts", "saved_subreddits", "sales_avatar", "offers", "lead_magnets"):
+            try:
+                await conn.execute(text("ALTER TABLE users ADD COLUMN plan_name VARCHAR(32)"))
+            except Exception:
+                pass
+            # Multi-tenant: user_id для companies, people, segments, reddit_posts, saved_subreddits, sales_avatar, offers, lead_magnets, drafts
+            for table in ("companies", "people", "segments", "reddit_posts", "saved_subreddits", "sales_avatar", "offers", "lead_magnets", "drafts"):
                 try:
                     await conn.execute(text(f"ALTER TABLE {table} ADD COLUMN user_id INTEGER"))
                 except Exception:
                     pass
             # Миграция: назначить user_id=1 существующим записям
-            for table in ("companies", "people", "segments", "reddit_posts", "saved_subreddits", "sales_avatar", "offers", "lead_magnets"):
+            for table in ("companies", "people", "segments", "reddit_posts", "saved_subreddits", "sales_avatar", "offers", "lead_magnets", "drafts"):
                 try:
                     await conn.execute(text(f"UPDATE {table} SET user_id = 1 WHERE user_id IS NULL"))
                 except Exception:
@@ -128,6 +132,7 @@ async def init_db() -> None:
                 "ALTER TABLE reddit_posts ADD COLUMN IF NOT EXISTS relevance_reason VARCHAR(256)",
                 "ALTER TABLE reddit_posts ADD COLUMN IF NOT EXISTS status VARCHAR(32) DEFAULT 'new'",
                 "ALTER TABLE users ADD COLUMN IF NOT EXISTS approval_status VARCHAR(16) DEFAULT 'approved'",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_name VARCHAR(32)",
                 "ALTER TABLE companies ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
                 "ALTER TABLE people ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
                 "ALTER TABLE segments ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
@@ -136,13 +141,14 @@ async def init_db() -> None:
                 "ALTER TABLE sales_avatar ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
                 "ALTER TABLE offers ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
                 "ALTER TABLE lead_magnets ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
+                "ALTER TABLE drafts ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
             ):
                 try:
                     await conn.execute(text(sql))
                 except Exception:
                     pass
             # Миграция: назначить user_id=1 существующим записям
-            for table in ("companies", "people", "segments", "reddit_posts", "saved_subreddits", "sales_avatar", "offers", "lead_magnets"):
+            for table in ("companies", "people", "segments", "reddit_posts", "saved_subreddits", "sales_avatar", "offers", "lead_magnets", "drafts"):
                 try:
                     await conn.execute(text(f"UPDATE {table} SET user_id = 1 WHERE user_id IS NULL"))
                 except Exception:

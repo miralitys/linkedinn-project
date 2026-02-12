@@ -7,12 +7,13 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from sqlalchemy import and_, delete, select, func
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.db import get_session
-from app.models import ContactPost, User, UserRole, SubscriptionStatus, UserApprovalStatus
+from app.models import User, UserRole, SubscriptionStatus, UserApprovalStatus
+from app.plans import PLANS
 from app.translations import get_locale_from_cookie, get_tr
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -55,6 +56,7 @@ async def admin_users(
             "id": u.id,
             "email": u.email,
             "role": u.role,
+            "plan_name": u.plan_name or "starter",
             "subscription_status": u.subscription_status,
             "subscription_expires_at": u.subscription_expires_at.isoformat()[:10] if u.subscription_expires_at else None,
             "approval_status": getattr(u, "approval_status", UserApprovalStatus.APPROVED.value),
@@ -75,6 +77,7 @@ async def admin_users(
         {
             "users": users,
             "users_serialized": users_serialized,
+            "plans": list(PLANS.keys()),
             "total_users": total_users,
             "admin_count": admin_count,
             "active_subscriptions": active_subscriptions,
@@ -87,25 +90,11 @@ async def admin_users(
     )
 
 
-@router.post("/clear-posts", response_class=JSONResponse)
-async def admin_clear_posts(
-    request: Request,
-    session: AsyncSession = Depends(get_session),
-):
-    """Очистить все посты в разделе Комментарии (только для админов)."""
-    if not _is_admin(request):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    count_r = await session.execute(select(func.count()).select_from(ContactPost))
-    count = count_r.scalar() or 0
-    await session.execute(delete(ContactPost))
-    await session.commit()
-    return JSONResponse({"ok": True, "deleted": count, "message": f"Удалено постов: {count}."})
-
-
 class UserCreateRequest(BaseModel):
     email: str
     password: str
     role: str = UserRole.USER.value
+    plan_name: str = "starter"
     subscription_status: str = SubscriptionStatus.FREE.value
 
 
@@ -113,6 +102,7 @@ class UserUpdateRequest(BaseModel):
     email: Optional[str] = None
     password: Optional[str] = None
     role: Optional[str] = None
+    plan_name: Optional[str] = None
     subscription_status: Optional[str] = None
     subscription_expires_at: Optional[str] = None
 
@@ -143,6 +133,9 @@ async def create_user(
     
     if body.role not in [UserRole.USER.value, UserRole.ADMIN.value]:
         raise HTTPException(status_code=400, detail="Invalid role")
+
+    if body.plan_name not in PLANS:
+        raise HTTPException(status_code=400, detail="Invalid plan name")
     
     if body.subscription_status not in [
         SubscriptionStatus.FREE.value,
@@ -164,6 +157,7 @@ async def create_user(
         email=email_lower,
         password_hash=_hash_password(body.password),
         role=body.role,
+        plan_name=body.plan_name,
         subscription_status=body.subscription_status,
     )
     session.add(user)
@@ -174,6 +168,7 @@ async def create_user(
         "id": user.id,
         "email": user.email,
         "role": user.role,
+        "plan_name": user.plan_name,
         "subscription_status": user.subscription_status,
         "created_at": user.created_at.isoformat() if user.created_at else None,
     }
@@ -209,6 +204,9 @@ async def update_user(
     if body.role is not None and body.role in [UserRole.USER.value, UserRole.ADMIN.value]:
         user.role = body.role
 
+    if body.plan_name is not None and body.plan_name in PLANS:
+        user.plan_name = body.plan_name
+
     if body.subscription_status is not None and body.subscription_status in [
         SubscriptionStatus.FREE.value,
         SubscriptionStatus.TRIAL.value,
@@ -237,6 +235,7 @@ async def update_user(
         "id": user.id,
         "email": user.email,
         "role": user.role,
+        "plan_name": user.plan_name,
         "subscription_status": user.subscription_status,
         "subscription_expires_at": user.subscription_expires_at.isoformat() if user.subscription_expires_at else None,
         "created_at": user.created_at.isoformat() if user.created_at else None,

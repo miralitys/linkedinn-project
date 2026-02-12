@@ -5,7 +5,7 @@ from starlette.responses import RedirectResponse, JSONResponse
 
 from app.config import settings
 
-PUBLIC_PATHS = {"/", "/login", "/register", "/logout", "/en", "/en/", "/set-locale"}
+PUBLIC_PATHS = {"/", "/login", "/register", "/logout", "/en", "/en/", "/set-locale", "/pricing", "/pricing2", "/en/pricing", "/en/pricing2", "/ui/pricing2"}
 
 
 def _auth_protection_enabled() -> bool:
@@ -22,7 +22,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if not _auth_protection_enabled():
             return await call_next(request)
         path = request.url.path.rstrip("/") or "/"
-        if path in PUBLIC_PATHS or path.startswith("/static") or path.startswith("/register"):
+        if path in PUBLIC_PATHS or path.startswith("/static") or path.startswith("/register") or path.startswith("/pricing") or path.startswith("/en/pricing"):
             return await call_next(request)
         # Проверяем доступность session более надежно
         session = getattr(request, "session", None)

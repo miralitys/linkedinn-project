@@ -7,7 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
 from app.deps import get_current_user_id
-from app.models import Company, ContactPost, Person, PersonStatus, Segment, Touch
+from app.models import Company, ContactPost, Person, PersonStatus, Segment, Touch, User
+from app.plans import get_plan
+from app.services.limits import get_priority_profiles_count, get_rss_sources_count
 from app.schemas import PersonCreate, PersonRead, PersonStatusUpdate, PersonUpdate
 from app.state_machine import can_transition
 
@@ -42,6 +44,35 @@ async def create_person(
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
 ):
+    # Проверка лимита людей
+    user = await session.get(User, user_id)
+    plan = get_plan(user.plan_name if user else None)
+    r = await session.execute(select(func.count()).select_from(Person).where(Person.user_id == user_id))
+    people_count = r.scalar() or 0
+    if people_count >= plan.get("people", 25):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Limit reached: {people_count}/{plan.get('people')} people. Upgrade your plan.",
+        )
+
+    # Лимит приоритетных профилей (watchlist / is_kol)
+    if plan.get("priority_profiles") is not None and getattr(body, "is_kol", False):
+        kol_count = await get_priority_profiles_count(session, user_id)
+        if kol_count >= plan.get("priority_profiles", 3):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Limit reached: {kol_count}/{plan.get('priority_profiles')} priority profiles. Upgrade your plan.",
+            )
+
+    # Лимит RSS-источников (feed_url) для Starter
+    if plan.get("rss_sources") is not None and (body.feed_url or "").strip():
+        rss_count = await get_rss_sources_count(session, user_id)
+        if rss_count >= plan.get("rss_sources", 2):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Limit reached: {rss_count}/{plan.get('rss_sources')} RSS sources. Upgrade your plan.",
+            )
+
     data = body.model_dump()
     if data.get("company_id"):
         c = await session.get(Company, data["company_id"])
@@ -85,7 +116,32 @@ async def update_person(
         raise HTTPException(404, "Person not found")
     if p.user_id != user_id:
         raise HTTPException(404, "Person not found")
-    for k, v in body.model_dump(exclude_unset=True).items():
+    user = await session.get(User, user_id)
+    plan = get_plan(user.plan_name if user else None)
+    updates = body.model_dump(exclude_unset=True)
+    # Лимит приоритетных профилей: при включении is_kol контакту, у которого его не было
+    if plan.get("priority_profiles") is not None and "is_kol" in updates and updates.get("is_kol"):
+        was_kol = getattr(p, "is_kol", False)
+        if not was_kol:
+            kol_count = await get_priority_profiles_count(session, user_id)
+            if kol_count >= plan.get("priority_profiles", 3):
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Limit reached: {kol_count}/{plan.get('priority_profiles')} priority profiles. Upgrade your plan.",
+                )
+
+    # Лимит RSS: при добавлении feed_url контакту, у которого его не было
+    if plan.get("rss_sources") is not None and "feed_url" in updates:
+        new_feed = (updates.get("feed_url") or "").strip()
+        had_feed = (getattr(p, "feed_url") or "").strip()
+        if new_feed and not had_feed:
+            rss_count = await get_rss_sources_count(session, user_id)
+            if rss_count >= plan.get("rss_sources", 2):
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Limit reached: {rss_count}/{plan.get('rss_sources')} RSS sources. Upgrade your plan.",
+                )
+    for k, v in updates.items():
         setattr(p, k, v)
     await session.commit()
     await session.refresh(p)

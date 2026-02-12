@@ -19,6 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.db import get_session
 from app.models import LinkedInDailyMetric, LinkedInOAuth
+from app.services.crypto import decrypt_token, encrypt_token
 
 router = APIRouter(prefix="/linkedin", tags=["linkedin"])
 
@@ -45,12 +46,13 @@ async def _get_valid_token(session: AsyncSession) -> Optional[str]:
     if row.expires_at and (row.expires_at - now).total_seconds() < 300:
         if not row.refresh_token or not settings.linkedin_client_id or not settings.linkedin_client_secret:
             return None
+        refresh_plain = decrypt_token(row.refresh_token, settings.token_encryption_key)
         async with httpx.AsyncClient() as client:
             resp = await client.post(
                 LINKEDIN_TOKEN_URL,
                 data={
                     "grant_type": "refresh_token",
-                    "refresh_token": row.refresh_token,
+                    "refresh_token": refresh_plain,
                     "client_id": settings.linkedin_client_id,
                     "client_secret": settings.linkedin_client_secret,
                 },
@@ -60,13 +62,13 @@ async def _get_valid_token(session: AsyncSession) -> Optional[str]:
             logging.warning("LinkedIn token refresh failed: %s %s", resp.status_code, resp.text)
             return None
         data = resp.json()
-        row.access_token = data["access_token"]
+        row.access_token = encrypt_token(data["access_token"], settings.token_encryption_key)
         row.expires_at = now + timedelta(seconds=data.get("expires_in", 5184000))
         if "refresh_token" in data:
-            row.refresh_token = data["refresh_token"]
+            row.refresh_token = encrypt_token(data["refresh_token"], settings.token_encryption_key)
         if "refresh_token_expires_in" in data:
             row.refresh_token_expires_at = now + timedelta(seconds=data["refresh_token_expires_in"])
-    return row.access_token
+    return decrypt_token(row.access_token, settings.token_encryption_key)
 
 
 def _normalize_redirect_uri(uri: Optional[str]) -> Optional[str]:
@@ -174,16 +176,17 @@ async def linkedin_callback(
     r = await session.execute(select(LinkedInOAuth).limit(1))
     existing = r.scalar_one_or_none()
     if existing:
-        existing.access_token = data["access_token"]
-        existing.refresh_token = data.get("refresh_token") or existing.refresh_token
+        existing.access_token = encrypt_token(data["access_token"], settings.token_encryption_key)
+        if data.get("refresh_token"):
+            existing.refresh_token = encrypt_token(data["refresh_token"], settings.token_encryption_key)
         existing.expires_at = expires_at
         existing.refresh_token_expires_at = refresh_expires or existing.refresh_token_expires_at
         existing.scope = data.get("scope", "")
     else:
         session.add(
             LinkedInOAuth(
-                access_token=data["access_token"],
-                refresh_token=data.get("refresh_token"),
+                access_token=encrypt_token(data["access_token"], settings.token_encryption_key),
+                refresh_token=encrypt_token(data["refresh_token"], settings.token_encryption_key) if data.get("refresh_token") else None,
                 expires_at=expires_at,
                 refresh_token_expires_at=refresh_expires,
                 scope=data.get("scope", ""),

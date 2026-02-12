@@ -18,6 +18,7 @@ from app.routers import (
     people,
     linkedin_oauth,
     news,
+    plans,
     posts,
     reddit,
     setup,
@@ -105,10 +106,13 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 # Порядок важен: последний add_middleware = первый по цепочке запроса.
+# NormalizePathMiddleware — редирект //path → /path (двойной слэш)
 # SessionMiddleware должен быть добавлен ВТОРЫМ (последним в коде), чтобы он выполнился ПЕРВЫМ и инициализировал session.
 # AuthMiddleware должен быть добавлен ПЕРВЫМ, чтобы он выполнился ПОСЛЕ SessionMiddleware и мог использовать session.
 from app.middleware.auth import AuthMiddleware
+from app.middleware.normalize_path import NormalizePathMiddleware
 app.add_middleware(AuthMiddleware)
+app.add_middleware(NormalizePathMiddleware)
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.session_secret or "lfas-change-me-in-production",
@@ -127,6 +131,7 @@ app.include_router(touches.router)
 app.include_router(agents_routes.router)
 app.include_router(posts.router)
 app.include_router(reddit.router)
+app.include_router(plans.router)
 app.include_router(news.router)
 app.include_router(linkedin_oauth.router)
 
@@ -151,6 +156,39 @@ async def root(request: Request):
 async def root_en(request: Request):
     """Landing page — English."""
     return _landing_response(request, "index_en.html", "en")
+
+
+from app.translations import get_tr
+@app.get("/pricing", response_class=HTMLResponse)
+@app.get("/pricing/", response_class=HTMLResponse)
+async def pricing_ru(request: Request):
+    """Pricing page — Russian."""
+    r = _landing_templates.TemplateResponse(request, "pricing.html", {"locale": "ru", "tr": get_tr("ru")})
+    r.set_cookie("locale", "ru", max_age=365 * 24 * 3600, samesite="lax")
+    return r
+
+
+@app.get("/en/pricing", response_class=HTMLResponse)
+@app.get("/en/pricing/", response_class=HTMLResponse)
+async def pricing_en(request: Request):
+    """Pricing page — English."""
+    r = _landing_templates.TemplateResponse(request, "pricing.html", {"locale": "en", "tr": get_tr("en")})
+    r.set_cookie("locale", "en", max_age=365 * 24 * 3600, samesite="lax")
+    return r
+
+
+@app.get("/pricing2")
+@app.get("/pricing2/")
+async def pricing2_redirect(request: Request):
+    """Redirect to main pricing."""
+    return RedirectResponse(url="/pricing", status_code=302)
+
+
+@app.get("/en/pricing2")
+@app.get("/en/pricing2/")
+async def pricing2_en_redirect(request: Request):
+    """Redirect to main pricing (EN)."""
+    return RedirectResponse(url="/en/pricing", status_code=302)
 
 
 @app.get("/set-locale")
@@ -249,6 +287,20 @@ try:
     async def ui_news(request: Request):
         return templates.TemplateResponse(
             request, "news.html", {"request": request, **_app_context(request)}
+        )
+
+    @app.get("/ui/pricing", response_class=HTMLResponse)
+    async def ui_pricing(request: Request):
+        ctx = _app_context(request)
+        return templates.TemplateResponse(
+            request, "pricing.html", {"request": request, **ctx}
+        )
+
+    @app.get("/ui/pricing2", response_class=HTMLResponse)
+    async def ui_pricing2(request: Request):
+        ctx = _app_context(request)
+        return templates.TemplateResponse(
+            request, "pricing.html", {"request": request, **ctx}
         )
 except Exception as e:
     logging.exception("UI routes failed to load (templates/static): %s", e)

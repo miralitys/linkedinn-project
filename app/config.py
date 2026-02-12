@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     linkedin_redirect_uri: Optional[str] = None
     session_secret: Optional[str] = None  # для SessionMiddleware (OAuth state)
     session_https_only: bool = False  # Secure cookie для HTTPS (включать в production)
+    token_encryption_key: Optional[str] = None  # для шифрования токенов в БД (≥16 символов; если не задан — plaintext)
     # Вход по email и паролю (один пользователь из .env). Включено только если заданы оба значения.
     auth_enabled: bool = True
     auth_admin_email: Optional[str] = None  # логин (email)

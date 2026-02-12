@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from app.db import async_session_maker
 from app.models import User, UserApprovalStatus, UserRole
+from app.plans import DEFAULT_PLAN
 
 
 async def get_current_user_id(request: Request) -> int:
@@ -27,6 +28,7 @@ async def get_current_user_id(request: Request) -> int:
                         password_hash=pw_hash,
                         role=UserRole.ADMIN.value,
                         approval_status=UserApprovalStatus.APPROVED.value,
+                        plan_name=DEFAULT_PLAN,
                     )
                     db.add(user)
                     await db.commit()

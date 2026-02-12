@@ -98,19 +98,17 @@
             <label for="news-rewrite-goal">{{ tr.reddit_goal }}</label>
             <select id="news-rewrite-goal" aria-label="{{ tr.reddit_goal }}"><option value="network">Network</option><option value="native_ads">{{ tr.reddit_goal_native }}</option><option value="full_ads">{{ tr.reddit_goal_full }}</option></select>
           </div>
-          <div class="news-rewrite-field">
+          <div class="news-rewrite-field news-rewrite-field-length">
             <label for="news-rewrite-length">{{ tr.reddit_length }}</label>
             <select id="news-rewrite-length" aria-label="{{ tr.reddit_length }}"><option value="short">{{ tr.reddit_length_short }}</option><option value="medium" selected>{{ tr.reddit_length_medium }}</option><option value="long">{{ tr.reddit_length_long }}</option></select>
           </div>
           <button type="button" id="news-rewrite-btn" class="btn primary news-rewrite-btn" aria-label="{{ tr.news_rewrite_title }}">{{ tr.reddit_rewrite_btn }}</button>
+          <button type="button" id="news-write-copy" class="btn secondary btn-sm news-copy-btn news-rewrite-btn">{{ tr.reddit_copy }}</button>
         </div>
         <div class="news-rewrite-output">
           <div class="news-rewrite-output-header">
             <span class="news-rewrite-result-label">{{ tr.reddit_result }}</span>
-            <div style="display: flex; align-items: center; gap: var(--space-2);">
-              <span id="news-write-char-count" class="news-char-count" style="font-size: var(--text-12); color: var(--text-muted);"></span>
-              <button type="button" id="news-write-copy" class="btn secondary btn-sm news-copy-btn">{{ tr.reddit_copy }}</button>
-            </div>
+            <span id="news-write-char-count" class="news-char-count" style="font-size: var(--text-12); color: var(--text-muted);"></span>
           </div>
           <textarea id="news-write-textarea" rows="4" placeholder="{{ tr.reddit_result_placeholder }}"></textarea>
         </div>
@@ -146,15 +144,15 @@
             <label for="news-post-from-text-length">{{ tr.reddit_length }}</label>
             <select id="news-post-from-text-length" aria-label="{{ tr.reddit_length }}"><option value="short">{{ tr.reddit_length_short }}</option><option value="medium" selected>{{ tr.reddit_length_medium }}</option><option value="long">{{ tr.reddit_length_long }}</option></select>
           </div>
+        </div>
+        <div class="news-post-from-text-buttons">
           <button type="button" id="news-post-from-text-generate" class="btn primary news-post-from-text-generate-btn" aria-label="{{ tr.reddit_rewrite_btn }}">{{ tr.reddit_rewrite_btn }}</button>
+          <button type="button" id="news-post-from-text-copy" class="btn secondary btn-sm news-post-from-text-copy-btn">{{ tr.reddit_copy }}</button>
         </div>
         <div class="news-post-from-text-output">
           <div class="news-post-from-text-output-header">
             <span>{{ tr.reddit_result }}</span>
-            <div style="display: flex; align-items: center; gap: var(--space-2);">
-              <span id="news-post-from-text-char-count" class="news-char-count" style="font-size: var(--text-12); color: var(--text-muted);"></span>
-              <button type="button" id="news-post-from-text-copy" class="btn secondary btn-sm">{{ tr.reddit_copy }}</button>
-            </div>
+            <span id="news-post-from-text-char-count" class="news-char-count" style="font-size: var(--text-12); color: var(--text-muted);"></span>
           </div>
           <textarea id="news-post-from-text-result" rows="6" placeholder="{{ tr.reddit_result_placeholder }}"></textarea>
         </div>
@@ -368,12 +366,13 @@
   .news-rewrite-fields {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-end;
+    align-items: center;
     gap: var(--space-2);
   }
   .news-rewrite-field {
-    flex: 1;
-    min-width: 140px;
+    flex: 1 1 0;
+    min-width: 95px;
+    max-width: 170px;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -403,11 +402,15 @@
     border-color: var(--primary);
     box-shadow: var(--focus-ring);
   }
+  .news-rewrite-field-length { max-width: 210px; }
   .news-rewrite-btn {
     height: 2.25rem;
     padding: 0 var(--space-4);
     font-weight: 600;
+    flex-shrink: 0;
   }
+  .news-rewrite-btn.news-copy-btn { height: 2.25rem; padding: 0 var(--space-3); }
+  #news-rewrite-btn { margin-left: auto; }
   .news-rewrite-output {
     display: flex;
     flex-direction: column;
@@ -578,16 +581,27 @@
   }
   .news-post-from-text-fields {
     display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
     gap: var(--space-2);
+    align-items: flex-end;
   }
   .news-post-from-text-field {
-    flex: 1;
-    min-width: 140px;
+    flex: 1 1 0;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 2px;
+  }
+  .news-post-from-text-buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+  }
+  .news-post-from-text-generate-btn,
+  .news-post-from-text-copy-btn {
+    height: 2.25rem;
+    padding: 0 var(--space-4);
+    font-weight: 600;
   }
   .news-post-from-text-field label {
     font-size: var(--text-12);
@@ -596,6 +610,8 @@
     margin: 0;
   }
   .news-post-from-text-field select {
+    width: 100%;
+    min-width: 0;
     height: 2.25rem;
     padding: 0 var(--space-2);
     font-size: var(--text-14);
@@ -609,11 +625,6 @@
     outline: none;
     border-color: var(--primary);
     box-shadow: var(--focus-ring);
-  }
-  .news-post-from-text-generate-btn {
-    height: 2.25rem;
-    padding: 0 var(--space-4);
-    font-weight: 600;
   }
   .news-post-from-text-output {
     display: flex;
@@ -1202,6 +1213,22 @@
     var status = isValid ? 'valid' : (charCount < range.min ? 'too-short' : 'too-long');
     countEl.textContent = charCount + ' / ' + range.min + '–' + range.max + ' ' + (tr.reddit_chars || 'chars');
     countEl.className = 'news-char-count news-char-count-' + status;
+    updateNewsRewriteButtonsState();
+  }
+  function updateNewsRewriteButtonsState() {
+    var ta = document.getElementById('news-write-textarea');
+    var copyBtn = document.getElementById('news-write-copy');
+    var rewriteBtn = document.getElementById('news-rewrite-btn');
+    if (!ta || !copyBtn || !rewriteBtn) return;
+    var text = (ta.value || '').trim();
+    var hasContent = text.length > 0 && text !== (tr.reddit_generating || 'Generating…');
+    if (hasContent) {
+      copyBtn.classList.remove('secondary'); copyBtn.classList.add('primary');
+      rewriteBtn.classList.remove('primary'); rewriteBtn.classList.add('secondary');
+    } else {
+      copyBtn.classList.remove('primary'); copyBtn.classList.add('secondary');
+      rewriteBtn.classList.remove('secondary'); rewriteBtn.classList.add('primary');
+    }
   }
   var newsRewriteBtn = document.getElementById('news-rewrite-btn');
   if (newsRewriteBtn) {
@@ -1282,6 +1309,7 @@
       postFromTextModal.hidden = false;
       postFromTextModal.classList.add('is-open');
       if (postFromTextInput) postFromTextInput.focus();
+      updatePostFromTextButtonsState();
     }
   }
   function closePostFromTextModal() {
@@ -1301,6 +1329,19 @@
     var status = isValid ? 'valid' : (charCount < range.min ? 'too-short' : 'too-long');
     postFromTextCharCount.textContent = charCount + ' / ' + range.min + '–' + range.max + ' ' + (tr.reddit_chars || 'chars');
     postFromTextCharCount.className = 'news-char-count news-char-count-' + status;
+    updatePostFromTextButtonsState();
+  }
+  function updatePostFromTextButtonsState() {
+    if (!postFromTextResult || !postFromTextCopy || !postFromTextGenerate) return;
+    var text = (postFromTextResult.value || '').trim();
+    var hasContent = text.length > 0 && text !== (tr.reddit_generating || 'Generating…');
+    if (hasContent) {
+      postFromTextCopy.classList.remove('secondary'); postFromTextCopy.classList.add('primary');
+      postFromTextGenerate.classList.remove('primary'); postFromTextGenerate.classList.add('secondary');
+    } else {
+      postFromTextCopy.classList.remove('primary'); postFromTextCopy.classList.add('secondary');
+      postFromTextGenerate.classList.remove('secondary'); postFromTextGenerate.classList.add('primary');
+    }
   }
 
   var newsMakePostBtn = document.getElementById('news-make-post-btn');
@@ -1366,6 +1407,7 @@
         .finally(function() {
           postFromTextGenerate.disabled = false;
           postFromTextGenerate.textContent = (tr.reddit_rewrite_btn || 'Rewrite');
+          updatePostFromTextButtonsState();
         });
     });
   }
