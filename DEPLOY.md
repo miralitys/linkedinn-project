@@ -29,7 +29,7 @@
    - **Region:** любой (например Frankfurt).
    - **Runtime:** Python 3.
    - **Build Command:** `pip install -r requirements.txt`
-   - **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - **Start Command:** `python -m scripts.migrate_users_schema 2>/dev/null; uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 5. **Environment** — добавь переменные:
 
    | Key             | Value / действие |

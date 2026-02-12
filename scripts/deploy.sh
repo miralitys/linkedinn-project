@@ -39,6 +39,8 @@ rsync -avz --delete $EXCLUDE \
 # Выполнение на сервере
 echo "→ Выполнение на сервере: pip install..."
 ssh "$REMOTE" "cd $REMOTE_PATH && pip install -r requirements.txt"
+echo "→ Миграция users (plan_name, approval_status)..."
+ssh "$REMOTE" "cd $REMOTE_PATH && python3 -m scripts.migrate_users_schema 2>/dev/null || true"
 
 # Перезапуск (если RESTART_AFTER_DEPLOY=true в .deploy.conf или systemd)
 if [ "${RESTART_AFTER_DEPLOY:-}" = "true" ]; then

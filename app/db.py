@@ -12,16 +12,22 @@ from app.models import Base
 # SQLite: need check_same_thread=False for aiosqlite. Postgres (Supabase): no special args.
 _connect_args = {}
 _poolclass = None
+_engine_kw = {"echo": False}
 if settings.database_url.startswith("sqlite"):
     _connect_args = {"check_same_thread": False}
     if ":memory:" in settings.database_url:
         _poolclass = StaticPool
+else:
+    # Postgres: pool_pre_ping — проверка соединений перед использованием (решает проблемы после миграций)
+    # pool_recycle — переподключение каждые 5 мин (избегаем устаревших prepared statements)
+    _engine_kw["pool_pre_ping"] = True
+    _engine_kw["pool_recycle"] = 300
 
 engine = create_async_engine(
     settings.database_url,
-    echo=False,
     connect_args=_connect_args if _connect_args else {},
     poolclass=_poolclass,
+    **_engine_kw,
 )
 
 async_session_maker = async_sessionmaker(
