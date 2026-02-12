@@ -20,7 +20,8 @@ if settings.database_url.startswith("sqlite"):
         _poolclass = StaticPool
 else:
     # Supabase/pgbouncer: prepared statements вызывают ошибки в transaction pooling
-    _connect_args = {"statement_cache_size": 0}
+    # timeout=120 — Render cold start + Supabase могут быть медленными
+    _connect_args = {"statement_cache_size": 0, "timeout": 120}
     _engine_kw["pool_pre_ping"] = True
     _engine_kw["pool_recycle"] = 300
 

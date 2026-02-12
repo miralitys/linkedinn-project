@@ -30,7 +30,17 @@ scheduler = AsyncIOScheduler()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_db()
+    # Retry init_db — Render cold start + Supabase могут давать TimeoutError
+    for attempt in range(3):
+        try:
+            await init_db()
+            break
+        except (TimeoutError, OSError) as e:
+            if attempt < 2:
+                logging.warning("init_db attempt %s failed (%s), retrying in 10s...", attempt + 1, e)
+                await asyncio.sleep(10)
+            else:
+                raise
     settings.memory_dir.mkdir(parents=True, exist_ok=True)
     settings.prompts_dir.mkdir(parents=True, exist_ok=True)
     # Автоматическая подгрузка постов: по расписанию и один раз после старта
