@@ -45,7 +45,7 @@ async def get_company(
     r = await session.get(Company, id)
     if not r:
         raise HTTPException(404, "Company not found")
-    if r.user_id is not None and r.user_id != user_id:
+    if r.user_id != user_id:
         raise HTTPException(404, "Company not found")
     return r
 
@@ -60,7 +60,7 @@ async def update_company(
     c = await session.get(Company, id)
     if not c:
         raise HTTPException(404, "Company not found")
-    if c.user_id is not None and c.user_id != user_id:
+    if c.user_id != user_id:
         raise HTTPException(404, "Company not found")
     for k, v in body.model_dump(exclude_unset=True).items():
         setattr(c, k, v)
@@ -78,7 +78,7 @@ async def delete_company(
     c = await session.get(Company, id)
     if not c:
         raise HTTPException(404, "Company not found")
-    if c.user_id is not None and c.user_id != user_id:
+    if c.user_id != user_id:
         raise HTTPException(404, "Company not found")
     await session.delete(c)
     await session.commit()

@@ -510,6 +510,8 @@
         <p class="step-desc">{{ tr.onboarding_step_author_desc }}</p>
         <label>{{ tr.setup_author_name }}</label>
         <input type="text" id="onboarding-author-name" placeholder="{{ tr.setup_author_name }}">
+        <label>{{ tr.setup_author_linkedin }}</label>
+        <input type="url" id="onboarding-author-linkedin" placeholder="https://www.linkedin.com/in/...">
         <label>{{ tr.setup_author_role }}</label>
         <input type="text" id="onboarding-author-role" placeholder="{{ tr.setup_author_role }}">
         <label>{{ tr.setup_author_history }}</label>
@@ -672,15 +674,18 @@
         setMsg('');
         if (currentStep === 0) {
           var name = (document.getElementById('onboarding-author-name').value || '').trim();
+          var linkedinInput = document.getElementById('onboarding-author-linkedin');
+          var linkedinUrl = (linkedinInput && linkedinInput.value) ? (linkedinInput.value || '').trim() : '';
           var role = (document.getElementById('onboarding-author-role').value || '').trim();
           var history = (document.getElementById('onboarding-author-history').value || '').trim();
           if (!name) { setMsg(tr('setup_author_name_required'), true); return; }
           if (!role) { setMsg(tr('setup_author_role_required') || 'Заполните роль', true); return; }
           if (!history) { setMsg(tr('setup_author_history_required') || 'Заполните историю', true); return; }
+          if (linkedinUrl && linkedinUrl.indexOf('linkedin.com') === -1) { setMsg(tr('person_linkedin_error') || 'Некорректная ссылка LinkedIn', true); return; }
           disableNext(true);
           fetch('/setup/section', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ section: 'authors', value: [{ full_name: name, role: role, history: history }] }),
+            body: JSON.stringify({ section: 'authors', value: [{ full_name: name, linkedin_url: linkedinUrl || null, role: role, history: history }] }),
             credentials: 'include'
           }).then(function(r) {
             disableNext(false);

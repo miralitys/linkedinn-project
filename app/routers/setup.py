@@ -3,8 +3,8 @@ import json
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy import or_, select
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
@@ -86,42 +86,28 @@ async def get_setup_for_scoring(session: AsyncSession, user_id: int) -> dict:
 
 @router.get("/onboarding-status")
 async def get_onboarding_status(
-    request: Request,
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
 ):
     """Проверка минимальных данных: автор, компания, контакт. Для показа onboarding wizard."""
     from app.models import Company, Person
-    is_admin = (request.session.get("user_role") or "").lower() == "admin"
-    # Условие для компаний/контактов: свои + legacy (NULL) + user_id=1 для админа (миграция)
-    company_filter = or_(Company.user_id == user_id, Company.user_id.is_(None))
-    if is_admin and user_id != 1:
-        company_filter = or_(company_filter, Company.user_id == 1)
-    person_filter = or_(Person.user_id == user_id, Person.user_id.is_(None))
-    if is_admin and user_id != 1:
-        person_filter = or_(person_filter, Person.user_id == 1)
-    # Автор: из KnowledgeBase setup_authors (с учётом legacy-ключей)
+    # Только свои данные — у каждого пользователя свой набор
+    key_authors = _kb_key("setup_authors", user_id)
+    r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key_authors))
+    row = r.scalar_one_or_none()
     authors = []
-    for key in (_kb_key("setup_authors", user_id), _kb_key("authors", user_id),
-                "setup_authors:1", "authors:1", "setup_authors", "authors"):
-        r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key))
-        row = r.scalar_one_or_none()
-        if row and row.value:
-            try:
-                authors = json.loads(row.value)
-                if not isinstance(authors, list):
-                    authors = []
-            except Exception:
-                pass
-            if authors:
-                break
+    if row and row.value:
+        try:
+            authors = json.loads(row.value)
+            if not isinstance(authors, list):
+                authors = []
+        except Exception:
+            pass
     has_author = len(authors) >= 1
-    # Компания (включая legacy и user_id=1 для админа)
-    r = await session.execute(select(Company).where(company_filter))
+    r = await session.execute(select(Company).where(Company.user_id == user_id))
     companies = list(r.scalars().all())
     has_company = len(companies) >= 1
-    # Контакт (включая legacy и user_id=1 для админа)
-    r = await session.execute(select(Person).where(person_filter))
+    r = await session.execute(select(Person).where(Person.user_id == user_id))
     people = list(r.scalars().all())
     has_contact = len(people) >= 1
     return {
@@ -202,37 +188,13 @@ async def get_setup_draft_debug(
     }
 
 
-def _kb_keys_for_user(base_keys: list, user_id: int, is_admin: bool) -> list:
-    """Ключи для поиска: legacy без суффикса, :1, свои — чтобы восстанавливать данные."""
-    keys = []
-    seen = set()
-    for bk in base_keys:
-        keys.append(bk)
-        seen.add(bk)
-    if is_admin and user_id != 1:
-        for bk in base_keys:
-            k1 = _kb_key(bk, 1)
-            if k1 not in seen:
-                keys.append(k1)
-                seen.add(k1)
-    for bk in base_keys:
-        k = _kb_key(bk, user_id)
-        if k not in seen:
-            keys.append(k)
-            seen.add(k)
-    return keys
-
-
 @router.get("/draft")
 async def get_setup_draft(
-    request: Request,
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
 ):
-    """Return saved draft for each section (authors, products, icp_raw, tone, goals)."""
-    is_admin = (request.session.get("user_role") or "").lower() == "admin"
+    """Return saved draft for each section (authors, products, icp_raw, tone, goals). Только свои данные."""
     result = {}
-    # authors: try setup_authors, then legacy "authors"
     key_sets = {
         "authors": ["setup_authors", "authors"],
         "products": ["setup_products", "products"],
@@ -242,7 +204,8 @@ async def get_setup_draft(
     }
     for section, base_keys in key_sets.items():
         row = None
-        for key in _kb_keys_for_user(base_keys, user_id, is_admin):
+        for base_key in base_keys:
+            key = _kb_key(base_key, user_id)
             r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key))
             row = r.scalar_one_or_none()
             if row and row.value:
@@ -285,21 +248,20 @@ async def get_setup_draft(
 SUBREDDITS_KEY = "saved_subreddits"
 
 
-async def _get_subreddits_list(session: AsyncSession, user_id: int, fallback_user_ids: Optional[list] = None) -> list:
-    keys_to_try = [SUBREDDITS_KEY]  # legacy без суффикса — первым
-    keys_to_try.append(_kb_key(SUBREDDITS_KEY, user_id))
-    if fallback_user_ids:
-        keys_to_try.extend(_kb_key(SUBREDDITS_KEY, uid) for uid in fallback_user_ids)
-    for key in keys_to_try:
-        r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key))
-        row = r.scalar_one_or_none()
-        if row and row.value:
-            try:
-                data = json.loads(row.value)
-                return list(data) if isinstance(data, list) else []
-            except Exception:
-                pass
-    return []
+async def _get_subreddits_list(session: AsyncSession, user_id: int) -> list:
+    """Только свои сабреддиты пользователя."""
+    key = _kb_key(SUBREDDITS_KEY, user_id)
+    r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key))
+    row = r.scalar_one_or_none()
+    if not row or not row.value:
+        return []
+    try:
+        data = json.loads(row.value)
+        return list(data) if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
 
 
 async def _save_subreddits_list(session: AsyncSession, user_id: int, names: list) -> None:
@@ -316,19 +278,16 @@ async def _save_subreddits_list(session: AsyncSession, user_id: int, names: list
 
 @router.get("/subreddits")
 async def list_setup_subreddits(
-    request: Request,
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
 ):
-    """Список сохранённых сабреддитов (из KnowledgeBase)."""
-    fallback = [1] if (request.session.get("user_role") or "").lower() == "admin" and user_id != 1 else None
-    names = await _get_subreddits_list(session, user_id, fallback)
+    """Список сохранённых сабреддитов (из KnowledgeBase). Только свои."""
+    names = await _get_subreddits_list(session, user_id)
     return sorted(set(names))
 
 
 @router.post("/subreddits")
 async def add_setup_subreddit(
-    request: Request,
     body: dict,
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
@@ -337,8 +296,7 @@ async def add_setup_subreddit(
     raw = (body.get("name") or "").strip().lower().replace("/r/", "").split("/")[0]
     if not raw:
         raise HTTPException(400, "Укажите имя сабреддита")
-    fallback = [1] if (request.session.get("user_role") or "").lower() == "admin" and user_id != 1 else None
-    names = await _get_subreddits_list(session, user_id, fallback)
+    names = await _get_subreddits_list(session, user_id)
     if raw in names:
         return {"ok": True, "name": raw, "message": "Уже в списке"}
     names.append(raw)
@@ -349,7 +307,6 @@ async def add_setup_subreddit(
 @router.delete("/subreddits/{name:path}", status_code=204)
 async def remove_setup_subreddit(
     name: str,
-    request: Request,
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
 ):
@@ -357,8 +314,7 @@ async def remove_setup_subreddit(
     sub = (name or "").strip().lower().replace("/r/", "").split("/")[0]
     if not sub:
         raise HTTPException(400, "Укажите имя сабреддита")
-    fallback = [1] if (request.session.get("user_role") or "").lower() == "admin" and user_id != 1 else None
-    names = await _get_subreddits_list(session, user_id, fallback)
+    names = await _get_subreddits_list(session, user_id)
     if sub not in names:
         raise HTTPException(404, "Сабреддит не найден в списке")
     names = [n for n in names if n != sub]

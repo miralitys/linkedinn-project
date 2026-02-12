@@ -45,11 +45,11 @@ async def create_person(
     data = body.model_dump()
     if data.get("company_id"):
         c = await session.get(Company, data["company_id"])
-        if c and c.user_id is not None and c.user_id != user_id:
+        if c and c.user_id != user_id:
             raise HTTPException(400, "Company not found")
     if data.get("segment_id"):
         s = await session.get(Segment, data["segment_id"])
-        if s and s.user_id is not None and s.user_id != user_id:
+        if s and s.user_id != user_id:
             raise HTTPException(400, "Segment not found")
     data["user_id"] = user_id
     p = Person(**data)
@@ -68,7 +68,7 @@ async def get_person(
     p = await session.get(Person, id)
     if not p:
         raise HTTPException(404, "Person not found")
-    if p.user_id is not None and p.user_id != user_id:
+    if p.user_id != user_id:
         raise HTTPException(404, "Person not found")
     return p
 
@@ -83,7 +83,7 @@ async def update_person(
     p = await session.get(Person, id)
     if not p:
         raise HTTPException(404, "Person not found")
-    if p.user_id is not None and p.user_id != user_id:
+    if p.user_id != user_id:
         raise HTTPException(404, "Person not found")
     for k, v in body.model_dump(exclude_unset=True).items():
         setattr(p, k, v)
@@ -102,7 +102,7 @@ async def update_person_status(
     p = await session.get(Person, id)
     if not p:
         raise HTTPException(404, "Person not found")
-    if p.user_id is not None and p.user_id != user_id:
+    if p.user_id != user_id:
         raise HTTPException(404, "Person not found")
     to_status = body.status
     if not can_transition(p.status, to_status):
@@ -125,7 +125,7 @@ async def delete_person(
     p = await session.get(Person, id)
     if not p:
         raise HTTPException(404, "Person not found")
-    if p.user_id is not None and p.user_id != user_id:
+    if p.user_id != user_id:
         raise HTTPException(404, "Person not found")
     # Удаляем связанные посты и касания до удаления контакта (person_id NOT NULL)
     await session.execute(delete(ContactPost).where(ContactPost.person_id == id))

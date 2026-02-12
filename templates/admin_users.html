@@ -16,24 +16,24 @@
   </div>
 </header>
 
-<div class="admin-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6);">
-  <div class="card admin-stat-card" style="padding: var(--space-4);">
+<div class="admin-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6);">
+  <div class="card admin-stat-card" style="padding: var(--space-4); min-width: 0;">
     <div style="font-size: var(--text-24); font-weight: 700; color: var(--primary);">{{ total_users }}</div>
     <div style="font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1);">{{ (tr.admin_total_users if tr else 'Всего пользователей') }}</div>
   </div>
-  <div class="card admin-stat-card" style="padding: var(--space-4);">
+  <div class="card admin-stat-card" style="padding: var(--space-4); min-width: 0;">
     <div style="font-size: var(--text-24); font-weight: 700; color: var(--primary);">{{ admin_count }}</div>
     <div style="font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1);">{{ (tr.admin_admins if tr else 'Администраторов') }}</div>
   </div>
-  <div class="card admin-stat-card" style="padding: var(--space-4);">
+  <div class="card admin-stat-card" style="padding: var(--space-4); min-width: 0;">
     <div style="font-size: var(--text-24); font-weight: 700; color: var(--success, #10b981);">{{ active_subscriptions }}</div>
     <div style="font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1);">{{ (tr.admin_active_subscriptions if tr else 'Активных подписок') }}</div>
   </div>
-  <div class="card admin-stat-card" style="padding: var(--space-4);">
+  <div class="card admin-stat-card" style="padding: var(--space-4); min-width: 0;">
     <div style="font-size: var(--text-24); font-weight: 700; color: var(--warning, #f59e0b);">{{ trial_users }}</div>
     <div style="font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1);">{{ (tr.admin_trial_users if tr else 'Пробных пользователей') }}</div>
   </div>
-  <div class="card admin-stat-card" style="padding: var(--space-4);">
+  <div class="card admin-stat-card" style="padding: var(--space-4); min-width: 0;">
     <div style="font-size: var(--text-24); font-weight: 700; color: var(--warning, #f59e0b);">{{ pending_users }}</div>
     <div style="font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1);">{{ (tr.admin_pending_users if tr else 'Ожидают подтверждения') }}</div>
   </div>
