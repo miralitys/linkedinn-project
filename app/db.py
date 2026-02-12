@@ -9,7 +9,8 @@ from sqlalchemy.pool import StaticPool
 from app.config import settings
 from app.models import Base
 
-# SQLite: need check_same_thread=False for aiosqlite. Postgres (Supabase): no special args.
+# SQLite: need check_same_thread=False for aiosqlite.
+# Postgres (Supabase): отключаем prepared statement cache — Supabase/pgbouncer не поддерживает его в transaction mode.
 _connect_args = {}
 _poolclass = None
 _engine_kw = {"echo": False}
@@ -18,8 +19,8 @@ if settings.database_url.startswith("sqlite"):
     if ":memory:" in settings.database_url:
         _poolclass = StaticPool
 else:
-    # Postgres: pool_pre_ping — проверка соединений перед использованием (решает проблемы после миграций)
-    # pool_recycle — переподключение каждые 5 мин (избегаем устаревших prepared statements)
+    # Supabase/pgbouncer: prepared statements вызывают ошибки в transaction pooling
+    _connect_args = {"statement_cache_size": 0}
     _engine_kw["pool_pre_ping"] = True
     _engine_kw["pool_recycle"] = 300
 
