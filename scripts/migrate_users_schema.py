@@ -37,6 +37,15 @@ async def main():
         for sql in (
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS approval_status VARCHAR(16) DEFAULT 'approved'",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_name VARCHAR(32)",
+            """CREATE TABLE IF NOT EXISTS usage (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id),
+                year_month VARCHAR(7) NOT NULL,
+                agent_name VARCHAR(64) NOT NULL,
+                count INTEGER NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )""",
         ):
             try:
                 await conn.execute(text(sql))

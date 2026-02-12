@@ -88,7 +88,8 @@ async def check_generation_limit(
     Для Starter: отдельные лимиты post/comment. Для Pro/Enterprise: общий generations_month.
     """
     user = await session.get(User, user_id)
-    plan = get_plan(user.plan_name if user else None)
+    plan_name = getattr(user, "plan_name", None) if user else None
+    plan = get_plan(plan_name)
 
     if plan.get("post_generations_month") is not None and _is_post_agent(agent_name):
         limit = plan.get("post_generations_month", 10)
