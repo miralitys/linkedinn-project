@@ -5,7 +5,7 @@
   <div class="posts-header-top">
     <h1 class="posts-page-title">{{ tr.posts_title }}</h1>
     <div class="posts-header-actions">
-      <button type="button" id="btn-parse-by-url" class="btn primary posts-parse-btn" aria-label="{{ tr.posts_parse_by_link }}">{{ tr.posts_parse_by_link }}</button>
+      <button type="button" id="btn-parse-by-url" class="btn secondary posts-parse-btn" aria-label="{{ tr.posts_parse_by_link }}">{{ tr.posts_parse_by_link }}</button>
       <button type="button" id="btn-refresh-posts" class="btn secondary btn-icon-text posts-refresh-btn" aria-label="{{ tr.posts_refresh }}" title="{{ tr.posts_refresh }}"><span aria-hidden="true">↻</span> {{ tr.posts_refresh }}</button>
     </div>
   </div>
@@ -39,7 +39,7 @@
   <div id="posts-empty" class="empty-state-card" style="display: none;">
     <p class="empty-state-title">{{ tr.posts_empty_title }}</p>
     <p class="empty-state-desc">{{ tr.posts_empty_desc }}</p>
-    <button type="button" id="posts-empty-cta" class="btn primary">{{ tr.posts_parse_by_link }}</button>
+    <button type="button" id="posts-empty-cta" class="btn secondary">{{ tr.posts_parse_by_link }}</button>
   </div>
   <div id="posts-error" class="error-state-card" style="display: none;">
     <p class="error-state-text">{{ tr.posts_error }}</p>

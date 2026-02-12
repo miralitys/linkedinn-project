@@ -5,7 +5,10 @@
 <header class="news-page-header">
   <div class="news-header-top">
     <h1 class="news-page-title">{{ tr.news_title }}</h1>
-    <button type="button" id="news-refresh-btn" class="btn primary btn-icon-text news-refresh-btn" aria-label="{{ tr.posts_refresh }}" title="{{ tr.posts_refresh }}"><span aria-hidden="true">↻</span> {{ tr.posts_refresh }}</button>
+    <div class="news-header-actions">
+      <button type="button" id="news-make-post-btn" class="btn secondary btn-icon-text" aria-label="{{ tr.news_make_post_from_text }}" title="{{ tr.news_make_post_from_text }}">{{ tr.news_make_post_from_text }}</button>
+      <button type="button" id="news-refresh-btn" class="btn secondary btn-icon-text news-refresh-btn" aria-label="{{ tr.posts_refresh }}" title="{{ tr.posts_refresh }}"><span aria-hidden="true">↻</span> {{ tr.posts_refresh }}</button>
+    </div>
   </div>
   <p class="news-header-desc">{{ tr.news_lead }}</p>
   <div class="news-toolbar-row news-toolbar-row-reddit">
@@ -117,11 +120,55 @@
   </div>
 </div>
 
+<!-- Modal: Сделать пост по тексту -->
+<div id="news-post-from-text-modal" class="news-post-from-text-modal" role="dialog" aria-modal="true" aria-labelledby="news-post-from-text-title" hidden>
+  <div class="news-post-from-text-backdrop" id="news-post-from-text-backdrop"></div>
+  <div class="news-post-from-text-panel">
+    <div class="news-post-from-text-header">
+      <h2 id="news-post-from-text-title" class="news-post-from-text-title">{{ tr.news_post_from_text_title }}</h2>
+      <button type="button" class="news-post-from-text-close" id="news-post-from-text-close" title="{{ tr.common_close_esc }}" aria-label="{{ tr.common_close }}">×</button>
+    </div>
+    <div class="news-post-from-text-body">
+      <p class="news-post-from-text-desc">{{ tr.news_post_from_text_desc }}</p>
+      <label for="news-post-from-text-input">{{ tr.news_post_from_text_input_label }}</label>
+      <textarea id="news-post-from-text-input" rows="6" placeholder="{{ tr.news_post_from_text_input_placeholder }}"></textarea>
+      <div class="news-post-from-text-form">
+        <div class="news-post-from-text-fields">
+          <div class="news-post-from-text-field">
+            <label for="news-post-from-text-author">{{ tr.reddit_as_author }}</label>
+            <select id="news-post-from-text-author" aria-label="{{ tr.reddit_author }}"><option value="">{{ tr.reddit_loading }}</option></select>
+          </div>
+          <div class="news-post-from-text-field">
+            <label for="news-post-from-text-goal">{{ tr.reddit_goal }}</label>
+            <select id="news-post-from-text-goal" aria-label="{{ tr.reddit_goal }}"><option value="network">Network</option><option value="native_ads">{{ tr.reddit_goal_native }}</option><option value="full_ads">{{ tr.reddit_goal_full }}</option></select>
+          </div>
+          <div class="news-post-from-text-field">
+            <label for="news-post-from-text-length">{{ tr.reddit_length }}</label>
+            <select id="news-post-from-text-length" aria-label="{{ tr.reddit_length }}"><option value="short">{{ tr.reddit_length_short }}</option><option value="medium" selected>{{ tr.reddit_length_medium }}</option><option value="long">{{ tr.reddit_length_long }}</option></select>
+          </div>
+          <button type="button" id="news-post-from-text-generate" class="btn primary news-post-from-text-generate-btn" aria-label="{{ tr.reddit_rewrite_btn }}">{{ tr.reddit_rewrite_btn }}</button>
+        </div>
+        <div class="news-post-from-text-output">
+          <div class="news-post-from-text-output-header">
+            <span>{{ tr.reddit_result }}</span>
+            <div style="display: flex; align-items: center; gap: var(--space-2);">
+              <span id="news-post-from-text-char-count" class="news-char-count" style="font-size: var(--text-12); color: var(--text-muted);"></span>
+              <button type="button" id="news-post-from-text-copy" class="btn secondary btn-sm">{{ tr.reddit_copy }}</button>
+            </div>
+          </div>
+          <textarea id="news-post-from-text-result" rows="6" placeholder="{{ tr.reddit_result_placeholder }}"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <style>
   /* ——— Страница новостей: аккуратный, читаемый дизайн ——— */
   .news-page-wrap { margin-top: 0; }
   .news-page-header { margin-bottom: var(--space-6); }
   .news-header-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-2); }
+  .news-header-actions { display: flex; align-items: center; gap: var(--space-2); }
   .news-page-title { font-size: 1.25rem; font-weight: 700; margin: 0; color: var(--text); letter-spacing: -0.02em; }
   .news-header-desc { margin: 0 0 var(--space-4); font-size: var(--text-12); color: var(--text-muted); line-height: 1.5; max-width: 42rem; }
   .news-toolbar-row { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
@@ -421,6 +468,188 @@
   .news-char-count-too-long {
     color: var(--error, #ef4444);
     font-weight: 500;
+  }
+  /* Modal: Сделать пост по тексту */
+  .news-post-from-text-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+    pointer-events: none;
+  }
+  .news-post-from-text-modal[hidden] { display: none !important; }
+  .news-post-from-text-modal.is-open { pointer-events: auto; }
+  .news-post-from-text-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .news-post-from-text-modal.is-open .news-post-from-text-backdrop { opacity: 1; }
+  .news-post-from-text-panel {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--elevation-modal);
+    border: 1px solid var(--border);
+    padding: var(--space-6);
+    transform: scale(0.96);
+    opacity: 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .news-post-from-text-modal.is-open .news-post-from-text-panel {
+    transform: scale(1);
+    opacity: 1;
+  }
+  .news-post-from-text-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+  .news-post-from-text-title {
+    margin: 0;
+    font-size: var(--text-20);
+    font-weight: 600;
+    color: var(--text);
+  }
+  .news-post-from-text-close {
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: none;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    line-height: 1;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--motion-fast), color var(--motion-fast);
+  }
+  .news-post-from-text-close:hover {
+    background: var(--border);
+    color: var(--text);
+  }
+  .news-post-from-text-body { display: flex; flex-direction: column; gap: var(--space-4); }
+  .news-post-from-text-desc {
+    margin: 0;
+    font-size: var(--text-14);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .news-post-from-text-body label {
+    font-size: var(--text-14);
+    font-weight: 500;
+    color: var(--text);
+    margin: 0;
+  }
+  .news-post-from-text-body #news-post-from-text-input {
+    width: 100%;
+    padding: var(--space-3);
+    font-family: inherit;
+    font-size: var(--text-14);
+    line-height: 1.55;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    resize: vertical;
+    box-sizing: border-box;
+  }
+  .news-post-from-text-body #news-post-from-text-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: var(--focus-ring);
+  }
+  .news-post-from-text-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-top: var(--space-2);
+  }
+  .news-post-from-text-fields {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-2);
+  }
+  .news-post-from-text-field {
+    flex: 1;
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .news-post-from-text-field label {
+    font-size: var(--text-12);
+    font-weight: 500;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .news-post-from-text-field select {
+    height: 2.25rem;
+    padding: 0 var(--space-2);
+    font-size: var(--text-14);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    box-sizing: border-box;
+  }
+  .news-post-from-text-field select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: var(--focus-ring);
+  }
+  .news-post-from-text-generate-btn {
+    height: 2.25rem;
+    padding: 0 var(--space-4);
+    font-weight: 600;
+  }
+  .news-post-from-text-output {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  .news-post-from-text-output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+  .news-post-from-text-output-header span {
+    font-size: var(--text-12);
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .news-post-from-text-output textarea {
+    width: 100%;
+    min-height: 6rem;
+    padding: var(--space-2) var(--space-3);
+    font-family: inherit;
+    font-size: var(--text-14);
+    line-height: 1.55;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    resize: vertical;
+    box-sizing: border-box;
+  }
+  .news-post-from-text-output textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: var(--focus-ring);
   }
 </style>
 <script>
@@ -938,15 +1167,16 @@
   var newsRewriteSetupDraft = { authors: [], products: [] };
   function fillNewsAuthorSelect(authors) {
     newsRewriteAuthorsList = Array.isArray(authors) ? authors : [];
-    var sel = document.getElementById('news-rewrite-author');
-    if (!sel) return;
-    sel.innerHTML = '';
-    if (!newsRewriteAuthorsList.length) {
-      sel.appendChild(new Option(tr.reddit_add_authors_first || '— Add authors in Settings —', ''));
-      return;
-    }
-    newsRewriteAuthorsList.forEach(function(a, i) {
-      sel.appendChild(new Option(a.full_name || ((tr.reddit_author_n || 'Author {}').replace('{}', String(i + 1))), String(i)));
+    [document.getElementById('news-rewrite-author'), document.getElementById('news-post-from-text-author')].forEach(function(sel) {
+      if (!sel) return;
+      sel.innerHTML = '';
+      if (!newsRewriteAuthorsList.length) {
+        sel.appendChild(new Option(tr.reddit_add_authors_first || '— Add authors in Settings —', ''));
+        return;
+      }
+      newsRewriteAuthorsList.forEach(function(a, i) {
+        sel.appendChild(new Option(a.full_name || ((tr.reddit_author_n || 'Author {}').replace('{}', String(i + 1))), String(i)));
+      });
     });
   }
   fetch('/setup/draft').then(function(r) { return r.json(); }).then(function(draft) {
@@ -1034,6 +1264,110 @@
   }
   if (newsLengthSelect) {
     newsLengthSelect.addEventListener('change', updateNewsCharCount);
+  }
+
+  /* Modal: Сделать пост по тексту */
+  var postFromTextModal = document.getElementById('news-post-from-text-modal');
+  var postFromTextBackdrop = document.getElementById('news-post-from-text-backdrop');
+  var postFromTextClose = document.getElementById('news-post-from-text-close');
+  var postFromTextInput = document.getElementById('news-post-from-text-input');
+  var postFromTextResult = document.getElementById('news-post-from-text-result');
+  var postFromTextGenerate = document.getElementById('news-post-from-text-generate');
+  var postFromTextCopy = document.getElementById('news-post-from-text-copy');
+  var postFromTextCharCount = document.getElementById('news-post-from-text-char-count');
+  var postFromTextLengthSelect = document.getElementById('news-post-from-text-length');
+
+  function openPostFromTextModal() {
+    if (postFromTextModal) {
+      postFromTextModal.hidden = false;
+      postFromTextModal.classList.add('is-open');
+      if (postFromTextInput) postFromTextInput.focus();
+    }
+  }
+  function closePostFromTextModal() {
+    if (postFromTextModal) {
+      postFromTextModal.hidden = true;
+      postFromTextModal.classList.remove('is-open');
+    }
+  }
+  function updatePostFromTextCharCount() {
+    if (!postFromTextResult || !postFromTextCharCount || !postFromTextLengthSelect) return;
+    var text = postFromTextResult.value || '';
+    var charCount = text.length;
+    var length = postFromTextLengthSelect.value || 'medium';
+    var ranges = { short: { min: 600, max: 900 }, medium: { min: 900, max: 1400 }, long: { min: 1400, max: 2200 } };
+    var range = ranges[length] || ranges.medium;
+    var isValid = charCount >= range.min && charCount <= range.max;
+    var status = isValid ? 'valid' : (charCount < range.min ? 'too-short' : 'too-long');
+    postFromTextCharCount.textContent = charCount + ' / ' + range.min + '–' + range.max + ' ' + (tr.reddit_chars || 'chars');
+    postFromTextCharCount.className = 'news-char-count news-char-count-' + status;
+  }
+
+  var newsMakePostBtn = document.getElementById('news-make-post-btn');
+  if (newsMakePostBtn) newsMakePostBtn.addEventListener('click', openPostFromTextModal);
+  if (postFromTextBackdrop) postFromTextBackdrop.addEventListener('click', closePostFromTextModal);
+  if (postFromTextClose) postFromTextClose.addEventListener('click', closePostFromTextModal);
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && postFromTextModal && postFromTextModal.classList.contains('is-open')) closePostFromTextModal();
+  });
+
+  if (postFromTextCopy) {
+    postFromTextCopy.addEventListener('click', function() {
+      var text = postFromTextResult ? postFromTextResult.value : '';
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(function() {
+        if (typeof window.toast === 'function') window.toast(tr.reddit_copied || 'Copied');
+      }).catch(function() {});
+    });
+  }
+  if (postFromTextResult) {
+    postFromTextResult.addEventListener('input', updatePostFromTextCharCount);
+    postFromTextResult.addEventListener('paste', function() { setTimeout(updatePostFromTextCharCount, 10); });
+  }
+  if (postFromTextLengthSelect) postFromTextLengthSelect.addEventListener('change', updatePostFromTextCharCount);
+
+  if (postFromTextGenerate) {
+    postFromTextGenerate.addEventListener('click', function() {
+      var inputText = (postFromTextInput && postFromTextInput.value) ? postFromTextInput.value.trim() : '';
+      if (!inputText || inputText.length < 50) {
+        if (typeof window.toast === 'function') window.toast(tr.news_post_from_text_min || 'Вставьте текст (минимум 50 символов)', 'error');
+        return;
+      }
+      var goal = document.getElementById('news-post-from-text-goal').value;
+      var length = document.getElementById('news-post-from-text-length').value;
+      var authorIndex = document.getElementById('news-post-from-text-author').value;
+      var author = (authorIndex !== '' && newsRewriteAuthorsList.length) ? newsRewriteAuthorsList[parseInt(authorIndex, 10)] : null;
+      var payload = { news_text: inputText, goal: goal, length: length };
+      if (author) payload.author = { full_name: author.full_name, role: author.role || '', history: author.history || '', linkedin_url: author.linkedin_url || '' };
+      if (newsRewriteSetupDraft.products && newsRewriteSetupDraft.products.length) payload.products = newsRewriteSetupDraft.products;
+      postFromTextGenerate.disabled = true;
+      postFromTextGenerate.textContent = (tr.reddit_generating || 'Generating…');
+      if (postFromTextResult) postFromTextResult.value = (tr.reddit_generating || 'Generating…');
+      updatePostFromTextCharCount();
+      fetch('/agents/news_post_agent/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ payload: payload }) })
+        .then(function(r) { return r.text().then(function(t) { return { ok: r.ok, status: r.status, text: t }; }); })
+        .then(function(r) {
+          if (!r.ok) {
+            var errMsg = r.text ? (function() { try { var j = JSON.parse(r.text); return j.detail || j.message || r.text.slice(0, 300); } catch (_) { return r.text.slice(0, 300); } }()) : (tr.news_error_server || 'Server error');
+            if (postFromTextResult) postFromTextResult.value = (tr.news_error_server || 'Server error') + ' (' + r.status + '): ' + errMsg;
+            updatePostFromTextCharCount();
+            return;
+          }
+          var data;
+          try { data = JSON.parse(r.text); } catch (_) { if (postFromTextResult) postFromTextResult.value = (tr.news_error_not_json || 'Error: response is not JSON.'); updatePostFromTextCharCount(); return; }
+          var postTextResult = data.result && data.result.post ? data.result.post : '';
+          if (postFromTextResult) postFromTextResult.value = (postTextResult || '').trim() || (tr.reddit_generate_failed || 'Failed to generate post.');
+          updatePostFromTextCharCount();
+        })
+        .catch(function(err) {
+          if (postFromTextResult) postFromTextResult.value = (tr.news_error_connect || 'Failed to connect to server.') + (err && err.message ? ': ' + err.message : '');
+          updatePostFromTextCharCount();
+        })
+        .finally(function() {
+          postFromTextGenerate.disabled = false;
+          postFromTextGenerate.textContent = (tr.reddit_rewrite_btn || 'Rewrite');
+        });
+    });
   }
 
   var sourceFilter = document.getElementById('news-source-filter');

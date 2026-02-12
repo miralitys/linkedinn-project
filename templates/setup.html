@@ -31,8 +31,8 @@
               <label class="sub">{{ tr.setup_author_role }}</label>
               <input name="author_role" type="text" placeholder="{{ tr.setup_author_role }}">
               <label class="sub">{{ tr.setup_author_history }}</label>
-              <p class="form-hint" style="margin: 0 0 var(--space-2) 0; font-size: var(--text-14); color: var(--text-muted);">{{ tr.setup_author_history_hint }}</p>
               <textarea name="author_history" rows="4" placeholder="{{ tr.setup_author_history_placeholder }}"></textarea>
+              <p class="form-hint" style="margin: var(--space-2) 0 var(--space-2) 0; font-size: var(--text-14); color: var(--text-muted);">{{ tr.setup_author_history_hint }}</p>
             </div>
           </div>
           <div class="form-actions-inline">
@@ -704,7 +704,7 @@
     block.innerHTML = '<label class="sub">' + (tr.setup_author_name || 'First and last name') + '</label><input name="author_full_name" type="text" placeholder="' + (tr.setup_author_name_short || 'First Last') + '" value="' + esc(a.full_name || '') + '">' +
       '<label class="sub">' + (tr.setup_author_linkedin || 'LinkedIn link') + '</label><input name="author_linkedin_url" type="text" placeholder="https://www.linkedin.com/in/..." value="' + esc(a.linkedin_url || '') + '">' +
       '<label class="sub">' + (tr.setup_author_role || 'Their role') + '</label><input name="author_role" type="text" placeholder="' + (tr.setup_role_placeholder || 'Position, expertise...') + '" value="' + esc(a.role || '') + '">' +
-      '<label class="sub">' + (tr.setup_author_history || 'Their background') + '</label><p class="form-hint" style="margin: 0 0 var(--space-2) 0; font-size: var(--text-14); color: var(--text-muted);">' + (tr.setup_author_history_hint || 'We recommend taking the interview — then you\'ll get the most accurate prompt.') + '</p><textarea name="author_history" rows="4" placeholder="' + (tr.setup_author_history_placeholder || 'Experience, background...') + '">' + esc(a.history || '') + '</textarea>';
+      '<label class="sub">' + (tr.setup_author_history || 'Their background') + '</label><textarea name="author_history" rows="4" placeholder="' + (tr.setup_author_history_placeholder || 'Experience, background...') + '">' + esc(a.history || '') + '</textarea><p class="form-hint" style="margin: var(--space-2) 0 var(--space-2) 0; font-size: var(--text-14); color: var(--text-muted);">' + (tr.setup_author_history_hint || 'We recommend taking the interview — then you\'ll get the most accurate prompt.') + '</p>';
     wrap.appendChild(block);
     setTimeout(resizeAllSetupTextareas, 0);
   }

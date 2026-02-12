@@ -515,9 +515,9 @@
         <label>{{ tr.setup_author_role }}</label>
         <input type="text" id="onboarding-author-role" placeholder="{{ tr.setup_author_role }}">
         <label>{{ tr.setup_author_history }}</label>
-        <p class="form-hint" style="margin: 0 0 var(--space-2) 0; font-size: var(--text-14); color: var(--text-muted);">{{ tr.setup_author_history_hint }}</p>
         <textarea id="onboarding-author-history" rows="3" placeholder="{{ tr.setup_author_history_placeholder }}"></textarea>
         <div class="onboarding-step-actions" style="margin-top: var(--space-4);">
+          <p class="form-hint" style="margin: 0 0 var(--space-2) 0; font-size: var(--text-14); color: var(--text-muted);">{{ tr.setup_author_history_hint }}</p>
           <button type="button" id="onboarding-btn-interview" class="btn secondary">{{ tr.setup_interview }}</button>
         </div>
       </div>
@@ -532,6 +532,8 @@
         <p class="step-desc">{{ tr.onboarding_step_contact_desc }}</p>
         <label>{{ tr.onboarding_contact_name }}</label>
         <input type="text" id="onboarding-contact-name" placeholder="{{ tr.onboarding_contact_name }}" required>
+        <label>{{ tr.onboarding_contact_position }}</label>
+        <input type="text" id="onboarding-contact-position" placeholder="{{ tr.onboarding_contact_position }}">
         <label>{{ tr.onboarding_contact_linkedin }}</label>
         <input type="url" id="onboarding-contact-linkedin" placeholder="{{ tr.onboarding_contact_linkedin_placeholder }}">
         <label>{{ tr.onboarding_contact_company }}</label>
@@ -722,6 +724,8 @@
         if (btnDone.disabled) return;
         setMsg('');
         var pname = (document.getElementById('onboarding-contact-name').value || '').trim();
+        var posInput = document.getElementById('onboarding-contact-position');
+        var title = (posInput && posInput.value) ? (posInput.value || '').trim() : '';
         var linkedinInput = document.getElementById('onboarding-contact-linkedin');
         var linkedinUrl = (linkedinInput && linkedinInput.value) ? (linkedinInput.value || '').trim() : '';
         var cid = document.getElementById('onboarding-contact-company');
@@ -734,7 +738,7 @@
         disableDone(true);
         fetch('/people', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ full_name: pname, company_id: companyId, linkedin_url: linkedinUrl }),
+          body: JSON.stringify({ full_name: pname, title: title || null, company_id: companyId, linkedin_url: linkedinUrl }),
           credentials: 'include'
         }).then(function(r) {
           disableDone(false);
