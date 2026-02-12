@@ -59,7 +59,7 @@ class CommentAgent(AgentBase):
         response = await self._llm.chat(
             [{"role": "system", "content": system}, {"role": "user", "content": user}],
             temperature=0.5,
-            max_tokens=1024,
+            max_tokens=512,
         )
         try:
             data = extract_json(response)
