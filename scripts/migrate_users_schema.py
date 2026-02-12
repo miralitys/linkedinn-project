@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Миграция таблицы users: добавление колонок plan_name, approval_status (если нет).
+Миграция схемы: users (plan_name, approval_status), usage, drafts (user_id).
 Запуск: из корня проекта с DATABASE_URL на Supabase в .env
 
   python -m scripts.migrate_users_schema
@@ -46,6 +46,7 @@ async def main():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )""",
+            "ALTER TABLE drafts ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)",
         ):
             try:
                 await conn.execute(text(sql))
