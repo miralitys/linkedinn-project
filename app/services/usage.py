@@ -87,7 +87,11 @@ async def check_generation_limit(
     Возвращает (ok, current, limit).
     Для Starter: отдельные лимиты post/comment. Для Pro/Enterprise: общий generations_month.
     """
-    user = await session.get(User, user_id)
+    try:
+        user = await session.get(User, user_id)
+    except Exception:
+        # Если запрос не удался (миграция, схема) — разрешаем генерацию
+        return True, 0, 999
     plan_name = getattr(user, "plan_name", None) if user else None
     plan = get_plan(plan_name)
 

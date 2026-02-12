@@ -1,5 +1,6 @@
 # app/routers/agents_routes.py
 import json
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,6 +15,7 @@ from app.schemas import AgentRunPayload, AgentRunResponse
 from agents.registry import AGENTS, run_agent
 
 router = APIRouter(prefix="/agents", tags=["agents"])
+_LOG = logging.getLogger(__name__)
 
 
 def _avatar_to_str(avatar) -> str:
@@ -38,6 +40,21 @@ async def run_agent_endpoint(
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
 ):
+    try:
+        return await _run_agent_impl(agent_name, body, session, user_id)
+    except HTTPException:
+        raise
+    except Exception as e:
+        _LOG.exception("Agent %s failed: %s", agent_name, e)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+async def _run_agent_impl(
+    agent_name: str,
+    body: AgentRunPayload,
+    session: AsyncSession,
+    user_id: int,
+) -> AgentRunResponse:
     if agent_name not in AGENTS:
         raise HTTPException(404, f"Unknown agent: {agent_name}")
     payload = body.payload or {}
@@ -53,11 +70,14 @@ async def run_agent_endpoint(
 
     # Inject shared memory (Sales Avatar) when needed
     if agent_name in ("content_agent", "comment_agent", "news_post_agent", "outreach_sequencer", "qa_guard"):
-        r = await session.execute(select(SalesAvatar).where(SalesAvatar.user_id == user_id).limit(1))
-        avatar = r.scalar_one_or_none()
-        if avatar and "sales_avatar" not in payload and "context" not in payload:
-            payload.setdefault("sales_avatar", _avatar_to_str(avatar))
-            payload.setdefault("context", _avatar_to_str(avatar))
+        try:
+            r = await session.execute(select(SalesAvatar).where(SalesAvatar.user_id == user_id).limit(1))
+            avatar = r.scalar_one_or_none()
+            if avatar and "sales_avatar" not in payload and "context" not in payload:
+                payload.setdefault("sales_avatar", _avatar_to_str(avatar))
+                payload.setdefault("context", _avatar_to_str(avatar))
+        except Exception:
+            pass  # Продолжаем без avatar
     
     # Inject setup data (authors, products, ICP) for scoring_agent
     if agent_name == "scoring_agent":
@@ -200,8 +220,11 @@ async def run_agent_endpoint(
         await session.flush()
         draft_id = draft.id
 
-    # Учёт генерации
+    # Учёт генерации (не блокируем ответ при ошибке)
     if agent_name in GENERATION_AGENTS:
-        await increment_usage(session, user_id, agent_name, 1)
+        try:
+            await increment_usage(session, user_id, agent_name, 1)
+        except Exception:
+            _LOG.warning("Failed to increment usage for %s", agent_name, exc_info=True)
 
     return AgentRunResponse(agent_name=agent_name, result=result, draft_id=draft_id)
