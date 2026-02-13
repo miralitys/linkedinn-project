@@ -441,6 +441,8 @@
     document.querySelectorAll('.author-history-wrap').forEach(function(el) { el.style.display = ''; });
     var saveAuthors = document.getElementById('save-authors');
     if (saveAuthors) saveAuthors.style.display = '';
+    var btnInterview = document.getElementById('btn-author-interview');
+    if (btnInterview) btnInterview.style.display = 'none';
     var resetLink = document.getElementById('reset-fingerprint-link');
     if (resetLink) resetLink.style.display = '';
   }
@@ -452,12 +454,15 @@
     document.querySelectorAll('.author-history-wrap').forEach(function(el) { el.style.display = 'none'; });
     var saveAuthors = document.getElementById('save-authors');
     if (saveAuthors) saveAuthors.style.display = 'none';
+    var btnInterview = document.getElementById('btn-author-interview');
+    if (btnInterview) btnInterview.style.display = '';
     var resetLink = document.getElementById('reset-fingerprint-link');
     if (resetLink) resetLink.style.display = 'none';
   }
 
   window.syncAuthorFormVisibility = function() {
-    if (window.__fingerprintCompleted) {
+    var isEditing = !!window.__authorFormEditing;
+    if (isEditing) {
       showHistoryBlocks();
     } else {
       hideHistoryBlocks();

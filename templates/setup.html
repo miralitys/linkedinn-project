@@ -719,6 +719,7 @@
       if (visible) wrap.removeAttribute('hidden'); else wrap.setAttribute('hidden', '');
     }
     if (btn) btn.setAttribute('aria-expanded', !!visible);
+    if (!visible) window.__authorFormEditing = false;
     if (visible) {
       if (typeof window.syncAuthorFormVisibility === 'function') window.syncAuthorFormVisibility();
       setTimeout(resizeAllSetupTextareas, 50);
@@ -744,12 +745,17 @@
     const block = document.createElement('div');
     block.className = 'author-block';
     const a = list[0];
+    var isEditing = !!window.__authorFormEditing;
+    var hasHistory = !!(a.history && String(a.history).trim());
+    var showHistoryField = isEditing || hasHistory;
+    var showInterviewHint = !showHistoryField;
+    var hintHtml = showInterviewHint ? ('<p class="form-hint author-interview-hint" style="margin: var(--space-2) 0 var(--space-2) 0; font-size: var(--text-14); color: var(--text-muted);">' + (tr.setup_author_history_hint || 'We recommend taking the interview — then you\'ll get the most accurate prompt.') + '</p>') : '';
     block.innerHTML = '<label class="sub">' + (tr.setup_author_name || 'First and last name') + '</label><input name="author_full_name" type="text" placeholder="' + (tr.setup_author_name_short || 'First Last') + '" value="' + esc(a.full_name || '') + '">' +
       '<label class="sub">' + (tr.setup_author_linkedin || 'LinkedIn link') + '</label><input name="author_linkedin_url" type="text" placeholder="https://www.linkedin.com/in/..." value="' + esc(a.linkedin_url || '') + '">' +
       '<label class="sub">' + (tr.setup_author_role || 'Their role') + '</label><input name="author_role" type="text" placeholder="' + (tr.setup_role_placeholder || 'Position, expertise...') + '" value="' + esc(a.role || '') + '">' +
-      '<div class="author-history-wrap" style="display:' + (window.__fingerprintCompleted ? '' : 'none') + ';">' +
+      '<div class="author-history-wrap" style="display:' + (showHistoryField ? '' : 'none') + ';">' +
       '<label class="sub">' + (tr.setup_author_history || 'Their background') + '</label><textarea name="author_history" rows="4" placeholder="' + (tr.setup_author_history_placeholder || 'Experience, background...') + '">' + esc(a.history || '') + '</textarea></div>' +
-      '<p class="form-hint" style="margin: var(--space-2) 0 var(--space-2) 0; font-size: var(--text-14); color: var(--text-muted);">' + (tr.setup_author_history_hint || 'We recommend taking the interview — then you\'ll get the most accurate prompt.') + '</p>';
+      hintHtml;
     wrap.appendChild(block);
     setTimeout(resizeAllSetupTextareas, 0);
   }
@@ -788,6 +794,7 @@
         btn.closest('.kebab-menu').hidden = true;
         btn.closest('.kebab-wrap').querySelector('.kebab-trigger').setAttribute('aria-expanded', 'false');
         editingAuthorIndex = i;
+        window.__authorFormEditing = true;
         setAuthorsToForm([savedAuthorsList[i]]);
         setAuthorsFormVisible(true);
         renderSavedAuthorsCards();
@@ -803,7 +810,7 @@
         const res = await fetch('/setup/section', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ section: 'authors', value: newList }), credentials: 'include' });
         if (res.ok && (await res.json()).ok) {
           savedAuthorsList = newList;
-          if (editingAuthorIndex === i) { editingAuthorIndex = null; setAuthorsFormVisible(false); }
+          if (editingAuthorIndex === i) { editingAuthorIndex = null; window.__authorFormEditing = false; setAuthorsFormVisible(false); }
           else if (editingAuthorIndex > i) editingAuthorIndex--;
           renderSavedAuthorsCards();
           updateSetupLimitBadges();
@@ -1059,6 +1066,7 @@
     const formWrap = document.getElementById('authors-form-wrap');
     if (formWrap && formWrap.hidden) {
       editingAuthorIndex = null;
+      window.__authorFormEditing = false;
       setAuthorsToForm([{ full_name: '', linkedin_url: '', role: '', history: '' }]);
       setAuthorsFormVisible(true);
     } else {
@@ -1068,6 +1076,7 @@
   const authorsCancelBtn = document.getElementById('authors-form-cancel');
   if (authorsCancelBtn) authorsCancelBtn.addEventListener('click', () => {
     editingAuthorIndex = null;
+    window.__authorFormEditing = false;
     setAuthorsFormVisible(false);
   });
   const authorsFormWrap = document.getElementById('authors-form-wrap');
@@ -1107,6 +1116,7 @@
   if (authorViewEdit) authorViewEdit.addEventListener('click', () => {
     if (viewedAuthorIndex !== null) {
       editingAuthorIndex = viewedAuthorIndex;
+      window.__authorFormEditing = true;
       setAuthorsToForm([savedAuthorsList[viewedAuthorIndex]]);
       setAuthorsFormVisible(true);
       renderSavedAuthorsCards();
@@ -1177,6 +1187,7 @@
         if (data.ok) {
           savedAuthorsList = authors;
           editingAuthorIndex = null;
+          window.__authorFormEditing = false;
           setAuthorsFormVisible(false);
           renderSavedAuthorsCards();
           setAuthorsToForm([{ full_name: '', linkedin_url: '', role: '', history: '' }]);

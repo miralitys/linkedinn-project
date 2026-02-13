@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ (tr.admin_users_title if tr else 'Пользователи') }} — MyVOICE's{% endblock %}
 {% block content %}
+<div class="admin-users-page">
 <header class="page-header">
   <div class="page-header-text">
     <h1>{{ (tr.admin_users_title if tr else 'Пользователи') }}</h1>
@@ -13,26 +14,26 @@
   </div>
 </header>
 
-<div class="admin-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6);">
-  <div class="card admin-stat-card" style="padding: var(--space-4); min-width: 0;">
-    <div style="font-size: var(--text-24); font-weight: 700; color: var(--primary);">{{ total_users }}</div>
-    <div style="font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1);">{{ (tr.admin_total_users if tr else 'Всего пользователей') }}</div>
+<div class="admin-stats">
+  <div class="admin-stat-card">
+    <span class="admin-stat-value">{{ total_users }}</span>
+    <span class="admin-stat-label">{{ (tr.admin_total_users if tr else 'Всего пользователей') }}</span>
   </div>
-  <div class="card admin-stat-card" style="padding: var(--space-4); min-width: 0;">
-    <div style="font-size: var(--text-24); font-weight: 700; color: var(--primary);">{{ admin_count }}</div>
-    <div style="font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1);">{{ (tr.admin_admins if tr else 'Администраторов') }}</div>
+  <div class="admin-stat-card">
+    <span class="admin-stat-value">{{ admin_count }}</span>
+    <span class="admin-stat-label">{{ (tr.admin_admins if tr else 'Администраторов') }}</span>
   </div>
-  <div class="card admin-stat-card" style="padding: var(--space-4); min-width: 0;">
-    <div style="font-size: var(--text-24); font-weight: 700; color: var(--success, #10b981);">{{ active_subscriptions }}</div>
-    <div style="font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1);">{{ (tr.admin_active_subscriptions if tr else 'Активных подписок') }}</div>
+  <div class="admin-stat-card">
+    <span class="admin-stat-value admin-stat-value-success">{{ active_subscriptions }}</span>
+    <span class="admin-stat-label">{{ (tr.admin_active_subscriptions if tr else 'Активных подписок') }}</span>
   </div>
-  <div class="card admin-stat-card" style="padding: var(--space-4); min-width: 0;">
-    <div style="font-size: var(--text-24); font-weight: 700; color: var(--warning, #f59e0b);">{{ trial_users }}</div>
-    <div style="font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1);">{{ (tr.admin_trial_users if tr else 'Пробных пользователей') }}</div>
+  <div class="admin-stat-card">
+    <span class="admin-stat-value admin-stat-value-warning">{{ trial_users }}</span>
+    <span class="admin-stat-label">{{ (tr.admin_trial_users if tr else 'Пробных пользователей') }}</span>
   </div>
-  <div class="card admin-stat-card" style="padding: var(--space-4); min-width: 0;">
-    <div style="font-size: var(--text-24); font-weight: 700; color: var(--warning, #f59e0b);">{{ pending_users }}</div>
-    <div style="font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1);">{{ (tr.admin_pending_users if tr else 'Ожидают подтверждения') }}</div>
+  <div class="admin-stat-card">
+    <span class="admin-stat-value admin-stat-value-warning">{{ pending_users }}</span>
+    <span class="admin-stat-label">{{ (tr.admin_pending_users if tr else 'Ожидают подтверждения') }}</span>
   </div>
 </div>
 
@@ -124,6 +125,7 @@
       </tbody>
     </table>
   </div>
+</div>
 </div>
 
 <!-- Модальное окно добавления пользователя -->
@@ -263,18 +265,124 @@
 </div>
 
 <style>
-  .admin-stats { align-items: stretch; }
-  .admin-stats .admin-stat-card { height: 6rem; display: flex; flex-direction: column; justify-content: center; }
-  .admin-users-card { overflow: visible; }
-  .admin-users-card .data-table-wrap { overflow: visible; }
-  .admin-users-card .data-table td { overflow: visible; }
-  .admin-user-menu-wrap { position: relative; display: inline-block; }
+  .admin-users-page { max-width: 100%; overflow-x: hidden; }
+  .admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  @media (min-width: 640px) {
+    .admin-stats { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-4); }
+  }
+  .admin-stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 72px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  @media (min-width: 640px) {
+    .admin-stat-card { padding: var(--space-5); min-height: 88px; }
+  }
+  .admin-stat-card:hover {
+    border-color: var(--primary-soft, rgba(99, 102, 241, 0.3));
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  .admin-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+  @media (min-width: 640px) {
+    .admin-stat-value { font-size: 1.75rem; }
+  }
+  .admin-stat-value-success { color: var(--success, #10b981); }
+  .admin-stat-value-warning { color: var(--warning, #f59e0b); }
+  .admin-stat-label {
+    font-size: var(--text-14);
+    color: var(--text-muted);
+    margin-top: var(--space-2);
+    line-height: 1.4;
+    max-width: 100%;
+  }
+  .admin-users-card {
+    overflow: visible;
+    padding: 0;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    max-width: 100%;
+  }
+  .admin-users-card .data-table-wrap {
+    overflow: visible;
+    width: 100%;
+  }
+  .admin-users-card .data-table {
+    width: 100%;
+    table-layout: fixed;
+  }
+  .admin-users-card .data-table th,
+  .admin-users-card .data-table td {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-13);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  @media (min-width: 1024px) {
+    .admin-users-card .data-table th,
+    .admin-users-card .data-table td { padding: var(--space-2) var(--space-4); font-size: var(--text-14); }
+  }
+  .admin-users-card .data-table { border-radius: var(--radius-lg); }
+  .admin-users-card .data-table thead th { border-top: none; }
+  .admin-users-card .data-table td { overflow: visible; vertical-align: middle; }
+  .admin-users-card .data-table th:last-child,
+  .admin-users-card .data-table td:last-child { padding-right: var(--space-5); }
+  .admin-user-menu-wrap { position: relative; display: inline-block; z-index: 1; }
+  .admin-user-menu-wrap.is-open { z-index: 1000; }
   .admin-user-menu-wrap .btn-card-menu { min-width: 36px; min-height: 36px; padding: 0; border: none; background: transparent; color: var(--text-muted); border-radius: var(--radius-sm); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
   .admin-user-menu-wrap .btn-card-menu:hover { background: var(--primary-soft); color: var(--primary); }
   .admin-user-menu-wrap .btn-card-menu:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-  .admin-user-menu-dropdown { position: absolute; right: 0; top: 100%; margin-top: 4px; min-width: 140px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-md); padding: var(--space-1); z-index: 100; display: none; }
+  .admin-user-menu-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 4px;
+    min-width: 160px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    padding: var(--space-2);
+    z-index: 100;
+    display: none;
+    list-style: none;
+    counter-reset: none;
+  }
   .admin-user-menu-wrap.is-open .admin-user-menu-dropdown { display: block; }
-  .admin-user-menu-item { display: block; width: 100%; padding: var(--space-2) var(--space-3); text-align: left; font-size: var(--text-13); color: var(--text); background: none; border: none; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; }
+  .admin-user-menu-item {
+    display: block;
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    text-align: left;
+    font-size: var(--text-14);
+    color: var(--text);
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    list-style: none;
+    appearance: none;
+  }
   .admin-user-menu-item:hover { background: var(--bg-soft); }
   .admin-user-menu-item.danger:hover { color: var(--danger); }
   .confirm-modal-desc { margin: 0 0 var(--space-4); font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; }
