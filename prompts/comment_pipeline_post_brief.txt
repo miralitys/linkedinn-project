@@ -1,0 +1,15 @@
+Проанализируй пост и верни JSON.
+
+Пост:
+{post_text}
+
+Верни ТОЛЬКО валидный JSON (без markdown, без пояснений):
+{{
+  "main_claim": "1 строка — о чём пост, главный тезис",
+  "anchors": ["конкретика/цифра/фраза 1", "конкретика 2", "..."],
+  "tone": "inspirational|neutral|sarcastic|reflective|aggressive|question|case|opinion",
+  "tags": ["тег1", "тег2", "тег3", "..."]
+}}
+
+anchors: 2-5 конкретных якорей из поста (цифры, имена, цитаты, ключевые фразы) — то, на что можно опереться в комментарии.
+tags: 3-7 тематических тегов (AI, logistics, startups, marketing, etc.).

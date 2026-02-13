@@ -92,8 +92,10 @@ class NewsPostAgent(AgentBase):
         for i, p in enumerate(products_raw, 1):
             if isinstance(p, dict):
                 name = p.get("name") or ""
+                one_liner = p.get("one_liner") or ""
                 desc = p.get("description") or ""
-                products_lines.append(f"{i}. {name}" + (f" — {desc}" if desc else ""))
+                human = one_liner or desc
+                products_lines.append(f"{i}. {name}" + (f" — {human}" if human else ""))
             elif isinstance(p, str) and p.strip():
                 products_lines.append(f"{i}. {p.strip()}")
         products_str = "\n".join(products_lines) if products_lines else "Продукты не загружены."

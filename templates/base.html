@@ -304,21 +304,256 @@
     .onboarding-step-wrap .step-desc { font-size: var(--text-14); color: var(--text-muted); margin: 0 0 var(--space-4); line-height: 1.5; }
     .onboarding-actions { display: flex; gap: var(--space-3); margin-top: var(--space-6); flex-wrap: wrap; }
     .onboarding-actions .btn { flex: 1; min-width: 120px; }
-    .interview-modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 2100; padding: var(--space-4); }
+    .interview-modal-overlay {
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.75) 100%);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2100; padding: var(--space-6);
+      animation: interview-fade-in 0.3s ease;
+    }
     .interview-modal-overlay[hidden] { display: none !important; }
-    .interview-modal { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--elevation-modal); max-width: 560px; width: 100%; padding: var(--space-6); }
-    .interview-confirm-box { text-align: center; }
-    .interview-modal-title { margin: 0 0 var(--space-3); font-size: var(--text-20); }
-    .interview-confirm-text { margin: 0 0 var(--space-5); color: var(--text); }
-    .interview-confirm-actions { display: flex; gap: var(--space-3); justify-content: center; }
-    .interview-question-box { max-height: 90vh; overflow-y: auto; }
-    .interview-progress-wrap { margin-bottom: var(--space-4); }
-    .interview-progress-bar { height: 8px; background: var(--border); border-radius: var(--radius-pill); overflow: hidden; }
-    .interview-progress-bar > .fill { display: block; height: 100%; background: var(--primary); border-radius: var(--radius-pill); transition: width var(--motion-normal); min-width: 2%; }
-    .interview-section-label { font-size: var(--text-14); font-weight: 600; color: var(--primary); margin: 0 0 var(--space-2); }
-    .interview-question-text { font-size: var(--text-16); color: var(--text); margin: 0 0 var(--space-3); line-height: 1.5; }
+    @keyframes interview-fade-in { from { opacity: 0; } to { opacity: 1; } }
+    .interview-modal {
+      background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+      border-radius: 24px;
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.08),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05),
+        0 24px 48px -12px rgba(0, 0, 0, 0.12),
+        0 0 80px -24px rgba(99, 102, 241, 0.2);
+      max-width: 560px; width: 100%;
+      padding: var(--space-10) var(--space-10);
+      animation: interview-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes interview-slide-up { from { opacity: 0; transform: translateY(24px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .interview-confirm-box { text-align: center; padding: var(--space-2); }
+    .interview-modal-title { margin: 0 0 var(--space-4); font-size: 1.3125rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+    .interview-confirm-text { margin: 0 0 var(--space-6); color: var(--text-muted); line-height: 1.65; font-size: var(--text-14); }
+    .interview-confirm-actions { display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap; }
+    .interview-question-box {
+      max-height: 90vh;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+    .interview-question-box::-webkit-scrollbar { width: 8px; }
+    .interview-question-box::-webkit-scrollbar-track { background: transparent; }
+    .interview-question-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--radius-pill); }
+    .interview-question-box::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+    .interview-progress-wrap {
+      margin-bottom: var(--space-6);
+      padding: var(--space-3) var(--space-4);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, rgba(129, 140, 248, 0.02) 100%);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(99, 102, 241, 0.08);
+    }
+    .interview-progress-bar {
+      height: 10px;
+      background: rgba(99, 102, 241, 0.1);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .interview-progress-bar > .fill {
+      display: block; height: 100%;
+      background: linear-gradient(90deg, var(--primary) 0%, #818cf8 60%, #a5b4fc 100%);
+      border-radius: var(--radius-pill);
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      min-width: 2%;
+      box-shadow: 0 0 16px rgba(99, 102, 241, 0.35);
+    }
+    .interview-progress-text {
+      margin: var(--space-3) 0 0 0;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+    }
+    .interview-section-label {
+      display: inline-block;
+      font-size: var(--text-12);
+      font-weight: 600;
+      color: var(--primary);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(129, 140, 248, 0.08) 100%);
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius-pill);
+      margin-bottom: var(--space-4);
+      letter-spacing: 0.05em;
+      border: 1px solid rgba(99, 102, 241, 0.18);
+    }
+    .interview-section-label.interview-section-extra {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.06) 100%);
+      color: #059669;
+      border-color: rgba(34, 197, 94, 0.25);
+    }
+    .interview-question-text {
+      font-size: 1.1875rem;
+      font-weight: 600;
+      color: var(--text);
+      margin: 0 0 var(--space-6);
+      line-height: 1.55;
+      letter-spacing: -0.02em;
+    }
     .interview-answer-input { width: 100%; padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: var(--text-14); resize: vertical; min-height: 100px; box-sizing: border-box; }
-    .interview-question-actions { display: flex; gap: var(--space-2); justify-content: space-between; margin-top: var(--space-4); }
+    .interview-question-body { min-height: 4rem; margin-bottom: var(--space-5); }
+    .interview-question-body .fp-options { display: flex; flex-direction: column; gap: var(--space-3); }
+    .interview-question-body .fp-option {
+      display: flex; align-items: center; gap: var(--space-4);
+      font-size: var(--text-14); cursor: pointer;
+      padding: var(--space-4) var(--space-5);
+      border-radius: var(--radius-lg);
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .interview-question-body .fp-option:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      background: linear-gradient(135deg, var(--primary-soft) 0%, rgba(129, 140, 248, 0.05) 100%);
+    }
+    .interview-question-body .fp-option input {
+      margin: 0; cursor: pointer;
+      width: 22px; height: 22px;
+      accent-color: var(--primary);
+      flex-shrink: 0;
+    }
+    .interview-question-body .fp-option:has(input:checked) {
+      border-color: var(--primary);
+      background: linear-gradient(135deg, var(--primary-soft) 0%, rgba(129, 140, 248, 0.1) 100%);
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.2);
+    }
+    .interview-question-body .fp-select {
+      width: 100%; padding: var(--space-4) var(--space-5);
+      font-size: var(--text-14);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .interview-question-body .fp-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+    }
+    .interview-question-body .fp-slider-wrap {
+      display: flex; align-items: center; gap: var(--space-6);
+      padding: var(--space-8) var(--space-8);
+      flex-wrap: wrap;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(129, 140, 248, 0.02) 100%);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(99, 102, 241, 0.1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+    .interview-question-body .fp-slider-label {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      white-space: normal;
+      max-width: 180px;
+      line-height: 1.4;
+    }
+    .interview-question-body .fp-slider-num {
+      font-weight: 700; color: var(--primary);
+      margin-right: 6px;
+      font-size: 0.9em;
+    }
+    .interview-question-body .fp-slider-label-min { order: -1; }
+    .interview-question-body .fp-slider {
+      flex: 1; min-width: 140px; height: 14px;
+      -webkit-appearance: none; appearance: none;
+      background: linear-gradient(to right, var(--primary) 0%, var(--primary) var(--slider-pct, 50%), rgba(99, 102, 241, 0.15) var(--slider-pct, 50%) 100%);
+      border-radius: var(--radius-pill);
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .interview-question-body .fp-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #ffffff 0%, #e0e7ff 40%, var(--primary) 100%);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4), 0 0 0 3px rgba(255,255,255,0.95);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .interview-question-body .fp-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.5), 0 0 0 3px rgba(255,255,255,0.95);
+    }
+    .interview-question-body .fp-slider::-moz-range-thumb {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #ffffff 0%, #e0e7ff 40%, var(--primary) 100%);
+      cursor: pointer; border: 3px solid rgba(255,255,255,0.95);
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    }
+    .interview-question-body .fp-slider-value {
+      min-width: 3.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 1.375rem;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--primary-soft) 0%, rgba(129, 140, 248, 0.12) 100%);
+      padding: var(--space-3) var(--space-5);
+      border-radius: var(--radius-pill);
+      text-align: center;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      box-shadow: 0 1px 3px rgba(99, 102, 241, 0.1);
+    }
+    .interview-question-body .fp-textarea {
+      width: 100%; padding: var(--space-4) var(--space-5);
+      font-size: var(--text-14);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      resize: vertical; min-height: 100px;
+      box-sizing: border-box;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .interview-question-body .fp-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+    }
+    .interview-question-body .fp-hint { margin: var(--space-2) 0 0 0; font-size: var(--text-12); color: var(--text-muted); }
+    .interview-question-body .fp-followup { margin-top: var(--space-4); }
+    .interview-question-body .fp-followup-label { display: block; font-size: var(--text-13); font-weight: 500; margin-bottom: var(--space-2); color: var(--text-secondary); }
+    .interview-question-body .fp-required { color: var(--danger, #dc2626); }
+    .interview-question-body .fp-other-label { display: block; font-size: var(--text-12); color: var(--text-muted); margin-bottom: var(--space-2); }
+    .interview-question-actions {
+      display: flex; gap: var(--space-3);
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: var(--space-8);
+      padding-top: var(--space-6);
+      border-top: 1px solid rgba(99, 102, 241, 0.08);
+    }
+    .interview-question-actions .btn.primary {
+      background: linear-gradient(135deg, var(--primary) 0%, #6366f1 50%, #818cf8 100%);
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+      padding: var(--space-3) var(--space-6);
+      font-weight: 600;
+      border: none;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+    }
+    .interview-question-actions .btn.primary:hover {
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+      transform: translateY(-1px);
+    }
+    .interview-question-actions .btn.interview-finish-btn {
+      padding: var(--space-4) var(--space-8);
+      font-size: 1rem;
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+    }
+    .interview-question-actions .btn.interview-finish-btn:hover {
+      box-shadow: 0 8px 28px rgba(99, 102, 241, 0.55);
+    }
+    .interview-last-question .interview-question-text {
+      font-size: 1.1875rem;
+    }
+    .interview-question-actions .btn.secondary {
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
     .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
     .toast-container { position: fixed; bottom: var(--space-6); right: var(--space-6); z-index: 1000; display: flex; flex-direction: column; gap: var(--space-2); max-width: 360px; }
     .toast-item { padding: var(--space-3) var(--space-4); border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--elevation-modal); font-size: var(--text-14); animation: toast-in 0.25s ease; }
@@ -462,6 +697,10 @@
       <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       {{ tr.nav_settings }}
     </a>
+    <a href="/ui/onboarding" class="nav-link {% if request and request.url.path == '/ui/onboarding' %}active{% endif %}" aria-current="{% if request and request.url.path == '/ui/onboarding' %}page{% else %}false{% endif %}" style="display:none;">
+      <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      {{ tr.nav_fingerprint }}
+    </a>
     <a href="{{ '/en/pricing' if locale is defined and locale == 'en' else '/pricing' }}" class="nav-link {% if request and (request.url.path == '/ui/pricing' or request.url.path == '/pricing' or request.url.path == '/en/pricing') %}active{% endif %}">
       <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       {{ tr.nav_pricing }}
@@ -518,11 +757,13 @@
         <input type="url" id="onboarding-author-linkedin" placeholder="https://www.linkedin.com/in/...">
         <label>{{ tr.setup_author_role }}</label>
         <input type="text" id="onboarding-author-role" placeholder="{{ tr.setup_author_role }}">
-        <label>{{ tr.setup_author_history }}</label>
-        <textarea id="onboarding-author-history" rows="3" placeholder="{{ tr.setup_author_history_placeholder }}"></textarea>
+        <div id="onboarding-history-wrap" class="author-history-wrap" style="display:none;">
+          <label>{{ tr.setup_author_history }}</label>
+          <textarea id="onboarding-author-history" rows="3" placeholder="{{ tr.setup_author_history_placeholder }}"></textarea>
+        </div>
         <div class="onboarding-step-actions" style="margin-top: var(--space-4);">
           <p class="form-hint" style="margin: 0 0 var(--space-2) 0; font-size: var(--text-14); color: var(--text-muted);">{{ tr.setup_author_history_hint }}</p>
-          <button type="button" id="onboarding-btn-interview" class="btn secondary">{{ tr.setup_interview }}</button>
+          <button type="button" id="onboarding-btn-interview" class="btn primary">{{ tr.setup_interview }}</button>
         </div>
       </div>
       <div id="onboarding-step-2" class="onboarding-step-wrap">
@@ -553,11 +794,11 @@
   </div>
   <!-- Interview modals (shared: onboarding + setup) -->
   <div id="interview-confirm-modal" class="interview-modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="interview-confirm-title">
-    <div class="interview-modal interview-confirm-box">
+    <div class="interview-modal interview-confirm-box" style="max-width: 440px;">
       <h2 id="interview-confirm-title" class="interview-modal-title">{{ tr.interview_title }}</h2>
       <p class="interview-confirm-text">{{ tr.interview_intro|safe }}</p>
       <div class="interview-confirm-actions">
-        <button type="button" id="interview-confirm-yes" class="btn primary">{{ tr.interview_ready }}</button>
+        <button type="button" id="interview-confirm-yes" class="btn primary" style="min-width: 140px;">{{ tr.interview_ready }}</button>
         <button type="button" id="interview-confirm-no" class="btn secondary">{{ tr.interview_later }}</button>
       </div>
     </div>
@@ -580,16 +821,17 @@
       </div>
       <h2 id="interview-section-label" class="interview-section-label"></h2>
       <p id="interview-question-title" class="interview-question-text"></p>
-      <textarea id="interview-answer-input" class="interview-answer-input" rows="4" placeholder="{{ tr.interview_answer_placeholder }}" aria-label="{{ tr.interview_answer_placeholder }}"></textarea>
+      <div id="interview-question-body" class="interview-question-body"></div>
       <div class="interview-question-actions">
-        <button type="button" id="interview-close" class="btn secondary" style="margin-right: auto;">{{ tr.interview_close_save }}</button>
+        <button type="button" id="interview-save" class="btn primary" style="margin-right: auto;">{{ tr.interview_save_progress }}</button>
+        <button type="button" id="interview-close" class="btn secondary">{{ tr.interview_close }}</button>
         <button type="button" id="interview-prev" class="btn secondary">{{ tr.interview_prev }}</button>
         <button type="button" id="interview-next" class="btn primary">{{ tr.interview_next }}</button>
       </div>
     </div>
   </div>
   </div>
-  <script src="/static/js/interview.js"></script>
+  <script src="/static/js/interview.js?v=13"></script>
   <script>
     window.toast = function(message, type) {
       type = type || 'success';
@@ -683,9 +925,12 @@
           var linkedinInput = document.getElementById('onboarding-author-linkedin');
           var linkedinUrl = (linkedinInput && linkedinInput.value) ? (linkedinInput.value || '').trim() : '';
           var role = (document.getElementById('onboarding-author-role').value || '').trim();
+          var historyWrap = document.getElementById('onboarding-history-wrap');
+          var historyVisible = historyWrap && historyWrap.style.display !== 'none';
           var history = (document.getElementById('onboarding-author-history').value || '').trim();
           if (!name) { setMsg(tr('setup_author_name_required'), true); return; }
           if (!role) { setMsg(tr('setup_author_role_required') || 'Заполните роль', true); return; }
+          if (!historyVisible) { setMsg(tr('setup_interview_required') || 'Сначала пройдите интервью', true); return; }
           if (!history) { setMsg(tr('setup_author_history_required') || 'Заполните историю', true); return; }
           if (linkedinUrl && linkedinUrl.indexOf('linkedin.com') === -1) { setMsg(tr('person_linkedin_error') || 'Некорректная ссылка LinkedIn', true); return; }
           disableNext(true);

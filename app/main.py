@@ -24,6 +24,7 @@ from app.routers import (
     setup,
     touches,
 )
+from app.routers import onboarding as onboarding_router
 
 scheduler = AsyncIOScheduler()
 
@@ -135,6 +136,7 @@ app.include_router(auth.router)
 from app.routers import admin
 app.include_router(admin.router)
 app.include_router(setup.router)
+app.include_router(onboarding_router.router)
 app.include_router(companies.router)
 app.include_router(people.router)
 app.include_router(touches.router)
@@ -241,6 +243,20 @@ try:
     async def ui_setup(request: Request):
         return templates.TemplateResponse(
             request, "setup.html", {"request": request, **_app_context(request)}
+        )
+
+    @app.get("/ui/onboarding", response_class=HTMLResponse)
+    async def ui_onboarding(request: Request):
+        from app.onboarding_questions import get_all_questions_flat
+        ctx = _app_context(request)
+        return templates.TemplateResponse(
+            request,
+            "onboarding.html",
+            {
+                "request": request,
+                **ctx,
+                "questions_json": get_all_questions_flat(),
+            },
         )
 
     @app.get("/ui/companies", response_class=HTMLResponse)

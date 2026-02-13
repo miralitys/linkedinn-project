@@ -33,14 +33,17 @@
               <input name="author_linkedin_url" type="text" placeholder="https://www.linkedin.com/in/...">
               <label class="sub">{{ tr.setup_author_role }}</label>
               <input name="author_role" type="text" placeholder="{{ tr.setup_author_role }}">
-              <label class="sub">{{ tr.setup_author_history }}</label>
-              <textarea name="author_history" rows="4" placeholder="{{ tr.setup_author_history_placeholder }}"></textarea>
+              <div class="author-history-wrap" style="display:none;">
+                <label class="sub">{{ tr.setup_author_history }}</label>
+                <textarea name="author_history" rows="4" placeholder="{{ tr.setup_author_history_placeholder }}"></textarea>
+              </div>
               <p class="form-hint" style="margin: var(--space-2) 0 var(--space-2) 0; font-size: var(--text-14); color: var(--text-muted);">{{ tr.setup_author_history_hint }}</p>
+              <p class="form-hint" style="margin: var(--space-1) 0 0 0; font-size: var(--text-12);"><a href="#" id="reset-fingerprint-link" style="display:none;">Сбросить fingerprint</a></p>
             </div>
           </div>
           <div class="form-actions-inline">
-            <button type="button" id="save-authors" class="btn primary">{{ tr.setup_save }}</button>
-            <button type="button" id="btn-author-interview" class="btn secondary">{{ tr.setup_interview }}</button>
+            <button type="button" id="save-authors" class="btn primary" style="display:none;">{{ tr.setup_save }}</button>
+            <button type="button" id="btn-author-interview" class="btn primary">{{ tr.setup_interview }}</button>
             <button type="button" id="authors-form-cancel" class="btn secondary">{{ tr.setup_cancel }}</button>
           </div>
           <p id="save-authors-msg" class="save-msg"></p>
@@ -66,8 +69,20 @@
             <div class="product-block">
               <label class="sub">{{ tr.setup_product_name }}</label>
               <input name="product_name" type="text" placeholder="{{ tr.setup_product_name_placeholder }}">
+              <label class="sub">{{ tr.setup_product_one_liner }}</label>
+              <input name="product_one_liner" type="text" placeholder="{{ tr.setup_product_one_liner_placeholder }}">
               <label class="sub">{{ tr.setup_product_desc }}</label>
               <textarea name="product_desc" rows="2" placeholder="{{ tr.setup_product_desc_placeholder }}"></textarea>
+              <label class="sub">{{ tr.setup_product_tags }}</label>
+              <input name="product_tags" type="text" placeholder="{{ tr.setup_product_tags_placeholder }}">
+              <label class="sub">{{ tr.setup_product_icp_tags }}</label>
+              <input name="product_icp_tags" type="text" placeholder="{{ tr.setup_product_icp_tags_placeholder }}">
+              <label class="sub">{{ tr.setup_product_allowed_claims }}</label>
+              <textarea name="product_allowed_claims" rows="2" placeholder="{{ tr.setup_product_allowed_claims_placeholder }}"></textarea>
+              <label class="sub">{{ tr.setup_product_forbidden_claims }}</label>
+              <textarea name="product_forbidden_claims" rows="2" placeholder="{{ tr.setup_product_forbidden_claims_placeholder }}"></textarea>
+              <label class="sub">{{ tr.setup_product_cta_templates }}</label>
+              <textarea name="product_cta_templates" rows="2" placeholder="{{ tr.setup_product_cta_templates_placeholder }}"></textarea>
             </div>
           </div>
           <div class="form-actions-inline">
@@ -173,10 +188,7 @@
       <button type="button" id="product-view-drawer-close" class="setup-view-drawer-close btn-icon" title="{{ tr.common_close_esc }}" aria-label="{{ tr.common_close }}">×</button>
     </div>
     <div class="setup-view-drawer-body">
-      <dl class="setup-view-drawer-dl">
-        <dt>{{ tr.setup_name }}</dt><dd id="product-view-name"></dd>
-        <dt>{{ tr.setup_description }}</dt><dd id="product-view-desc"></dd>
-      </dl>
+      <dl id="product-view-dl" class="setup-view-drawer-dl"></dl>
       <div class="setup-view-drawer-actions">
         <button type="button" id="product-view-drawer-edit" class="btn secondary">{{ tr.setup_edit }}</button>
       </div>
@@ -527,13 +539,30 @@
   let editingProductIndex = null;
   let savedIcpList = [];
   let editingIcpIndex = null;
+  function _parseList(val) {
+    if (!val || typeof val !== 'string') return [];
+    return val.split(/[,\n]/).map(s => s.trim()).filter(Boolean);
+  }
   function getProductsFromForm() {
-    const names = document.querySelectorAll('input[name="product_name"]');
-    const descs = document.querySelectorAll('textarea[name="product_desc"]');
-    return Array.from(names).map((inp, i) => ({
-      name: (inp.value || '').trim(),
-      description: (descs[i] && descs[i].value ? descs[i].value.trim() : '')
-    })).filter(p => p.name);
+    const blocks = document.querySelectorAll('.product-block');
+    return Array.from(blocks).map(block => {
+      const name = (block.querySelector('input[name="product_name"]')?.value || '').trim();
+      const desc = (block.querySelector('textarea[name="product_desc"]')?.value || '').trim();
+      const oneLiner = (block.querySelector('input[name="product_one_liner"]')?.value || '').trim();
+      const tagsRaw = block.querySelector('input[name="product_tags"]')?.value || '';
+      const icpTagsRaw = block.querySelector('input[name="product_icp_tags"]')?.value || '';
+      const allowedRaw = block.querySelector('textarea[name="product_allowed_claims"]')?.value || '';
+      const forbiddenRaw = block.querySelector('textarea[name="product_forbidden_claims"]')?.value || '';
+      const ctaRaw = block.querySelector('textarea[name="product_cta_templates"]')?.value || '';
+      const p = { name, description: desc || undefined };
+      if (oneLiner) p.one_liner = oneLiner;
+      const tags = _parseList(tagsRaw); if (tags.length) p.tags = tags;
+      const icpTags = _parseList(icpTagsRaw); if (icpTags.length) p.icp_tags = icpTags;
+      const allowed = _parseList(allowedRaw); if (allowed.length) p.allowed_claims = allowed;
+      const forbidden = _parseList(forbiddenRaw); if (forbidden.length) p.forbidden_claims = forbidden;
+      const cta = _parseList(ctaRaw); if (cta.length) p.cta_templates = cta;
+      return p;
+    }).filter(p => p.name);
   }
   function getIcpFromForm() {
     const name = document.querySelector('input[name="icp_name"]');
@@ -690,7 +719,10 @@
       if (visible) wrap.removeAttribute('hidden'); else wrap.setAttribute('hidden', '');
     }
     if (btn) btn.setAttribute('aria-expanded', !!visible);
-    if (visible) setTimeout(resizeAllSetupTextareas, 50);
+    if (visible) {
+      if (typeof window.syncAuthorFormVisibility === 'function') window.syncAuthorFormVisibility();
+      setTimeout(resizeAllSetupTextareas, 50);
+    }
   }
   function getAuthorsFromForm() {
     const names = document.querySelectorAll('input[name="author_full_name"]');
@@ -715,7 +747,9 @@
     block.innerHTML = '<label class="sub">' + (tr.setup_author_name || 'First and last name') + '</label><input name="author_full_name" type="text" placeholder="' + (tr.setup_author_name_short || 'First Last') + '" value="' + esc(a.full_name || '') + '">' +
       '<label class="sub">' + (tr.setup_author_linkedin || 'LinkedIn link') + '</label><input name="author_linkedin_url" type="text" placeholder="https://www.linkedin.com/in/..." value="' + esc(a.linkedin_url || '') + '">' +
       '<label class="sub">' + (tr.setup_author_role || 'Their role') + '</label><input name="author_role" type="text" placeholder="' + (tr.setup_role_placeholder || 'Position, expertise...') + '" value="' + esc(a.role || '') + '">' +
-      '<label class="sub">' + (tr.setup_author_history || 'Their background') + '</label><textarea name="author_history" rows="4" placeholder="' + (tr.setup_author_history_placeholder || 'Experience, background...') + '">' + esc(a.history || '') + '</textarea><p class="form-hint" style="margin: var(--space-2) 0 var(--space-2) 0; font-size: var(--text-14); color: var(--text-muted);">' + (tr.setup_author_history_hint || 'We recommend taking the interview — then you\'ll get the most accurate prompt.') + '</p>';
+      '<div class="author-history-wrap" style="display:' + (window.__fingerprintCompleted ? '' : 'none') + ';">' +
+      '<label class="sub">' + (tr.setup_author_history || 'Their background') + '</label><textarea name="author_history" rows="4" placeholder="' + (tr.setup_author_history_placeholder || 'Experience, background...') + '">' + esc(a.history || '') + '</textarea></div>' +
+      '<p class="form-hint" style="margin: var(--space-2) 0 var(--space-2) 0; font-size: var(--text-14); color: var(--text-muted);">' + (tr.setup_author_history_hint || 'We recommend taking the interview — then you\'ll get the most accurate prompt.') + '</p>';
     wrap.appendChild(block);
     setTimeout(resizeAllSetupTextareas, 0);
   }
@@ -879,6 +913,11 @@
     const drawer = document.getElementById('author-view-drawer');
     if (drawer) { drawer.classList.remove('is-open'); drawer.setAttribute('aria-hidden', 'true'); }
   }
+  function _row(label, val) {
+    if (val === undefined || val === null || val === '') return '';
+    const v = Array.isArray(val) ? val.join(', ') : String(val);
+    return '<dt>' + esc(label) + '</dt><dd>' + esc(v) + '</dd>';
+  }
   function openProductView(i) {
     const p = savedProductsList[i];
     if (!p) return;
@@ -887,8 +926,18 @@
     if (!drawer) return;
     const name = (p.name || p.title) || (tr.setup_no_name || 'No name');
     document.getElementById('product-view-drawer-title').textContent = name;
-    document.getElementById('product-view-name').textContent = name;
-    document.getElementById('product-view-desc').textContent = (p.description || p.desc || '') || '—';
+    const dl = document.getElementById('product-view-dl');
+    if (dl) {
+      let html = _row(tr.setup_name || 'Name', name) +
+        _row(tr.setup_product_one_liner || 'One-liner', p.one_liner) +
+        _row(tr.setup_description || 'Description', p.description || p.desc) +
+        _row(tr.setup_product_tags || 'Tags', p.tags) +
+        _row(tr.setup_product_icp_tags || 'ICP tags', p.icp_tags) +
+        _row(tr.setup_product_allowed_claims || 'Allowed claims', p.allowed_claims) +
+        _row(tr.setup_product_forbidden_claims || 'Forbidden claims', p.forbidden_claims) +
+        _row(tr.setup_product_cta_templates || 'CTA templates', p.cta_templates);
+      dl.innerHTML = html || '<dd>—</dd>';
+    }
     drawer.classList.add('is-open');
     drawer.setAttribute('aria-hidden', 'false');
   }
@@ -932,6 +981,32 @@
   function resizeAllSetupTextareas() {
     document.querySelectorAll('.setup-form-wrap textarea').forEach(resizeTextarea);
   }
+  function _productBlockHtml(p) {
+    const name = esc(p.name || '');
+    const desc = esc(p.description || '');
+    const oneLiner = esc(p.one_liner || '');
+    const tags = (p.tags && Array.isArray(p.tags)) ? p.tags.join(', ') : '';
+    const icpTags = (p.icp_tags && Array.isArray(p.icp_tags)) ? p.icp_tags.join(', ') : '';
+    const allowed = (p.allowed_claims && Array.isArray(p.allowed_claims)) ? p.allowed_claims.join('\n') : '';
+    const forbidden = (p.forbidden_claims && Array.isArray(p.forbidden_claims)) ? p.forbidden_claims.join('\n') : '';
+    const cta = (p.cta_templates && Array.isArray(p.cta_templates)) ? p.cta_templates.join('\n') : '';
+    return '<label class="sub">' + (tr.setup_product_name || 'Product name') + '</label>' +
+      '<input name="product_name" type="text" placeholder="' + (tr.setup_product_name_placeholder || '') + '" value="' + name + '">' +
+      '<label class="sub">' + (tr.setup_product_one_liner || 'One-liner') + '</label>' +
+      '<input name="product_one_liner" type="text" placeholder="' + (tr.setup_product_one_liner_placeholder || '') + '" value="' + oneLiner + '">' +
+      '<label class="sub">' + (tr.setup_product_desc || 'Product description') + '</label>' +
+      '<textarea name="product_desc" rows="2" placeholder="' + (tr.setup_product_desc_placeholder || '') + '">' + desc + '</textarea>' +
+      '<label class="sub">' + (tr.setup_product_tags || 'Tags') + '</label>' +
+      '<input name="product_tags" type="text" placeholder="' + (tr.setup_product_tags_placeholder || '') + '" value="' + esc(tags) + '">' +
+      '<label class="sub">' + (tr.setup_product_icp_tags || 'ICP tags') + '</label>' +
+      '<input name="product_icp_tags" type="text" placeholder="' + (tr.setup_product_icp_tags_placeholder || '') + '" value="' + esc(icpTags) + '">' +
+      '<label class="sub">' + (tr.setup_product_allowed_claims || 'Allowed claims') + '</label>' +
+      '<textarea name="product_allowed_claims" rows="2" placeholder="' + (tr.setup_product_allowed_claims_placeholder || '') + '">' + esc(allowed) + '</textarea>' +
+      '<label class="sub">' + (tr.setup_product_forbidden_claims || 'Forbidden claims') + '</label>' +
+      '<textarea name="product_forbidden_claims" rows="2" placeholder="' + (tr.setup_product_forbidden_claims_placeholder || '') + '">' + esc(forbidden) + '</textarea>' +
+      '<label class="sub">' + (tr.setup_product_cta_templates || 'CTA templates') + '</label>' +
+      '<textarea name="product_cta_templates" rows="2" placeholder="' + (tr.setup_product_cta_templates_placeholder || '') + '">' + esc(cta) + '</textarea>';
+  }
   function setProductsToForm(products) {
     const wrap = document.getElementById('products-wrap');
     if (!wrap) return;
@@ -941,19 +1016,12 @@
       if (i === 0) {
         const block = document.createElement('div');
         block.className = 'product-block';
-        block.innerHTML = '<label class="sub">' + (tr.setup_product_name || 'Product name') + '</label>' +
-          '<input name="product_name" type="text" placeholder="' + (tr.setup_product_name_placeholder || 'Product name') + '" value="' + esc(p.name) + '">' +
-          '<label class="sub">' + (tr.setup_product_desc || 'Product description') + '</label>' +
-          '<textarea name="product_desc" rows="2" placeholder="' + (tr.setup_description_placeholder || 'Description...') + '">' + esc(p.description) + '</textarea>';
+        block.innerHTML = _productBlockHtml(p);
         wrap.appendChild(block);
       } else {
         const row = document.createElement('div');
         row.className = 'product-row';
-        row.innerHTML = '<div class="product-block">' +
-          '<label class="sub">' + (tr.setup_product_name || 'Product name') + '</label>' +
-          '<input name="product_name" type="text" placeholder="' + (tr.setup_product_name_placeholder || 'Product name') + '" value="' + esc(p.name) + '">' +
-          '<label class="sub">' + (tr.setup_product_desc || 'Product description') + '</label>' +
-          '<textarea name="product_desc" rows="2" placeholder="' + (tr.setup_description_placeholder || 'Description...') + '">' + esc(p.description) + '</textarea>' +
+        row.innerHTML = '<div class="product-block">' + _productBlockHtml(p) +
           '</div><button type="button" class="btn-remove btn-add" title="' + (tr.companies_delete || 'Delete') + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
         row.querySelector('.btn-remove').addEventListener('click', () => row.remove());
         wrap.appendChild(row);
@@ -983,6 +1051,9 @@
     editingProductIndex = null;
     setProductsFormVisible(false);
   });
+  var resetFpLink = document.getElementById('reset-fingerprint-link');
+  if (resetFpLink) resetFpLink.addEventListener('click', function(e) { e.preventDefault(); if (typeof window.resetFingerprint === 'function') window.resetFingerprint(); });
+
   const addAuthorBtn = document.getElementById('add-author');
   if (addAuthorBtn) addAuthorBtn.addEventListener('click', function() {
     const formWrap = document.getElementById('authors-form-wrap');

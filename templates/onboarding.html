@@ -1,0 +1,524 @@
+{% extends "base.html" %}
+{% block title %}{{ tr.onboarding_fp_title }} — MyVOICE's{% endblock %}
+{% block content %}
+<header class="onboarding-fp-header">
+  <h1 class="onboarding-fp-title">{{ tr.onboarding_fp_title }}</h1>
+  <p class="onboarding-fp-desc">{{ tr.onboarding_fp_lead }}</p>
+</header>
+
+<div id="onboarding-fp-wizard" class="onboarding-fp-wizard">
+  <div class="onboarding-fp-progress">
+    <div class="onboarding-fp-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+      <span id="onboarding-fp-progress-fill" class="progress-fill"></span>
+    </div>
+    <p id="onboarding-fp-progress-text" class="onboarding-fp-progress-text"></p>
+  </div>
+
+  <div id="onboarding-fp-question-card" class="onboarding-fp-card">
+    <div id="onboarding-fp-section-label" class="onboarding-fp-section-label"></div>
+    <h2 id="onboarding-fp-question-text" class="onboarding-fp-question-text"></h2>
+    <div id="onboarding-fp-question-body"></div>
+  </div>
+
+  <div class="onboarding-fp-nav">
+    <button type="button" id="onboarding-fp-prev" class="btn secondary" style="display:none;">{{ tr.interview_prev }}</button>
+    <button type="button" id="onboarding-fp-next" class="btn primary">{{ tr.interview_next }}</button>
+    <button type="button" id="onboarding-fp-save" class="btn primary" style="display:none;">{{ tr.onboarding_fp_save }}</button>
+    <p id="onboarding-fp-msg" class="onboarding-fp-msg" role="status"></p>
+  </div>
+</div>
+
+<style>
+  .onboarding-fp-header { margin-bottom: var(--space-8); }
+  .onboarding-fp-title { margin: 0 0 var(--space-2); font-size: 1.375rem; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+  .onboarding-fp-desc { margin: 0; font-size: var(--text-14); color: var(--text-muted); line-height: 1.6; max-width: 42rem; }
+  .onboarding-fp-wizard { max-width: 36rem; }
+  .onboarding-fp-progress { margin-bottom: var(--space-5); }
+  .onboarding-fp-progress-bar {
+    height: 8px;
+    background: rgba(99, 102, 241, 0.12);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .onboarding-fp-progress-bar .progress-fill {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary) 0%, #818cf8 100%);
+    border-radius: var(--radius-pill);
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .onboarding-fp-progress-text { margin: var(--space-2) 0 0 0; font-size: var(--text-14); color: var(--text-muted); font-weight: 500; }
+  .onboarding-fp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 0 0 1px rgba(99, 102, 241, 0.06);
+    margin-bottom: var(--space-4);
+  }
+  .onboarding-fp-section-label {
+    font-size: var(--text-12); font-weight: 600; color: var(--primary);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.14) 0%, rgba(129, 140, 248, 0.1) 100%);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-pill);
+    margin-bottom: var(--space-4);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    display: inline-block;
+  }
+  .onboarding-fp-question-text { margin: 0 0 var(--space-5); font-size: 1.125rem; font-weight: 600; color: var(--text); line-height: 1.5; letter-spacing: -0.01em; }
+  .onboarding-fp-question-body { min-height: 4rem; }
+  .onboarding-fp-nav { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+  .onboarding-fp-msg { margin: 0; font-size: var(--text-14); min-height: 1.5em; flex: 1; }
+  .onboarding-fp-options { display: flex; flex-direction: column; gap: var(--space-3); }
+  .onboarding-fp-option {
+    display: flex; align-items: center; gap: var(--space-4);
+    font-size: var(--text-14); cursor: pointer;
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    transition: all 0.2s ease;
+  }
+  .onboarding-fp-option:hover {
+    border-color: rgba(99, 102, 241, 0.35);
+    background: var(--primary-soft);
+  }
+  .onboarding-fp-option input { margin: 0; cursor: pointer; width: 20px; height: 20px; accent-color: var(--primary); flex-shrink: 0; }
+  .onboarding-fp-option:has(input:checked) {
+    border-color: var(--primary);
+    background: linear-gradient(135deg, var(--primary-soft) 0%, rgba(129, 140, 248, 0.08) 100%);
+    box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.25);
+  }
+  .onboarding-fp-other-label { display: block; font-size: var(--text-12); color: var(--text-muted); margin-bottom: var(--space-2); }
+  .onboarding-fp-other-label .fp-required { color: var(--danger, #dc2626); }
+  .onboarding-fp-select {
+    width: 100%;
+    padding: var(--space-4) var(--space-5);
+    font-size: var(--text-14);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    transition: border-color 0.2s ease;
+  }
+  .onboarding-fp-select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
+  .onboarding-fp-slider-wrap {
+    display: flex; align-items: center; gap: var(--space-5);
+    padding: var(--space-6);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, rgba(129, 140, 248, 0.03) 100%);
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(99, 102, 241, 0.12);
+  }
+  .onboarding-fp-slider {
+    flex: 1; min-width: 140px; height: 14px;
+    -webkit-appearance: none; appearance: none;
+    background: linear-gradient(to right, var(--primary) 0%, var(--primary) var(--slider-pct, 50%), rgba(99, 102, 241, 0.15) var(--slider-pct, 50%) 100%);
+    border-radius: var(--radius-pill);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .onboarding-fp-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #fff 0%, var(--primary) 50%, #818cf8 100%);
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(99, 102, 241, 0.5);
+    transition: transform 0.2s ease;
+  }
+  .onboarding-fp-slider::-webkit-slider-thumb:hover { transform: scale(1.12); }
+  .onboarding-fp-slider::-moz-range-thumb {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #fff 0%, var(--primary) 50%, #818cf8 100%);
+    cursor: pointer; border: 2px solid rgba(255,255,255,0.9);
+    box-shadow: 0 2px 12px rgba(99, 102, 241, 0.5);
+  }
+  .slider-value {
+    min-width: 3rem; font-weight: 700; color: var(--primary); font-size: 1.25rem;
+    background: linear-gradient(135deg, var(--primary-soft) 0%, rgba(129, 140, 248, 0.15) 100%);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-pill);
+    text-align: center;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+  }
+  .fp-slider-label { font-size: 0.8125rem; color: var(--text-muted); white-space: normal; max-width: 180px; line-height: 1.4; }
+  .fp-slider-num { font-weight: 700; color: var(--primary); margin-right: 4px; }
+  .onboarding-fp-textarea {
+    width: 100%;
+    padding: var(--space-4) var(--space-5);
+    font-size: var(--text-14);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    resize: vertical;
+    min-height: 100px;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease;
+  }
+  .onboarding-fp-textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18); }
+  .q-hint { margin: var(--space-2) 0 0 0; font-size: var(--text-12); color: var(--text-muted); }
+</style>
+
+<script>
+(function() {
+  const questions = {{ questions_json|tojson }};
+  const total = questions.length;
+  let currentIndex = 0;
+  const answers = {};
+
+  const progressFill = document.getElementById('onboarding-fp-progress-fill');
+  const progressText = document.getElementById('onboarding-fp-progress-text');
+  const sectionLabel = document.getElementById('onboarding-fp-section-label');
+  const questionText = document.getElementById('onboarding-fp-question-text');
+  const questionBody = document.getElementById('onboarding-fp-question-body');
+  const btnPrev = document.getElementById('onboarding-fp-prev');
+  const btnNext = document.getElementById('onboarding-fp-next');
+  const btnSave = document.getElementById('onboarding-fp-save');
+  const msgEl = document.getElementById('onboarding-fp-msg');
+  const tr = window.__tr || {};
+
+  function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function getCurrentValue(q) {
+    const storeTo = q.store_to;
+    const otherOpt = q.other_option;
+    const wrap = questionBody;
+    const radios = wrap.querySelectorAll('input[type="radio"][name="' + storeTo + '"]');
+    const checks = wrap.querySelectorAll('input[type="checkbox"][name="' + storeTo + '"]');
+    const select = wrap.querySelector('select[name="' + storeTo + '"]');
+    const slider = wrap.querySelector('input[type="range"][name="' + storeTo + '"]');
+    const textarea = wrap.querySelector('textarea[name="' + storeTo + '"]');
+    const otherInput = wrap.querySelector('input.onboarding-fp-other-input[name="' + storeTo + '_other"]');
+    if (radios.length) {
+      const r = wrap.querySelector('input[type="radio"][name="' + storeTo + '"]:checked');
+      if (!r) return null;
+      const selVal = r.value;
+      if (otherOpt && selVal === otherOpt && otherInput) {
+        const t = (otherInput.value || '').trim();
+        return t || selVal;
+      }
+      return selVal;
+    }
+    if (checks.length) {
+      const arr = Array.from(wrap.querySelectorAll('input[type="checkbox"][name="' + storeTo + '"]:checked')).map(function(c) { return c.value; });
+      if (otherOpt && arr.indexOf(otherOpt) >= 0 && otherInput) {
+        const txt = (otherInput.value || '').trim();
+        arr = arr.filter(function(v) { return v !== otherOpt; });
+        if (txt) arr.push(txt);
+      }
+      return arr;
+    }
+    if (select) {
+      const selVal = select.value;
+      if (otherOpt && selVal === otherOpt && otherInput) {
+        const t = (otherInput.value || '').trim();
+        return t || selVal;
+      }
+      return selVal;
+    }
+    if (slider) return parseInt(slider.value, 10);
+    if (textarea) return (textarea.value || '').trim();
+    return null;
+  }
+
+  function saveCurrentAnswer() {
+    if (currentIndex >= 0 && currentIndex < total) {
+      const q = questions[currentIndex];
+      let val = getCurrentValue(q);
+      const def = q.default;
+      if (val === null || val === '' || (Array.isArray(val) && val.length === 0)) {
+        if (q.optional && q.ui_type === 'text_optional') val = '';
+        else if (val === null && def !== undefined) val = def;
+      }
+      if (val !== null && (val !== '' || !q.optional)) answers[q.store_to] = val;
+    }
+  }
+
+  function renderQuestionBody(q) {
+    const storeTo = q.store_to;
+    const saved = answers[storeTo];
+    let html = '';
+    if (q.ui_type === 'radio') {
+      const otherOpt = q.other_option;
+      const isOther = otherOpt && (saved && q.options && q.options.indexOf(saved) < 0);
+      const otherVal = isOther ? saved : '';
+      html = '<div class="onboarding-fp-options" role="radiogroup" aria-label="' + esc(q.question) + '">';
+      (q.options || []).forEach(function(opt) {
+        const checked = (isOther ? opt === otherOpt : (saved !== undefined ? saved === opt : opt === q.default)) ? ' checked' : '';
+        html += '<label class="onboarding-fp-option"><input type="radio" name="' + esc(storeTo) + '" value="' + esc(opt) + '"' + checked + '> ' + esc(opt) + '</label>';
+      });
+      html += '</div>';
+      if (otherOpt) {
+        html += '<div class="onboarding-fp-other-wrap" id="onboarding-other-wrap-' + esc(storeTo).replace(/\./g, '-') + '" style="' + (isOther ? '' : 'display:none;') + ' margin-top: var(--space-3);">';
+        html += '<label class="onboarding-fp-other-label"><span class="fp-required">*</span> ' + (tr.onboarding_other_required || 'Обязательно укажите') + '</label>';
+        html += '<input type="text" class="onboarding-fp-other-input onboarding-fp-textarea" name="' + esc(storeTo) + '_other" placeholder="' + esc(q.other_placeholder || 'Укажите свой вариант') + '" value="' + esc(otherVal) + '">';
+        html += '</div>';
+      }
+    } else if (q.ui_type === 'checkbox') {
+      const defArr = Array.isArray(q.default) ? q.default : [q.default];
+      const savedArr = Array.isArray(saved) ? saved : (saved ? [saved] : []);
+      const otherOpt = q.other_option;
+      let otherVal = '';
+      if (otherOpt && savedArr.length) {
+        const notInOpts = savedArr.filter(function(v) { return !q.options || q.options.indexOf(v) < 0; });
+        if (notInOpts.length) otherVal = notInOpts[0];
+        savedArr = savedArr.filter(function(v) { return q.options && q.options.indexOf(v) >= 0; });
+        if (otherVal) savedArr.push(otherOpt);
+      }
+      const useVal = saved !== undefined ? savedArr : defArr;
+      const isOtherChecked = useVal.indexOf(otherOpt) >= 0;
+      html = '<div class="onboarding-fp-options" role="group">';
+      (q.options || []).forEach(function(opt) {
+        const checked = useVal.indexOf(opt) >= 0 ? ' checked' : '';
+        html += '<label class="onboarding-fp-option"><input type="checkbox" name="' + esc(storeTo) + '" value="' + esc(opt) + '"' + checked + '> ' + esc(opt) + '</label>';
+      });
+      html += '</div>';
+      if (otherOpt) {
+        html += '<div class="onboarding-fp-other-wrap" id="onboarding-other-wrap-' + esc(storeTo).replace(/\./g, '-') + '" style="' + (isOtherChecked ? '' : 'display:none;') + ' margin-top: var(--space-3);">';
+        html += '<label class="onboarding-fp-other-label"><span class="fp-required">*</span> ' + (tr.onboarding_other_required || 'Обязательно укажите') + '</label>';
+        html += '<input type="text" class="onboarding-fp-other-input onboarding-fp-textarea" name="' + esc(storeTo) + '_other" placeholder="' + esc(q.other_placeholder || 'Укажите свой вариант') + '" value="' + esc(otherVal) + '">';
+        html += '</div>';
+      }
+      if (q.max_select) html += '<p class="q-hint">' + (tr.onboarding_select_up_to || 'Выбери до') + ' ' + q.max_select + '</p>';
+    } else if (q.ui_type === 'dropdown') {
+      const def = q.default;
+      const otherOpt = q.other_option;
+      const val = saved !== undefined ? saved : def;
+      const isOther = otherOpt && (val === otherOpt || (val && q.options && q.options.indexOf(val) < 0));
+      const otherVal = isOther && val !== otherOpt ? val : '';
+      html = '<select name="' + esc(storeTo) + '" class="onboarding-fp-select" id="onboarding-select-' + esc(storeTo).replace(/\./g, '-') + '">';
+      (q.options || []).forEach(function(opt) {
+        const sel = (isOther ? opt === otherOpt : val === opt) ? ' selected' : '';
+        html += '<option value="' + esc(opt) + '"' + sel + '>' + esc(opt) + '</option>';
+      });
+      html += '</select>';
+      if (otherOpt) {
+        html += '<div class="onboarding-fp-other-wrap" id="onboarding-other-wrap-' + esc(storeTo).replace(/\./g, '-') + '" style="' + (isOther ? '' : 'display:none;') + ' margin-top: var(--space-3);">';
+        html += '<label class="onboarding-fp-other-label"><span class="fp-required">*</span> ' + (tr.onboarding_other_required || 'Обязательно укажите') + '</label>';
+        html += '<input type="text" class="onboarding-fp-other-input onboarding-fp-textarea" name="' + esc(storeTo) + '_other" placeholder="' + esc(q.other_placeholder || 'Укажите свой вариант') + '" value="' + esc(otherVal) + '">';
+        html += '</div>';
+      }
+    } else if (q.ui_type === 'slider') {
+      const min = (q.options && q.options[0]) || 1;
+      const max = (q.options && q.options[1]) || 10;
+      const val = saved !== undefined ? saved : (q.default !== undefined ? q.default : min);
+      const labels = q.slider_labels || {};
+      const minLabel = labels.min || labels[min] || '';
+      const maxLabel = labels.max || labels[max] || '';
+      html = '<div class="onboarding-fp-slider-wrap">';
+      if (minLabel) html += '<span class="fp-slider-label fp-slider-label-min"><span class="fp-slider-num">' + min + '</span> ' + esc(minLabel) + '</span>';
+      html += '<input type="range" name="' + esc(storeTo) + '" class="onboarding-fp-slider" min="' + min + '" max="' + max + '" value="' + val + '" aria-label="' + esc(q.question) + '"><span class="slider-value" data-for="' + esc(storeTo) + '">' + val + '</span>';
+      if (maxLabel) html += '<span class="fp-slider-label fp-slider-label-max"><span class="fp-slider-num">' + max + '</span> ' + esc(maxLabel) + '</span>';
+      html += '</div>';
+    } else if (q.ui_type === 'text_optional') {
+      html = '<textarea name="' + esc(storeTo) + '" class="onboarding-fp-textarea" rows="3" placeholder="' + esc(q.default || '') + '">' + esc(saved || '') + '</textarea>';
+    }
+    questionBody.innerHTML = html || '';
+
+    if (q.ui_type === 'slider') {
+      const slider = questionBody.querySelector('input[type="range"]');
+      if (slider) {
+        const min = parseInt(slider.min, 10) || 1;
+        const max = parseInt(slider.max, 10) || 10;
+        function updateSliderPct() {
+          const val = parseInt(slider.value, 10);
+          const pct = ((val - min) / (max - min) * 100) + '%';
+          slider.style.setProperty('--slider-pct', pct);
+        }
+        updateSliderPct();
+        slider.addEventListener('input', function() {
+          const sv = questionBody.querySelector('.slider-value[data-for="' + storeTo + '"]');
+          if (sv) sv.textContent = slider.value;
+          updateSliderPct();
+        });
+      }
+    }
+    if (q.ui_type === 'checkbox') {
+      const checks = questionBody.querySelectorAll('input[type="checkbox"][name="' + storeTo + '"]');
+      const exclusiveOpt = q.exclusive_option;
+      checks.forEach(function(cb) {
+        cb.addEventListener('change', function() {
+          if (exclusiveOpt) {
+            if (cb.value === exclusiveOpt && cb.checked) {
+              checks.forEach(function(c) { if (c !== cb) c.checked = false; });
+            } else if (cb.value !== exclusiveOpt && cb.checked) {
+              const excCb = questionBody.querySelector('input[type="checkbox"][name="' + storeTo + '"][value="' + exclusiveOpt + '"]');
+              if (excCb) excCb.checked = false;
+            }
+          }
+          if (q.max_select) {
+            const checked = questionBody.querySelectorAll('input[type="checkbox"][name="' + storeTo + '"]:checked');
+            if (checked.length > q.max_select) checked[q.max_select].checked = false;
+          }
+        });
+      });
+    }
+    const otherOpt = q.other_option;
+    if (otherOpt) {
+      const wrapId = 'onboarding-other-wrap-' + storeTo.replace(/\./g, '-');
+      const otherWrap = questionBody.querySelector('[id="' + wrapId + '"]');
+      function toggleOther() {
+        let show = false;
+        if (q.ui_type === 'radio') {
+          const r = questionBody.querySelector('input[type="radio"][name="' + storeTo + '"]:checked');
+          show = r && r.value === otherOpt;
+        } else if (q.ui_type === 'checkbox') {
+          const r = Array.from(questionBody.querySelectorAll('input[type="checkbox"][name="' + storeTo + '"]')).find(function(c) { return c.value === otherOpt; });
+          show = r && r.checked;
+        } else if (q.ui_type === 'dropdown') {
+          const sel = questionBody.querySelector('select[name="' + storeTo + '"]');
+          show = sel && sel.value === otherOpt;
+        }
+        if (otherWrap) otherWrap.style.display = show ? '' : 'none';
+      }
+      if (q.ui_type === 'radio') {
+        questionBody.querySelectorAll('input[type="radio"][name="' + storeTo + '"]').forEach(function(r) {
+          r.addEventListener('change', toggleOther);
+        });
+      } else if (q.ui_type === 'checkbox') {
+        const cb = Array.from(questionBody.querySelectorAll('input[type="checkbox"][name="' + storeTo + '"]')).find(function(c) { return c.value === otherOpt; });
+        if (cb) cb.addEventListener('change', toggleOther);
+      } else if (q.ui_type === 'dropdown') {
+        const sel = questionBody.querySelector('select[name="' + storeTo + '"]');
+        if (sel) sel.addEventListener('change', toggleOther);
+      }
+    }
+  }
+
+  function renderQuestion() {
+    const q = questions[currentIndex];
+    progressFill.style.width = (total ? ((currentIndex + 1) / total) * 100 : 0) + '%';
+    progressText.textContent = (tr.interview_question_progress_full || 'Вопрос {0} из {1} · осталось примерно {2} мин')
+      .replace('{0}', currentIndex + 1).replace('{1}', total).replace('{2}', Math.max(0, Math.ceil((total - currentIndex - 1) * 0.5)));
+    sectionLabel.textContent = q.section_title || '';
+    questionText.textContent = (typeof q.id === 'number' ? q.id + '. ' : '') + (q.question || '');
+    renderQuestionBody(q);
+    btnPrev.style.display = currentIndex > 0 ? 'inline-block' : 'none';
+    btnNext.style.display = currentIndex < total - 1 ? 'inline-block' : 'none';
+    btnSave.style.display = currentIndex === total - 1 ? 'inline-block' : 'none';
+    msgEl.textContent = '';
+  }
+
+  function validateCurrentQuestion() {
+    const q = questions[currentIndex];
+    if (!q || q.optional) return true;
+    const val = getCurrentValue(q);
+    if (val === null) return false;
+    if (val === '') return false;
+    if (Array.isArray(val) && val.length === 0) return false;
+    return true;
+  }
+
+  function validateRequiredOther() {
+    const q = questions[currentIndex];
+    if (!q || !q.other_option) return true;
+    const storeTo = q.store_to;
+    let isOtherSelected = false;
+    if (q.ui_type === 'radio') {
+      const r = questionBody.querySelector('input[type="radio"][name="' + storeTo + '"]:checked');
+      isOtherSelected = r && r.value === q.other_option;
+    } else if (q.ui_type === 'checkbox') {
+      const cb = Array.from(questionBody.querySelectorAll('input[type="checkbox"][name="' + storeTo + '"]')).find(function(c) { return c.value === q.other_option && c.checked; });
+      isOtherSelected = !!cb;
+    } else if (q.ui_type === 'dropdown') {
+      const sel = questionBody.querySelector('select[name="' + storeTo + '"]');
+      isOtherSelected = sel && sel.value === q.other_option;
+    }
+    if (!isOtherSelected) return true;
+    const otherInput = questionBody.querySelector('input.onboarding-fp-other-input[name="' + storeTo + '_other"]');
+    return otherInput && (otherInput.value || '').trim().length > 0;
+  }
+
+  function applyFingerprint(fp) {
+    function flatten(obj, prefix) {
+      prefix = prefix || '';
+      const out = {};
+      for (const k in obj) {
+        const v = obj[k];
+        const path = prefix ? prefix + '.' + k : k;
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+          Object.assign(out, flatten(v, path));
+        } else {
+          out[path] = v;
+        }
+      }
+      return out;
+    }
+    const flat = flatten(fp);
+    for (const path in flat) answers[path] = flat[path];
+  }
+
+  btnPrev.addEventListener('click', function() {
+    saveCurrentAnswer();
+    if (currentIndex > 0) {
+      currentIndex--;
+      renderQuestion();
+    }
+  });
+
+  btnNext.addEventListener('click', function() {
+    saveCurrentAnswer();
+    if (!validateCurrentQuestion() || !validateRequiredOther()) {
+      msgEl.textContent = tr.onboarding_fill_required || 'Заполните обязательные поля';
+      msgEl.style.color = 'var(--danger)';
+      return;
+    }
+    msgEl.textContent = '';
+    if (currentIndex < total - 1) {
+      currentIndex++;
+      renderQuestion();
+    }
+  });
+
+  btnSave.addEventListener('click', async function() {
+    saveCurrentAnswer();
+    if (!validateCurrentQuestion() || !validateRequiredOther()) {
+      msgEl.textContent = tr.onboarding_fill_required || 'Заполните обязательные поля';
+      msgEl.style.color = 'var(--danger)';
+      return;
+    }
+    msgEl.textContent = '';
+    btnSave.disabled = true;
+    btnSave.textContent = tr.onboarding_saving || 'Сохранение…';
+    const payload = {};
+    questions.forEach(function(q) {
+      const v = answers[q.store_to];
+      if (v !== undefined && v !== null && (v !== '' || !q.optional)) payload[q.store_to] = v;
+      else if (!q.optional && q.ui_type !== 'text_optional') payload[q.store_to] = q.default;
+    });
+    try {
+      const res = await fetch('/onboarding/fingerprint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        credentials: 'include'
+      });
+      const data = await res.json().catch(function() { return {}; });
+      if (res.ok && data.ok) {
+        msgEl.textContent = tr.onboarding_fp_saved || 'Сохранено';
+        msgEl.style.color = 'var(--primary)';
+      } else {
+        msgEl.textContent = data.error || data.detail || (tr.common_error || 'Ошибка');
+        msgEl.style.color = 'var(--danger)';
+      }
+    } catch (err) {
+      msgEl.textContent = (tr.onboarding_error || 'Ошибка: ') + (err.message || '');
+      msgEl.style.color = 'var(--danger)';
+    } finally {
+      btnSave.disabled = false;
+      btnSave.textContent = tr.onboarding_fp_save || 'Сохранить';
+    }
+  });
+
+  fetch('/onboarding/fingerprint', { credentials: 'include' })
+    .then(function(r) { return r.ok ? r.json() : {}; })
+    .then(function(fp) {
+      if (fp && Object.keys(fp).length > 0) applyFingerprint(fp);
+      renderQuestion();
+    })
+    .catch(function() { renderQuestion(); });
+})();
+</script>
+{% endblock %}

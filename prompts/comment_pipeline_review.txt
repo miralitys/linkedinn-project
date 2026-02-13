@@ -1,0 +1,40 @@
+Проверь комментарий на соответствие критериям.
+
+Вариант: {variant}
+Пороги: {thresholds}
+
+Правила fail (нарушение = немедленный fail):
+{policy_fail_rules}
+
+Всегда fail: no_post_anchor, fake_personal_claim, lecture_mode, toxicity
+
+Черновик:
+{draft}
+
+Якоря поста (должен быть >=1):
+{anchors}
+
+Ограничения автора:
+{constraints}
+
+Product plan (если есть):
+{product_plan_section}
+
+Верни ТОЛЬКО валидный JSON:
+{{
+  "pass": true/false,
+  "scores": {{
+    "persona_fit": 0-100,
+    "ai_smell": 0-100,
+    "post_anchor": 0-100,
+    "clarity": 0-100,
+    "integrity": 0-100,
+    "salesiness": 0-100
+  }},
+  "flags": ["generic_opening", "cliche", "lecture_mode", "fake_personal_claim", "no_post_anchor", "too_long", "too_formal", "product_mention", "cta", "link", "forbidden_claim_violation", "toxicity", "salesy_tone", "product_missing", "cta_missing", "em_dash", "colon"],
+  "patch_plan": [
+    {{"op": "remove|replace|add", "hint": "конкретное указание"}}
+  ]
+}}
+
+patch_plan: максимум 2-3 правки. Не переписывать >35% текста. Не добавлять фактов.

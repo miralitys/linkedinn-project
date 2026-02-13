@@ -78,7 +78,36 @@ async def _run_agent_impl(
                 payload.setdefault("context", _avatar_to_str(avatar))
         except Exception:
             pass  # Продолжаем без avatar
-    
+
+    # Inject fingerprint + products for comment_agent
+    if agent_name == "comment_agent":
+        try:
+            fp_key = f"fingerprint:{user_id}"
+            r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == fp_key))
+            row = r.scalar_one_or_none()
+            if row and row.value and "author_answers_66" not in payload and "fingerprint" not in payload:
+                try:
+                    fingerprint = json.loads(row.value)
+                    payload.setdefault("author_answers_66", fingerprint)
+                    payload.setdefault("fingerprint", fingerprint)
+                except Exception:
+                    pass
+            if not payload.get("products"):
+                for base_key in ("setup_products", "products"):
+                    key = _kb_key(base_key, user_id)
+                    r = await session.execute(select(KnowledgeBase).where(KnowledgeBase.key == key))
+                    row = r.scalar_one_or_none()
+                    if row and row.value:
+                        try:
+                            products = json.loads(row.value)
+                            if isinstance(products, list) and products:
+                                payload.setdefault("products", products)
+                                break
+                        except Exception:
+                            pass
+        except Exception:
+            pass
+
     # Inject setup data (authors, products, ICP) for scoring_agent
     if agent_name == "scoring_agent":
         draft_data = {}

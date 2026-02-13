@@ -13,9 +13,22 @@ class SetupWizardInput(BaseModel):
     goals: str
 
 
+class SetupProductItem(BaseModel):
+    """Минимальный продукт-объект для селектора и агентов."""
+    name: str
+    one_liner: Optional[str] = None  # человеческий, без маркетинга
+    description: Optional[str] = None  # legacy / полное описание
+    tags: Optional[List[str]] = None  # 5–15 тегов
+    icp_tags: Optional[List[str]] = None  # кто покупает
+    aliases: Optional[List[str]] = None  # альтернативные названия для product_missing check
+    allowed_claims: Optional[List[str]] = None  # что можно утверждать
+    forbidden_claims: Optional[List[str]] = None  # что нельзя обещать
+    cta_templates: Optional[List[str]] = None  # только для hard ads
+
+
 class SetupSectionSave(BaseModel):
     section: str  # products | icp | tone | goals
-    value: Any  # for products: list of {name, description}; for others: str
+    value: Any  # for products: list of SetupProductItem (or {name, description} legacy); for others: str
 
 
 # --------------- Companies ---------------
