@@ -1,6 +1,7 @@
 # agents/base.py
 """Base agent: load prompts from /prompts, call LLM, return structured result."""
 from pathlib import Path
+import re
 from typing import Any
 
 from app.config import settings
@@ -35,6 +36,22 @@ class AgentBase:
 
     def get_user_prompt_template(self) -> str:
         return load_prompt(self.name, "user") or "Входные данные:\n{payload}"
+
+    def render_user_prompt(self, **kwargs: Any) -> str:
+        """Safely render {placeholders} without crashing on literal JSON braces."""
+        template = self.get_user_prompt_template()
+        pattern = re.compile(r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}")
+
+        def replacer(match: re.Match[str]) -> str:
+            key = match.group(1)
+            if key in kwargs:
+                value = kwargs[key]
+                return "" if value is None else str(value)
+            return match.group(0)
+
+        rendered = pattern.sub(replacer, template)
+        # Keep compatibility with templates that used {{ }} for literal braces.
+        return rendered.replace("{{", "{").replace("}}", "}")
 
     async def run(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Override in subclass: build messages, call _llm.chat(), parse result."""

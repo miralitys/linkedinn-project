@@ -15,8 +15,7 @@ class SetupAgent(AgentBase):
         goals = payload.get("goals", "")
 
         system = self.get_system_prompt()
-        user_tpl = self.get_user_prompt_template()
-        user = user_tpl.format(
+        user = self.render_user_prompt(
             product=product,
             icp_raw=icp_raw,
             tone=tone,

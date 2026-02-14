@@ -26,8 +26,7 @@ class ScoringAgent(AgentBase):
             comments_info = f"Top comments:\n{comments_text}\n" if comments_text else ""
 
         system = self.get_system_prompt()
-        user_tpl = self.get_user_prompt_template()
-        user = user_tpl.format(
+        user = self.render_user_prompt(
             author=author or "Не указано",
             products=products or "Не указано",
             icp=icp or "Не указано",

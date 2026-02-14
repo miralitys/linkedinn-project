@@ -15,8 +15,7 @@ class ContentAgent(AgentBase):
         thesis = payload.get("thesis", "")
 
         system = self.get_system_prompt()
-        user_tpl = self.get_user_prompt_template()
-        user = user_tpl.format(
+        user = self.render_user_prompt(
             sales_avatar=sales_avatar,
             segment_name=segment_name,
             offer_or_lead_magnet=offer_or_lead_magnet,

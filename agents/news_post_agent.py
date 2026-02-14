@@ -114,8 +114,7 @@ class NewsPostAgent(AgentBase):
         }.get(length, "средний")
 
         system = self.get_system_prompt()
-        user_tpl = self.get_user_prompt_template()
-        user = user_tpl.format(
+        user = self.render_user_prompt(
             news_text=news_text,
             sales_avatar=sales_avatar,
             goal=goal_label,

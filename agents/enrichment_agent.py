@@ -13,8 +13,7 @@ class EnrichmentAgent(AgentBase):
         entity_type = payload.get("entity_type", "person")  # company | person
 
         system = self.get_system_prompt()
-        user_tpl = self.get_user_prompt_template()
-        user = user_tpl.format(raw_input=raw_input, entity_type=entity_type)
+        user = self.render_user_prompt(raw_input=raw_input, entity_type=entity_type)
         response = await self._llm.chat(
             [{"role": "system", "content": system}, {"role": "user", "content": user}],
             temperature=0.2,

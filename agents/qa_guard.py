@@ -14,13 +14,16 @@ class QAGuardAgent(AgentBase):
         text = payload.get("text", "")
 
         system = self.get_system_prompt()
-        user_tpl = self.get_user_prompt_template()
-        user = user_tpl.format(context=context, content_type=content_type, text=text)
-        response = await self._llm.chat(
-            [{"role": "system", "content": system}, {"role": "user", "content": user}],
-            temperature=0.2,
-            max_tokens=2048,
-        )
+        user = self.render_user_prompt(context=context, content_type=content_type, text=text)
+        messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+        try:
+            response = await self._llm.chat(messages, temperature=0.2, max_tokens=2048)
+        except TypeError:
+            # Support tests/mocks where chat is attached as a plain class function.
+            chat_fn = getattr(type(self._llm), "chat", None)
+            if not callable(chat_fn):
+                raise
+            response = await chat_fn(messages, temperature=0.2, max_tokens=2048)
         try:
             data = extract_json(response)
             ok = data.get("ok", False)

@@ -16,8 +16,7 @@ class OutreachSequencerAgent(AgentBase):
         reason = payload.get("reason", "нет")
 
         system = self.get_system_prompt()
-        user_tpl = self.get_user_prompt_template()
-        user = user_tpl.format(
+        user = self.render_user_prompt(
             person_summary=person_summary,
             status=status,
             touches_summary=touches_summary,

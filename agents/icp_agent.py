@@ -13,8 +13,7 @@ class ICPAgent(AgentBase):
         examples = payload.get("examples", "")
 
         system = self.get_system_prompt()
-        user_tpl = self.get_user_prompt_template()
-        user = user_tpl.format(hypotheses=hypotheses, examples=examples)
+        user = self.render_user_prompt(hypotheses=hypotheses, examples=examples)
         response = await self._llm.chat(
             [{"role": "system", "content": system}, {"role": "user", "content": user}],
             temperature=0.4,
