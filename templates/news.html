@@ -118,6 +118,17 @@
           <button type="button" id="news-rewrite-btn" class="btn primary news-rewrite-btn" aria-label="{{ tr.news_rewrite_title }}">{{ tr.reddit_rewrite_btn }}</button>
           <button type="button" id="news-write-copy" class="btn secondary btn-sm news-copy-btn news-rewrite-btn">{{ tr.reddit_copy }}</button>
         </div>
+        <div id="news-rewrite-generate-progress" class="generate-progress" style="display: none;" aria-live="off">
+          <div class="generate-progress-head">
+            <span class="generate-progress-title">{{ tr.posts_gen_progress_title }}</span>
+            <span id="news-rewrite-generate-progress-time" class="generate-progress-time">0:00</span>
+          </div>
+          <div id="news-rewrite-generate-progress-track" class="generate-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="{{ tr.posts_gen_progress_title }}">
+            <span id="news-rewrite-generate-progress-fill" class="generate-progress-fill" style="width: 0%;"></span>
+          </div>
+          <ul id="news-rewrite-generate-progress-steps" class="generate-progress-steps"></ul>
+          <p id="news-rewrite-generate-progress-note" class="generate-progress-note"></p>
+        </div>
         <div class="news-rewrite-output">
           <div class="news-rewrite-output-header">
             <span class="news-rewrite-result-label">{{ tr.reddit_result }}</span>
@@ -161,6 +172,17 @@
         <div class="news-post-from-text-buttons">
           <button type="button" id="news-post-from-text-generate" class="btn primary news-post-from-text-generate-btn" aria-label="{{ tr.reddit_rewrite_btn }}">{{ tr.reddit_rewrite_btn }}</button>
           <button type="button" id="news-post-from-text-copy" class="btn secondary btn-sm news-post-from-text-copy-btn">{{ tr.reddit_copy }}</button>
+        </div>
+        <div id="news-post-from-text-generate-progress" class="generate-progress" style="display: none;" aria-live="off">
+          <div class="generate-progress-head">
+            <span class="generate-progress-title">{{ tr.posts_gen_progress_title }}</span>
+            <span id="news-post-from-text-generate-progress-time" class="generate-progress-time">0:00</span>
+          </div>
+          <div id="news-post-from-text-generate-progress-track" class="generate-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="{{ tr.posts_gen_progress_title }}">
+            <span id="news-post-from-text-generate-progress-fill" class="generate-progress-fill" style="width: 0%;"></span>
+          </div>
+          <ul id="news-post-from-text-generate-progress-steps" class="generate-progress-steps"></ul>
+          <p id="news-post-from-text-generate-progress-note" class="generate-progress-note"></p>
         </div>
         <div class="news-post-from-text-output">
           <div class="news-post-from-text-output-header">
@@ -486,6 +508,109 @@
   }
   .news-char-count-too-short,
   .news-char-count-too-long {
+    color: var(--error, #ef4444);
+    font-weight: 500;
+  }
+  .generate-progress {
+    margin-top: var(--space-2);
+    padding: var(--space-3);
+    border: 1px solid #dbe3f1;
+    border-radius: var(--radius);
+    background: #f8fafc;
+  }
+  .generate-progress.is-done {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+  }
+  .generate-progress.is-error {
+    border-color: #fecaca;
+    background: #fef2f2;
+  }
+  .generate-progress-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+  }
+  .generate-progress-title {
+    font-size: var(--text-12);
+    font-weight: 600;
+    color: var(--text);
+  }
+  .generate-progress-time {
+    font-size: var(--text-12);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .generate-progress-track {
+    position: relative;
+    height: 6px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+  }
+  .generate-progress-fill {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #6366f1, #818cf8);
+    transition: width 0.35s ease;
+  }
+  .generate-progress-steps {
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: var(--space-1);
+  }
+  .generate-progress-step {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-12);
+    color: var(--text-muted);
+    line-height: 1.35;
+  }
+  .generate-progress-step-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #cbd5e1;
+    flex-shrink: 0;
+  }
+  .generate-progress-step.is-active {
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .generate-progress-step.is-active .generate-progress-step-dot {
+    background: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.16);
+  }
+  .generate-progress-step.is-done {
+    color: var(--success, #10b981);
+  }
+  .generate-progress-step.is-done .generate-progress-step-dot {
+    background: var(--success, #10b981);
+  }
+  .generate-progress-step.is-error {
+    color: var(--error, #ef4444);
+  }
+  .generate-progress-step.is-error .generate-progress-step-dot {
+    background: var(--error, #ef4444);
+  }
+  .generate-progress-note {
+    margin: var(--space-2) 0 0;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: var(--text-muted);
+  }
+  .generate-progress.is-done .generate-progress-note {
+    color: var(--success, #10b981);
+    font-weight: 600;
+  }
+  .generate-progress.is-error .generate-progress-note {
     color: var(--error, #ef4444);
     font-weight: 500;
   }
@@ -1366,6 +1491,7 @@
     currentNewsItem = item;
     var ta = document.getElementById('news-write-textarea');
     if (ta) ta.value = '';
+    hideNewsRewriteGenerationProgress();
     updateNewsCharCount();
     var drawer = document.getElementById('news-view-drawer');
     var titleEl = document.getElementById('news-view-title');
@@ -1469,6 +1595,7 @@
       drawer.classList.remove('is-open');
       drawer.setAttribute('aria-hidden', 'true');
     }
+    hideNewsRewriteGenerationProgress();
   }
   document.getElementById('news-view-backdrop').addEventListener('click', closeNewsView);
   document.getElementById('news-view-close').addEventListener('click', closeNewsView);
@@ -1514,7 +1641,7 @@
     var lengthSelect = document.getElementById('news-rewrite-length');
     if (!ta || !countEl || !lengthSelect) return;
     var text = ta.value || '';
-    var charCount = text.length;
+    var charCount = text.replace(/\s+/g, '').length;
     var length = lengthSelect.value || 'medium';
     var ranges = {
       short: { min: 600, max: 900 },
@@ -1524,7 +1651,7 @@
     var range = ranges[length] || ranges.medium;
     var isValid = charCount >= range.min && charCount <= range.max;
     var status = isValid ? 'valid' : (charCount < range.min ? 'too-short' : 'too-long');
-    countEl.textContent = charCount + ' / ' + range.min + '–' + range.max + ' ' + (tr.reddit_chars || 'chars');
+    countEl.textContent = charCount + ' / ' + range.min + '–' + range.max + ' ' + (tr.reddit_chars || 'chars (no spaces)');
     countEl.className = 'news-char-count news-char-count-' + status;
     updateNewsRewriteButtonsState();
   }
@@ -1570,6 +1697,7 @@
       newsRewriteBtn.disabled = true;
       newsRewriteBtn.textContent = (tr.reddit_generating || 'Generating…');
       if (ta) ta.value = (tr.reddit_generating || 'Generating…');
+      newsRewriteGenerationProgress.start();
       updateNewsCharCount();
       fetch('/agents/news_post_agent/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ payload: payload }) })
         .then(function(r) { return r.text().then(function(t) { return { ok: r.ok, status: r.status, text: t }; }); })
@@ -1578,17 +1706,21 @@
             var errMsg = r.text ? (function() { try { var j = JSON.parse(r.text); return j.detail || j.message || r.text.slice(0, 300); } catch (_) { return r.text.slice(0, 300); } }()) : (tr.news_error_server || 'Server error');
             if (ta) ta.value = (tr.news_error_server || 'Server error') + ' (' + r.status + '): ' + errMsg;
             updateNewsCharCount();
+            newsRewriteGenerationProgress.finalize('error');
             return;
           }
           var data;
-          try { data = JSON.parse(r.text); } catch (_) { if (ta) ta.value = (tr.news_error_not_json || 'Error: response is not JSON.'); updateNewsCharCount(); return; }
+          try { data = JSON.parse(r.text); } catch (_) { if (ta) ta.value = (tr.news_error_not_json || 'Error: response is not JSON.'); updateNewsCharCount(); newsRewriteGenerationProgress.finalize('error'); return; }
           var postTextResult = data.result && data.result.post ? data.result.post : '';
-          if (ta) ta.value = (postTextResult || '').trim() || uiText(tr.reddit_generate_failed, 'Failed to generate post.', 'Не удалось сгенерировать пост.');
+          var postTextValue = (postTextResult || '').trim();
+          if (ta) ta.value = postTextValue || uiText(tr.reddit_generate_failed, 'Failed to generate post.', 'Не удалось сгенерировать пост.');
           updateNewsCharCount();
+          newsRewriteGenerationProgress.finalize(postTextValue ? 'done' : 'error');
         })
         .catch(function(err) {
           if (ta) ta.value = uiText(tr.news_error_connect, 'Failed to connect to server.', 'Не удалось подключиться к серверу.') + (err && err.message ? ': ' + err.message : '');
           updateNewsCharCount();
+          newsRewriteGenerationProgress.finalize('error');
         })
         .finally(function() {
           newsRewriteBtn.disabled = false;
@@ -1621,6 +1753,7 @@
     if (postFromTextModal) {
       postFromTextModal.hidden = false;
       postFromTextModal.classList.add('is-open');
+      hideNewsPostFromTextGenerationProgress();
       if (postFromTextInput) postFromTextInput.focus();
       updatePostFromTextButtonsState();
     }
@@ -1630,17 +1763,18 @@
       postFromTextModal.hidden = true;
       postFromTextModal.classList.remove('is-open');
     }
+    hideNewsPostFromTextGenerationProgress();
   }
   function updatePostFromTextCharCount() {
     if (!postFromTextResult || !postFromTextCharCount || !postFromTextLengthSelect) return;
     var text = postFromTextResult.value || '';
-    var charCount = text.length;
+    var charCount = text.replace(/\s+/g, '').length;
     var length = postFromTextLengthSelect.value || 'medium';
     var ranges = { short: { min: 600, max: 900 }, medium: { min: 900, max: 1400 }, long: { min: 1400, max: 2200 } };
     var range = ranges[length] || ranges.medium;
     var isValid = charCount >= range.min && charCount <= range.max;
     var status = isValid ? 'valid' : (charCount < range.min ? 'too-short' : 'too-long');
-    postFromTextCharCount.textContent = charCount + ' / ' + range.min + '–' + range.max + ' ' + (tr.reddit_chars || 'chars');
+    postFromTextCharCount.textContent = charCount + ' / ' + range.min + '–' + range.max + ' ' + (tr.reddit_chars || 'chars (no spaces)');
     postFromTextCharCount.className = 'news-char-count news-char-count-' + status;
     updatePostFromTextButtonsState();
   }
@@ -1655,6 +1789,141 @@
       postFromTextCopy.classList.remove('primary'); postFromTextCopy.classList.add('secondary');
       postFromTextGenerate.classList.remove('secondary'); postFromTextGenerate.classList.add('primary');
     }
+  }
+
+  var newsGenerationProgressStages = [
+    (tr.posts_gen_stage_prepare || uiText(null, 'Preparing post context', 'Собираем контекст поста')),
+    (tr.posts_gen_stage_voice || uiText(null, 'Applying author voice', 'Применяем стиль автора')),
+    (uiText(null, 'Generating post draft', 'Генерируем пост')),
+    (uiText(null, 'Checking and adjusting length', 'Проверяем и корректируем длину')),
+    (tr.posts_gen_stage_finalize || uiText(null, 'Reviewing and formatting', 'Проверяем и форматируем'))
+  ];
+  var newsGenerationProgressDetails = [
+    (tr.posts_gen_detail_prepare_context || uiText(null, 'Analyzing topic, tone, and key message.', 'Анализируем тему, тональность и ключевой посыл.')),
+    (tr.posts_gen_detail_prepare_author || uiText(null, 'Applying the selected author\'s style and vocabulary.', 'Применяем стиль и словарь выбранного автора.')),
+    (uiText(null, 'Drafting one post for the selected goal.', 'Готовим единый пост под выбранную цель.')),
+    (uiText(null, 'Verifying selected length and adjusting if needed.', 'Проверяем выбранную длину и корректируем при необходимости.')),
+    (tr.posts_gen_detail_review || uiText(null, 'Checking readability, logic, and tone consistency.', 'Проверяем читабельность, логику и соответствие тону.'))
+  ];
+  var newsGenerationProgressStageOffsetsMs = [0, 1400, 4200, 8600, 13800];
+
+  function createNewsGenerationProgress(prefix) {
+    var root = document.getElementById(prefix + '-generate-progress');
+    var track = document.getElementById(prefix + '-generate-progress-track');
+    var fill = document.getElementById(prefix + '-generate-progress-fill');
+    var time = document.getElementById(prefix + '-generate-progress-time');
+    var steps = document.getElementById(prefix + '-generate-progress-steps');
+    var note = document.getElementById(prefix + '-generate-progress-note');
+    var timer = null;
+    var hideTimer = null;
+    var startedAt = 0;
+    var activeStage = 0;
+
+    function formatElapsed(ms) {
+      var total = Math.max(0, Math.floor(ms / 1000));
+      var min = Math.floor(total / 60);
+      var sec = String(total % 60).padStart(2, '0');
+      return min + ':' + sec;
+    }
+    function computeStage(ms) {
+      var idx = 0;
+      for (var i = 0; i < newsGenerationProgressStageOffsetsMs.length; i++) {
+        if (ms >= newsGenerationProgressStageOffsetsMs[i]) idx = i;
+      }
+      return idx;
+    }
+    function computePercent(ms) {
+      var rampMs = 38000;
+      var maxPercentBeforeDone = 94;
+      return Math.max(6, Math.min(maxPercentBeforeDone, Math.round((ms / rampMs) * maxPercentBeforeDone)));
+    }
+    function getDetail(ms, mode) {
+      if (mode === 'done') return uiText(null, 'Done. Post is ready to publish.', 'Готово. Пост готов к публикации.');
+      if (mode === 'error') return (tr.posts_generation_failed || uiText(null, 'Failed to complete generation.', 'Не удалось завершить генерацию.'));
+      if (ms >= 45000) return (tr.posts_gen_hint_slow || uiText(null, 'Running extra validation. It can take up to 1-2 minutes.', 'Идёт дополнительная проверка. Иногда это занимает до 1-2 минут.'));
+      return newsGenerationProgressDetails[activeStage] || '';
+    }
+    function renderSteps(mode) {
+      if (!steps) return;
+      steps.innerHTML = newsGenerationProgressStages.map(function(label, idx) {
+        var cls = '';
+        if (mode === 'done') cls = ' is-done';
+        else if (mode === 'error') {
+          if (idx < activeStage) cls = ' is-done';
+          else if (idx === activeStage) cls = ' is-error';
+        } else {
+          if (idx < activeStage) cls = ' is-done';
+          else if (idx === activeStage) cls = ' is-active';
+        }
+        return '<li class="generate-progress-step' + cls + '"><span class="generate-progress-step-dot" aria-hidden="true"></span><span>' + escapeHtml(label) + '</span></li>';
+      }).join('');
+    }
+    function tick() {
+      if (!root) return;
+      var elapsed = Date.now() - startedAt;
+      activeStage = computeStage(elapsed);
+      if (time) time.textContent = formatElapsed(elapsed);
+      var percent = computePercent(elapsed);
+      if (fill) fill.style.width = percent + '%';
+      if (track) track.setAttribute('aria-valuenow', String(percent));
+      renderSteps('running');
+      if (note) note.textContent = getDetail(elapsed, 'running');
+    }
+    function clearTimers() {
+      if (timer) { clearInterval(timer); timer = null; }
+      if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    }
+    function hide() {
+      clearTimers();
+      if (!root) return;
+      root.style.display = 'none';
+      root.classList.remove('is-done', 'is-error');
+      if (fill) fill.style.width = '0%';
+      if (track) track.setAttribute('aria-valuenow', '0');
+      if (time) time.textContent = '0:00';
+      if (steps) steps.innerHTML = '';
+      if (note) note.textContent = '';
+    }
+    function start() {
+      if (!root) return;
+      clearTimers();
+      root.classList.remove('is-done', 'is-error');
+      root.style.display = 'block';
+      startedAt = Date.now();
+      activeStage = 0;
+      tick();
+      timer = setInterval(tick, 350);
+    }
+    function finalize(mode) {
+      if (!root) return;
+      clearTimers();
+      var elapsed = Date.now() - startedAt;
+      if (time) time.textContent = formatElapsed(elapsed);
+      if (mode === 'done') {
+        activeStage = newsGenerationProgressStages.length - 1;
+        root.classList.add('is-done');
+        if (fill) fill.style.width = '100%';
+        if (track) track.setAttribute('aria-valuenow', '100');
+        renderSteps('done');
+        if (note) note.textContent = getDetail(elapsed, 'done');
+        hideTimer = setTimeout(hide, 1800);
+        return;
+      }
+      root.classList.add('is-error');
+      renderSteps('error');
+      if (note) note.textContent = getDetail(elapsed, 'error');
+      hideTimer = setTimeout(hide, 3200);
+    }
+    return { start: start, finalize: finalize, hide: hide };
+  }
+
+  var newsRewriteGenerationProgress = createNewsGenerationProgress('news-rewrite');
+  var newsPostFromTextGenerationProgress = createNewsGenerationProgress('news-post-from-text');
+  function hideNewsRewriteGenerationProgress() {
+    if (newsRewriteGenerationProgress) newsRewriteGenerationProgress.hide();
+  }
+  function hideNewsPostFromTextGenerationProgress() {
+    if (newsPostFromTextGenerationProgress) newsPostFromTextGenerationProgress.hide();
   }
 
   var newsMakePostBtn = document.getElementById('news-make-post-btn');
@@ -1697,6 +1966,7 @@
       postFromTextGenerate.disabled = true;
       postFromTextGenerate.textContent = (tr.reddit_generating || 'Generating…');
       if (postFromTextResult) postFromTextResult.value = (tr.reddit_generating || 'Generating…');
+      newsPostFromTextGenerationProgress.start();
       updatePostFromTextCharCount();
       fetch('/agents/news_post_agent/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ payload: payload }) })
         .then(function(r) { return r.text().then(function(t) { return { ok: r.ok, status: r.status, text: t }; }); })
@@ -1705,17 +1975,21 @@
             var errMsg = r.text ? (function() { try { var j = JSON.parse(r.text); return j.detail || j.message || r.text.slice(0, 300); } catch (_) { return r.text.slice(0, 300); } }()) : (tr.news_error_server || 'Server error');
             if (postFromTextResult) postFromTextResult.value = (tr.news_error_server || 'Server error') + ' (' + r.status + '): ' + errMsg;
             updatePostFromTextCharCount();
+            newsPostFromTextGenerationProgress.finalize('error');
             return;
           }
           var data;
-          try { data = JSON.parse(r.text); } catch (_) { if (postFromTextResult) postFromTextResult.value = (tr.news_error_not_json || 'Error: response is not JSON.'); updatePostFromTextCharCount(); return; }
+          try { data = JSON.parse(r.text); } catch (_) { if (postFromTextResult) postFromTextResult.value = (tr.news_error_not_json || 'Error: response is not JSON.'); updatePostFromTextCharCount(); newsPostFromTextGenerationProgress.finalize('error'); return; }
           var postTextResult = data.result && data.result.post ? data.result.post : '';
-          if (postFromTextResult) postFromTextResult.value = (postTextResult || '').trim() || uiText(tr.reddit_generate_failed, 'Failed to generate post.', 'Не удалось сгенерировать пост.');
+          var postTextValue = (postTextResult || '').trim();
+          if (postFromTextResult) postFromTextResult.value = postTextValue || uiText(tr.reddit_generate_failed, 'Failed to generate post.', 'Не удалось сгенерировать пост.');
           updatePostFromTextCharCount();
+          newsPostFromTextGenerationProgress.finalize(postTextValue ? 'done' : 'error');
         })
         .catch(function(err) {
           if (postFromTextResult) postFromTextResult.value = uiText(tr.news_error_connect, 'Failed to connect to server.', 'Не удалось подключиться к серверу.') + (err && err.message ? ': ' + err.message : '');
           updatePostFromTextCharCount();
+          newsPostFromTextGenerationProgress.finalize('error');
         })
         .finally(function() {
           postFromTextGenerate.disabled = false;

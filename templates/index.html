@@ -1,317 +1,1089 @@
 {% extends "base_landing.html" %}
-{% block title %}MyVOICE's — B2B-лиды из LinkedIn: лента и черновики{% endblock %}
+{% block title %}MyVOICE's — B2B-лиды из LinkedIn через системные обсуждения{% endblock %}
 {% block head %}
-  <meta name="description" content="MyVOICE's собирает посты ваших контактов, новости и Reddit в одну ленту и помогает быстро писать комментарии и посты в вашем стиле.">
-  <meta property="og:title" content="MyVOICE's — B2B-лиды из LinkedIn: лента и черновики">
-  <meta property="og:description" content="MyVOICE's собирает посты ваших контактов, новости и Reddit в одну ленту и помогает быстро писать комментарии и посты в вашем стиле.">
+  <meta name="description" content="MyVOICE's объединяет контакты, новости и Reddit в единую ленту и помогает стабильно превращать LinkedIn-обсуждения в B2B-лиды.">
+  <meta property="og:title" content="MyVOICE's — B2B-лиды из LinkedIn через системные обсуждения">
+  <meta property="og:description" content="Единая лента, быстрые черновики и понятный рабочий ритм для LinkedIn-комментариев и постов.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="MyVOICE's — B2B-лиды из LinkedIn: лента и черновики">
-  <meta name="twitter:description" content="MyVOICE's собирает посты ваших контактов, новости и Reddit в одну ленту и помогает быстро писать комментарии и посты в вашем стиле.">
+  <meta name="twitter:title" content="MyVOICE's — B2B-лиды из LinkedIn через системные обсуждения">
+  <meta name="twitter:description" content="Единая лента, быстрые черновики и понятный рабочий ритм для LinkedIn-комментариев и постов.">
 {% endblock %}
 
 {% block content %}
 <style>
-  .hero { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-10); align-items: center; margin-bottom: 80px; }
-  .hero-text { max-width: 720px; }
-  .hero-label { font-size: var(--text-12); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: var(--space-2); }
-  .hero h1 { font-size: clamp(1.5rem, 4vw, var(--text-32)); font-weight: 700; line-height: 1.25; letter-spacing: -0.02em; margin: 0 0 var(--space-4); color: var(--text); }
-  .hero-desc { font-size: var(--text-16); color: var(--text-muted); line-height: 1.65; margin: 0 0 var(--space-6); }
-  .hero-cta-row { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-6); }
-  .hero-cta { display: inline-block; background: var(--primary); color: white; font-weight: 500; padding: 0.75rem 1.5rem; border-radius: var(--radius-pill); transition: background var(--motion-fast); }
-  .hero-cta:hover { background: var(--primary-hover); color: white; text-decoration: none; }
-  .hero-cta-secondary { display: inline-block; background: transparent; color: var(--text); font-weight: 500; padding: 0.75rem 1.5rem; border-radius: var(--radius-pill); border: 1px solid var(--border); transition: border-color var(--motion-fast), color var(--motion-fast); }
-  .hero-cta-secondary:hover { border-color: var(--primary); color: var(--primary); text-decoration: none; }
-  .hero-bullets { display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--text-14); color: var(--text-muted); }
-  .hero-bullets span { display: flex; align-items: center; gap: var(--space-2); }
-  .hero-bullets span::before { content: ''; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; flex-shrink: 0; }
-  .hero-screenshot { border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; background: var(--surface-alt); aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: var(--text-14); }
-  .hero-screenshot img { width: 100%; height: 100%; object-fit: cover; }
-  .hero-badges { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
-  .hero-badge { font-size: var(--text-12); font-weight: 500; padding: 4px 10px; border-radius: var(--radius-pill); background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-muted); }
-  .hero-badge-btn { cursor: pointer; transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast); }
-  .hero-badge-btn:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
-  .hero-badge-btn.active { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); font-weight: 600; }
-  .landing-screenshot-modal { position: fixed; inset: 0; z-index: 200; display: none; align-items: center; justify-content: center; padding: var(--space-6); background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
-  .landing-screenshot-modal.is-open { display: flex; }
-  .landing-screenshot-modal-content { position: relative; max-width: 90vw; max-height: 90vh; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.25); background: var(--surface); }
-  .landing-screenshot-modal-content img { display: block; width: 100%; height: auto; max-height: 90vh; object-fit: contain; }
-  .landing-screenshot-modal-close { position: absolute; top: var(--space-2); right: var(--space-2); width: 40px; height: 40px; border: none; background: rgba(0,0,0,0.5); color: #fff; font-size: 1.5rem; line-height: 1; cursor: pointer; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; transition: background var(--motion-fast); }
-  .landing-screenshot-modal-close:hover { background: rgba(0,0,0,0.8); }
+  .home-page {
+    display: grid;
+    gap: 56px;
+  }
 
-  .section { margin-bottom: 80px; }
-  .section .section-title,
-  .section .section-desc,
-  .section .section-sub,
-  .section p { max-width: 720px; }
-  .section-wide { max-width: none; }
-  .section-fullwidth { max-width: none; }
-  .section-fullwidth .section-title,
-  .section-fullwidth .section-desc,
-  .section-fullwidth .section-sub,
-  .section-fullwidth p { max-width: none; }
-  .section-title { font-size: var(--text-24); font-weight: 700; letter-spacing: -0.02em; margin: 0 0 var(--space-4); color: var(--text); }
-  .section-desc { font-size: var(--text-16); color: var(--text-muted); line-height: 1.65; margin: 0 0 var(--space-6); }
-  .section-sub { font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; margin: 0; }
-  .section p { margin: 0 0 var(--space-4); color: var(--text); font-size: var(--text-16); line-height: 1.65; }
-  .section p:last-child { margin-bottom: 0; }
+  .home-page > section {
+    width: 100%;
+    max-width: 1160px;
+    margin: 0 auto;
+  }
 
-  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin: var(--space-6) 0; }
-  .stat-card { background: var(--surface-alt); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-6); }
-  .stat-card .num { font-size: var(--text-32); font-weight: 700; letter-spacing: -0.02em; color: var(--text); margin-bottom: var(--space-2); }
-  .stat-card .label { font-size: var(--text-14); color: var(--text-muted); line-height: 1.4; }
-  .section a.arrow { font-size: var(--text-14); color: var(--accent); display: inline-flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
-  .section a.arrow:hover { text-decoration: none; }
+  .surface-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow-card);
+    transition: transform 220ms ease-out, box-shadow 220ms ease-out, border-color 220ms ease-out, background-color 180ms ease-out;
+  }
 
-  .features-list { margin: 0; padding: 0; list-style: none; }
-  .features-list li { margin-bottom: var(--space-8); padding-bottom: var(--space-8); border-bottom: 1px solid var(--border); }
-  .features-list li:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-  .features-list h3 { font-size: var(--text-18); font-weight: 600; margin: 0 0 var(--space-2); color: var(--text); }
-  .features-list p { margin: 0; font-size: var(--text-16); color: var(--text-muted); line-height: 1.6; }
+  .section-head {
+    margin-bottom: 32px;
+  }
 
-  .stats-two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: var(--space-6) 0; }
-  .stat-card .num { font-size: var(--text-32); }
+  .section-head h2 {
+    margin: 0;
+    font-size: clamp(30px, 4vw, 40px);
+    line-height: 1.18;
+    font-weight: 650;
+    color: var(--neutral-900);
+    letter-spacing: -0.02em;
+  }
 
-  .faq-list { margin: 0; padding: 0; list-style: none; }
-  .faq-list li { margin-bottom: var(--space-6); }
-  .faq-list dt { font-size: var(--text-16); font-weight: 600; margin: 0 0 var(--space-2); color: var(--text); }
-  .faq-list dd { margin: 0; font-size: var(--text-16); color: var(--text-muted); line-height: 1.6; }
+  .section-head p {
+    margin: 12px 0 0;
+    max-width: 720px;
+    font-size: 16px;
+    line-height: 1.62;
+    font-weight: 400;
+    color: var(--neutral-500);
+  }
 
-  .cta-card { background: var(--surface-alt); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-8); margin: var(--space-10) 0; box-shadow: var(--elevation-2); }
-  .cta-card h2 { margin: 0 0 var(--space-3); font-size: var(--text-24); font-weight: 700; }
-  .cta-card p { margin: 0 0 var(--space-4); color: var(--text-muted); font-size: var(--text-16); line-height: 1.6; }
-  .cta-card .btn { display: inline-block; background: var(--primary); color: white; font-weight: 500; padding: 0.75rem 1.5rem; border-radius: var(--radius-pill); margin-top: var(--space-2); }
-  .cta-card .btn:hover { background: var(--primary-hover); color: white; text-decoration: none; }
+  .section-head-nowrap h2,
+  .section-head-nowrap p {
+    white-space: nowrap;
+  }
 
-  .how-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin: var(--space-6) 0; }
-  .how-step { max-width: 100%; }
-  .how-step-num { font-size: var(--text-12); font-weight: 600; color: var(--accent); margin-bottom: var(--space-2); }
-  .how-step h3 { font-size: var(--text-18); font-weight: 600; margin: 0 0 var(--space-2); color: var(--text); }
-  .how-step p { font-size: var(--text-14); color: var(--text-muted); line-height: 1.6; margin: 0 0 var(--space-3); }
-  .fit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); margin: var(--space-6) 0; }
-  .fit-card { padding: var(--space-4); border-radius: var(--radius); border: 1px solid var(--border); }
-  .fit-card h3 { font-size: var(--text-16); font-weight: 600; margin: 0 0 var(--space-3); color: var(--text); }
-  .fit-card ul { margin: 0; padding-left: 1.2em; font-size: var(--text-14); color: var(--text-muted); line-height: 1.65; }
+  .section-head-nowrap p {
+    max-width: none;
+  }
 
-  .faq-accordion { margin: 0; padding: 0; list-style: none; }
-  .faq-accordion li { border-bottom: 1px solid var(--border); }
-  .faq-accordion button { width: 100%; padding: var(--space-4) var(--space-4) var(--space-4) 0; min-height: 48px; text-align: left; font-size: var(--text-16); font-weight: 600; color: var(--text); background: none; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
-  .faq-accordion button:hover { color: var(--accent); }
-  .faq-accordion button::after { content: '+'; font-size: 1.2em; color: var(--text-muted); flex-shrink: 0; }
-  .faq-accordion li.is-open button::after { content: '−'; }
-  .faq-accordion .faq-answer { padding: 0 var(--space-4) var(--space-4) 0; font-size: var(--text-16); color: var(--text-muted); line-height: 1.65; display: none; }
-  .faq-accordion li.is-open .faq-answer { display: block; }
+  .home-btn {
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 32px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    font-size: 15px;
+    line-height: 1;
+    font-weight: 600;
+    text-decoration: none;
+    transition: filter 200ms ease-out, transform 120ms ease-out, color 200ms ease-out, background-color 200ms ease-out, border-color 200ms ease-out, box-shadow 200ms ease-out;
+    cursor: pointer;
+    white-space: nowrap;
+  }
 
-  .cta-card .cta-sub { font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-2); }
-  .cta-card .btn-row { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-4); }
-  .cta-card .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
-  .cta-card .btn-secondary:hover { border-color: var(--primary); color: var(--primary); background: transparent; text-decoration: none; }
+  .home-btn:active {
+    transform: scale(0.98);
+  }
 
-  @media (max-width: 768px) {
-    .hero { grid-template-columns: 1fr; }
-    .hero-text { max-width: none; }
-    .stats-grid { grid-template-columns: 1fr; }
-    .stats-two { grid-template-columns: 1fr; }
-    .how-steps { grid-template-columns: 1fr; }
-    .fit-grid { grid-template-columns: 1fr; }
+  .home-btn:focus-visible,
+  .preview-tab:focus-visible,
+  .faq-trigger:focus-visible {
+    outline: 2px solid #a5b4fc;
+    outline-offset: 2px;
+  }
+
+  .home-btn-primary {
+    color: #ffffff;
+    background: var(--primary-600);
+    box-shadow: 0 12px 28px rgba(93, 92, 255, 0.3);
+  }
+
+  .home-btn-primary:hover {
+    color: #ffffff;
+    background: var(--primary-700);
+    transform: translateY(-2px);
+  }
+
+  .home-btn-secondary {
+    color: var(--neutral-900);
+    background: #ffffff;
+    border: 1.5px solid rgba(15, 23, 42, 0.12);
+  }
+
+  .home-btn-secondary:hover {
+    color: var(--neutral-900);
+    border-color: var(--primary-400);
+    background: #f8faff;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
+    gap: 48px;
+    align-items: start;
+  }
+
+  .hero-copy h1 {
+    margin: 0;
+    max-width: 720px;
+    font-size: clamp(44px, 6vw, 64px);
+    line-height: 1.08;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--neutral-900);
+  }
+
+  .hero-highlight {
+    font-weight: 700;
+    background: linear-gradient(135deg, #5d5cff, #7c7bff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hero-sub {
+    margin: 20px 0 0;
+    max-width: 560px;
+    font-size: 18px;
+    line-height: 1.62;
+    font-weight: 400;
+    color: #475569;
+  }
+
+  .hero-actions {
+    margin-top: 32px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .hero-trust-note {
+    margin: 10px 0 0;
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: 500;
+    color: var(--neutral-500);
+  }
+
+  .hero-login-link {
+    margin: 12px 0 0;
+    font-size: 14px;
+    line-height: 22px;
+    color: var(--neutral-500);
+  }
+
+  .hero-login-link a {
+    font-weight: 600;
+  }
+
+  .hero-bullets {
+    margin: 24px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 16px;
+    max-width: 640px;
+  }
+
+  .hero-bullets li {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    font-size: 15px;
+    line-height: 24px;
+    color: var(--neutral-500);
+  }
+
+  .hero-bullets li strong {
+    color: var(--neutral-900);
+    font-weight: 600;
+  }
+
+  .hero-bullets svg {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex: 0 0 auto;
+    color: var(--success-600);
+    stroke-width: 1.5;
+  }
+
+  .hero-preview {
+    align-self: flex-start;
+    margin-top: 0;
+    transform: none;
+    border-radius: 20px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: #ffffff;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+    padding: 6px;
+  }
+
+  .preview-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .preview-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 500;
+    color: #3730a3;
+    background: #eef2ff;
+  }
+
+  .preview-status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--primary-600);
+  }
+
+  .preview-meta {
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 500;
+    color: var(--neutral-500);
+  }
+
+  .preview-screen {
+    position: relative;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--neutral-100);
+    min-height: 360px;
+  }
+
+  .preview-screen img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 360px;
+    object-fit: cover;
+    object-position: center top;
+    transform: scale(1.06);
+    transform-origin: center top;
+    filter: saturate(1.03) contrast(1.02);
+  }
+
+  .preview-callout {
+    position: absolute;
+    z-index: 2;
+    min-height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(4px);
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 500;
+    color: var(--neutral-700);
+  }
+
+  .preview-callout-feed {
+    top: 12px;
+    left: 12px;
+  }
+
+  .preview-callout-comments {
+    top: 12px;
+    right: 12px;
+  }
+
+  .preview-callout-persona {
+    left: 12px;
+    bottom: 12px;
+  }
+
+  .preview-tabs {
+    margin-top: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 36px;
+    padding: 3px;
+    border-radius: 999px;
+    background: var(--neutral-100);
+    border: 1px solid var(--neutral-200);
+  }
+
+  .preview-tab {
+    height: 30px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--neutral-600);
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 500;
+    padding: 0 12px;
+    cursor: pointer;
+    transition: background 180ms ease-out, color 180ms ease-out;
+  }
+
+  .preview-tab:hover {
+    color: var(--primary-700);
+  }
+
+  .preview-tab.is-active {
+    background: var(--primary-100);
+    color: var(--primary-700);
+  }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    align-items: stretch;
+  }
+
+  .step-card {
+    padding: 32px;
+    min-height: 100%;
+    border-radius: 20px;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    background: #ffffff;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+    transition: border-color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
+  }
+
+  .step-card:hover {
+    border-color: rgba(93, 92, 255, 0.28);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
+  }
+
+  .step-badge {
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 600;
+    color: #3730a3;
+    background: #eef2ff;
+  }
+
+  .step-icon {
+    margin-top: 14px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--primary-50);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-600);
+  }
+
+  .step-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 1.75;
+  }
+
+  .step-card h3 {
+    margin: 14px 0 8px;
+    font-size: 22px;
+    line-height: 1.25;
+    font-weight: 600;
+    color: var(--neutral-900);
+  }
+
+  .step-card p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 24px;
+    color: var(--neutral-500);
+  }
+
+  .step-meta {
+    margin-top: 12px;
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: 600;
+    color: var(--primary-700);
+  }
+
+  .fit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    align-items: stretch;
+  }
+
+  .fit-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 32px;
+    min-height: 100%;
+    box-shadow: var(--shadow-card);
+  }
+
+  .fit-card-positive {
+    background: #f2fbf6;
+    border-color: #d7f2e2;
+  }
+
+  .fit-card-negative {
+    background: #fafbfc;
+    border-color: #e6e8ec;
+  }
+
+  .fit-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 18px;
+    line-height: 24px;
+    font-weight: 700;
+    color: var(--neutral-900);
+  }
+
+  .fit-title svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 1.75;
+    flex: 0 0 auto;
+  }
+
+  .fit-title.fit-positive svg {
+    color: var(--success-600);
+  }
+
+  .fit-title.fit-negative svg {
+    color: var(--neutral-400);
+  }
+
+  .fit-card ul {
+    margin: 0;
+    padding-left: 20px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .fit-card li {
+    font-size: 15px;
+    line-height: 24px;
+    color: var(--neutral-500);
+  }
+
+  .fit-help {
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 22px;
+    color: var(--neutral-500);
+  }
+
+  .fit-help a {
+    font-weight: 600;
+  }
+
+  .text-card {
+    max-width: 920px;
+    padding: 40px;
+    border-radius: 20px;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    background: #ffffff;
+  }
+
+  .text-card,
+  .faq-card {
+    margin: 0 auto;
+  }
+
+  .text-card h2 {
+    margin: 0;
+    font-size: clamp(30px, 4vw, 40px);
+    line-height: 1.18;
+    font-weight: 650;
+    color: var(--neutral-900);
+  }
+
+  .text-card p {
+    margin: 14px 0 0;
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--neutral-500);
+    max-width: 720px;
+  }
+
+  .key-pill {
+    margin-top: 16px;
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(93, 92, 255, 0.18);
+    background: #eef2ff;
+    color: #3730a3;
+    font-size: 13px;
+    line-height: 1.35;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  }
+
+  .quote-note {
+    margin-top: 16px;
+    padding: 4px 0 4px 12px;
+    border-left: 2px solid #8e8fff;
+    font-size: 14px;
+    line-height: 22px;
+    color: var(--neutral-500);
+  }
+
+  .faq-card {
+    padding: 0;
+    max-width: 920px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .faq-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 12px;
+  }
+
+  .faq-item {
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 18px;
+    background: #ffffff;
+    padding: 0 28px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .faq-trigger {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 26px 0;
+    min-height: 72px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    cursor: pointer;
+    color: var(--neutral-900);
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+    transition: background-color 180ms ease-out, color 180ms ease-out;
+  }
+
+  .faq-trigger:hover {
+    background: #fbfcff;
+  }
+
+  .faq-trigger svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 1.5;
+    color: var(--neutral-500);
+    flex: 0 0 auto;
+    transition: transform 180ms ease-out;
+  }
+
+  .faq-item.is-open .faq-trigger svg {
+    transform: rotate(180deg);
+  }
+
+  .faq-item.is-open {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+  }
+
+  .faq-answer {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-4px);
+    overflow: hidden;
+    transition: max-height 240ms ease, opacity 220ms ease, transform 220ms ease;
+  }
+
+  .faq-item.is-open .faq-answer {
+    transform: translateY(0);
+  }
+
+  .faq-answer p {
+    margin: 0;
+    max-width: 720px;
+    padding: 0 0 24px;
+    font-size: 15px;
+    line-height: 24px;
+    color: var(--neutral-500);
+  }
+
+  .demo-card {
+    padding: 48px;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #f8f9ff 0%, #ffffff 100%);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  }
+
+  .demo-card h2 {
+    margin: 0;
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: var(--neutral-900);
+  }
+
+  .demo-card p {
+    margin: 12px 0 0;
+    max-width: 720px;
+    font-size: 16px;
+    line-height: 26px;
+    color: var(--neutral-500);
+  }
+
+  .demo-actions {
+    margin-top: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .demo-actions .home-btn-primary {
+    height: 56px;
+    padding: 0 32px;
+    box-shadow: 0 16px 34px rgba(93, 92, 255, 0.34);
+  }
+
+  .demo-actions .home-btn-secondary {
+    color: var(--neutral-600);
+    border-color: var(--neutral-300);
+  }
+
+  .demo-chips {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .demo-chips li {
+    min-height: 32px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid var(--neutral-200);
+    background: var(--neutral-100);
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 500;
+    color: var(--neutral-600);
+  }
+
+  @media (max-width: 1080px) {
+    .hero {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .hero-copy h1,
+    .hero-sub {
+      max-width: none;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .home-page {
+      gap: 44px;
+    }
+
+    .section-head-nowrap h2,
+    .section-head-nowrap p {
+      white-space: normal;
+    }
+
+    .steps-grid,
+    .fit-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .faq-card,
+    .text-card {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hero-actions,
+    .demo-actions {
+      width: 100%;
+      flex-direction: column;
+    }
+
+    .hero-actions .home-btn,
+    .demo-actions .home-btn {
+      width: 100%;
+    }
+
+    .preview-screen,
+    .preview-screen img {
+      min-height: 240px;
+    }
+
+    .preview-callout {
+      min-height: 24px;
+      padding: 0 8px;
+      font-size: 11px;
+    }
+
+    .preview-callout-persona {
+      display: none;
+    }
+
+    .demo-card {
+      padding: 32px 24px;
+    }
+
+    .demo-card h2 {
+      font-size: 26px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation: none !important;
+      transition: none !important;
+    }
   }
 </style>
 
-<section class="hero">
-  <div class="hero-text">
-    <p class="hero-label">MyVOICE's</p>
-    <h1>Стабильно получайте B2B-лиды из LinkedIn, участвуя в правильных обсуждениях</h1>
-    <p class="hero-desc">MyVOICE's собирает посты ваших контактов, новости и Reddit в одну ленту и помогает быстро писать комментарии и посты в вашем стиле.</p>
-    <div class="hero-cta-row">
-      <a href="/login" class="hero-cta">Войти</a>
-    </div>
-    <div class="hero-bullets">
-      <span>Единая лента: контакты, новости и Reddit</span>
-      <span>Черновики комментариев и постов за 2 минуты, без продажного тона</span>
-      <span>Быстро включаетесь в обсуждения, которые читают ваши лиды</span>
-    </div>
-  </div>
-  <div class="hero-visual">
-    <div class="hero-screenshot" aria-hidden="true">
-      <img id="hero-screenshot-img" src="/static/landing-hero.png" alt="Лента постов и генерация комментария: Reddit-пост и блок «Переписать этот пост» с результатом" width="800" height="600" style="width:100%;height:100%;object-fit:cover;">
-    </div>
-    <div class="hero-badges">
-      <button type="button" class="hero-badge hero-badge-btn" id="hero-badge-comment" aria-label="Показать скриншот: генерация комментария">Комментарии</button>
-      <button type="button" class="hero-badge hero-badge-btn" id="hero-badge-news" aria-label="Показать скриншот: раздел Новости">Новости</button>
-      <button type="button" class="hero-badge hero-badge-btn" id="hero-badge-reddit" aria-label="Показать скриншот: раздел Reddit">Reddit</button>
-    </div>
-  </div>
-</section>
+<div class="home-page">
+  <section class="hero" id="top">
+    <div class="hero-copy">
+      <h1>Превращайте <span class="hero-highlight">LinkedIn-обсуждения</span> в стабильный поток B2B-лидов</h1>
+      <p class="hero-sub">MyVOICE's собирает посты контактов, новости и Reddit в единую ленту, чтобы вы быстрее принимали решения и публиковали релевантные комментарии в своем стиле.</p>
 
-<div id="landing-screenshot-modal" class="landing-screenshot-modal" role="dialog" aria-modal="true" aria-label="Скриншот: панель генерации комментария" hidden>
-  <div class="landing-screenshot-modal-content">
-    <button type="button" class="landing-screenshot-modal-close" id="landing-screenshot-modal-close" aria-label="Закрыть">×</button>
-    <img src="/static/landing-comment.jpg" alt="Панель генерации комментария: пост, автор, цель, варианты длины и результат" id="landing-screenshot-modal-img">
-  </div>
+      <div class="hero-actions">
+        <a href="/pricing" class="home-btn home-btn-primary">Начать 7 дней бесплатно</a>
+        <a href="#how" class="home-btn home-btn-secondary">Посмотреть как работает</a>
+      </div>
+      <p class="hero-trust-note">Отмена в 1 клик · Карта нужна только для trial</p>
+
+      <p class="hero-login-link">Уже есть аккаунт? <a href="/login">Войти</a></p>
+
+      <ul class="hero-bullets">
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="currentColor"/></svg>
+          <span><strong>Единая лента.</strong> Контакты, Новости и Reddit в одном рабочем потоке.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="currentColor"/></svg>
+          <span><strong>Черновики в вашем тоне.</strong> Быстрые варианты без случайного “продажного” звучания.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="currentColor"/></svg>
+          <span><strong>Реакция за минуты.</strong> Меньше ручной рутины, больше качественных касаний с лидами.</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="hero-preview" aria-label="Превью продукта">
+      <div class="preview-top">
+        <span class="preview-status">Рабочая лента</span>
+        <span class="preview-meta">3 источника · 1 система</span>
+      </div>
+      <div class="preview-screen">
+        <img id="hero-preview-image" src="/static/landing-comment.jpg" alt="Панель генерации комментария: пост, автор, цель и варианты ответа" loading="eager">
+        <span class="preview-callout preview-callout-feed">Единая лента</span>
+        <span class="preview-callout preview-callout-comments">3 варианта комментария</span>
+        <span class="preview-callout preview-callout-persona">Персона и стиль</span>
+      </div>
+      <div class="preview-tabs" role="tablist" aria-label="Разделы превью">
+        <button class="preview-tab is-active" type="button" role="tab" aria-selected="true" data-slide="0">Комментарии</button>
+        <button class="preview-tab" type="button" role="tab" aria-selected="false" data-slide="1">Новости</button>
+        <button class="preview-tab" type="button" role="tab" aria-selected="false" data-slide="2">Reddit</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="section-head section-head-nowrap">
+      <h2>Как это работает</h2>
+      <p>Три понятных шага, чтобы превратить LinkedIn в управляемый канал для B2B-коммуникаций и лидогенерации.</p>
+    </div>
+
+    <div class="steps-grid">
+      <article class="step-card surface-card">
+        <span class="step-badge">Шаг 1</span>
+        <span class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h10M4 17h7" stroke="currentColor"/></svg>
+        </span>
+        <h3>Подключаете важные источники</h3>
+        <p>Добавляете контакты, темы, компании, новости и сабреддиты под вашу нишу.</p>
+        <p class="step-meta">Настройка за 2 минуты</p>
+      </article>
+
+      <article class="step-card surface-card">
+        <span class="step-badge">Шаг 2</span>
+        <span class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16v10H9l-5 4V5z" stroke="currentColor"/></svg>
+        </span>
+        <h3>Получаете релевантные поводы</h3>
+        <p>Система собирает ленту и сразу предлагает черновики под ваш контекст.</p>
+        <p class="step-meta">Черновики сразу</p>
+      </article>
+
+      <article class="step-card surface-card">
+        <span class="step-badge">Шаг 3</span>
+        <span class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 12l4 4L19 6" stroke="currentColor"/></svg>
+        </span>
+        <h3>Публикуете быстрее и увереннее</h3>
+        <p>Вы выбираете лучший вариант, отправляете и держите стабильный ритм касаний.</p>
+        <p class="step-meta">Публикация за 30 секунд</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="section-head section-head-nowrap">
+      <h2>Кому подходит и кому нет</h2>
+      <p>Платформа заточена под B2B-команды и экспертов, которым важны системность, качество касаний и репутация в нише.</p>
+    </div>
+
+    <div class="fit-grid">
+      <article class="fit-card fit-card-positive surface-card">
+        <div class="fit-title fit-positive">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="currentColor"/></svg>
+          Подходит
+        </div>
+        <ul>
+          <li>Founders и эксперты в B2B с длинным циклом сделки</li>
+          <li>Sales leads, которым важны доверие и скорость реакции</li>
+          <li>Marketers, которым нужен единый рабочий процесс для контента</li>
+        </ul>
+      </article>
+
+      <article class="fit-card fit-card-negative surface-card">
+        <div class="fit-title fit-negative">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor"/></svg>
+          Не подходит
+        </div>
+        <ul>
+          <li>Если вы хотите лиды завтра без участия</li>
+          <li>Если вы не готовы отвечать людям лично</li>
+          <li>Если нужен полностью автопилот без контроля</li>
+        </ul>
+      </article>
+    </div>
+
+    <p class="fit-help">Если сомневаетесь, <a href="#demo">запишитесь на демо</a> — покажем сценарий под вашу нишу за 30 минут.</p>
+  </section>
+
+  <section id="crisis">
+    <article class="text-card surface-card">
+      <h2>Почему важно быть в разговорах</h2>
+      <p>В B2B лиды редко принимают решение после первого касания. Они наблюдают за тем, как вы формулируете мысли, где участвуете и насколько полезны ваши ответы. Постоянное присутствие в правильных обсуждениях формирует доверие быстрее любой холодной рассылки.</p>
+      <span class="key-pill">Главная мысль: видимость + регулярность = рост доверия и входящих диалогов</span>
+    </article>
+  </section>
+
+  <section id="why">
+    <article class="text-card surface-card">
+      <h2>Почему LinkedIn именно сейчас</h2>
+      <p>Покупатели в B2B проверяют экспертизу в публичном поле до первого звонка. LinkedIn — это место, где решение “с кем работать” часто формируется до контакта с продажами.</p>
+      <p class="quote-note">Когда у вас есть единая лента и быстрые качественные черновики, команда отвечает раньше конкурентов и выглядит профессионально в каждой дискуссии.</p>
+    </article>
+  </section>
+
+  <section id="faq">
+    <div class="section-head">
+      <h2>FAQ</h2>
+      <p>Коротко о запуске, результатах и формате работы с платформой.</p>
+    </div>
+
+    <div class="faq-card surface-card">
+      <ul class="faq-list" role="list">
+        <li class="faq-item">
+          <button class="faq-trigger" type="button" aria-expanded="false">
+            <span>Через сколько появляется первый эффект?</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor"/></svg>
+          </button>
+          <div class="faq-answer"><p>Первые сигналы обычно видны через 2–4 недели. Стабильный поток появляется, когда команда держит ритм несколько месяцев.</p></div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-trigger" type="button" aria-expanded="false">
+            <span>Сколько времени нужно команде в неделю?</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor"/></svg>
+          </button>
+          <div class="faq-answer"><p>Обычно 2–4 часа в неделю. Этого хватает, чтобы разобрать ленту, выбрать поводы и опубликовать сильные ответы.</p></div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-trigger" type="button" aria-expanded="false">
+            <span>Нужно ли отвечать на каждый пост?</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor"/></svg>
+          </button>
+          <div class="faq-answer"><p>Нет, важнее качество, а не объем. Достаточно нескольких точных касаний в неделю, если они релевантны вашей аудитории.</p></div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-trigger" type="button" aria-expanded="false">
+            <span>Подходит ли это для узкой ниши?</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor"/></svg>
+          </button>
+          <div class="faq-answer"><p>Да, в узких нишах это работает особенно хорошо. Там быстрее видно, кто действительно дает ценность и понимает контекст.</p></div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-trigger" type="button" aria-expanded="false">
+            <span>Можно ли начать без сложной настройки?</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor"/></svg>
+          </button>
+          <div class="faq-answer"><p>Да. Базовый запуск занимает один рабочий слот: добавили источники, проверили ленту и сразу получили первые черновики.</p></div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="demo">
+    <div class="demo-card surface-card">
+      <h2>Записаться на демо (30 минут)</h2>
+      <p>Покажем ленту под вашу нишу, разберем типовые сценарии и дадим конкретный план действий на первые 7 дней после демо.</p>
+
+      <div class="demo-actions">
+        <a href="mailto:hello@myvoices.app?subject=Запись на демо MyVOICE's (30 мин)" class="home-btn home-btn-primary">Записаться на демо</a>
+        <a href="mailto:hello@myvoices.app?subject=Запись демо MyVOICE's" class="home-btn home-btn-secondary">Получить запись</a>
+      </div>
+
+      <ul class="demo-chips" aria-label="Преимущества демо">
+        <li>Разберем вашу нишу</li>
+        <li>Покажем ленту</li>
+        <li>Дадим план на 7 дней</li>
+      </ul>
+    </div>
+  </section>
 </div>
 
-<section class="section section-fullwidth" id="crisis">
-  <h2 class="section-title">Почему важно быть в разговорах</h2>
-  <p class="section-desc">В B2B решения принимают по доверию. В LinkedIn это видно сразу: профиль, посты, комментарии. Если вы регулярно появляетесь в обсуждениях у ваших лидов, вас начинают узнавать и чаще пишут сами.</p>
-  <p class="section-sub">На демо покажем, какие темы и авторы в вашей нише дают самый быстрый отклик.</p>
-</section>
-
-<section class="section section-wide" id="how">
-  <h2 class="section-title">Как это работает</h2>
-  <p class="section-desc">Три шага к регулярному контенту в LinkedIn.</p>
-  <div class="how-steps">
-    <div class="how-step">
-      <div class="how-step-num">Шаг 1</div>
-      <h3>Подключаете источники</h3>
-      <p>Добавляете контакты, лидеров мнений, компании, темы, сабреддиты и источники новостей.</p>
-    </div>
-    <div class="how-step">
-      <div class="how-step-num">Шаг 2</div>
-      <h3>Получаете ленту и черновики</h3>
-      <p>Лента обновляется сама. Мы предлагаем черновики комментариев и постов в вашем тоне.</p>
-    </div>
-    <div class="how-step">
-      <div class="how-step-num">Шаг 3</div>
-      <h3>Делаете контент регулярно</h3>
-      <p>Лента подкидывает поводы, а вы быстро превращаете их в комментарии и посты.</p>
-    </div>
-  </div>
-</section>
-
-<section class="section section-wide" id="features">
-  <h2 class="section-title">Кому подходит и кому нет</h2>
-  <div class="fit-grid">
-    <div class="fit-card">
-      <h3>Подходит</h3>
-      <ul>
-        <li>B2B и длинный цикл сделки</li>
-        <li>Продаете экспертизу, а не скидку</li>
-        <li>Есть 2-4 часа в неделю на контент и общение</li>
-      </ul>
-    </div>
-    <div class="fit-card">
-      <h3>Не подходит</h3>
-      <ul>
-        <li>Нужны лиды завтра без участия</li>
-        <li>Хотите полностью на автопилоте, без общения</li>
-        <li>B2C масс-маркет без фокуса на экспертизе</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<section class="section section-fullwidth" id="why">
-  <h2 class="section-title">Почему LinkedIn</h2>
-  <p class="section-desc">Доверие к холодной рекламе падает. В B2B люди выбирают по рекомендациям и публичной экспертизе. LinkedIn показывает это прямо в ленте: кто что пишет и как общается.</p>
-</section>
-
-<section class="section section-wide" id="faq">
-  <h2 class="section-title">Частые вопросы</h2>
-  <ul class="faq-accordion" role="list">
-    <li>
-      <button type="button" aria-expanded="false" aria-controls="faq-1" id="faq-q1">Увижу ли я такой же рост, как в кейсах?</button>
-      <div class="faq-answer" id="faq-1" role="region" aria-labelledby="faq-q1">Результаты зависят от ниши и регулярности. Мы даём систему и черновики; консистентность решает больше всего.</div>
-    </li>
-    <li>
-      <button type="button" aria-expanded="false" aria-controls="faq-2" id="faq-q2">Сколько времени нужно, чтобы увидеть эффект?</button>
-      <div class="faq-answer" id="faq-2" role="region" aria-labelledby="faq-q2">Тёплые отклики — часто через несколько недель. Устойчивый поток лидов — несколько месяцев системной работы.</div>
-    </li>
-    <li>
-      <button type="button" aria-expanded="false" aria-controls="faq-3" id="faq-q3">Нужно ли комментировать каждый пост?</button>
-      <div class="faq-answer" id="faq-3" role="region" aria-labelledby="faq-q3">Нет. Достаточно 3–5 качественных комментариев или постов в неделю. Важны полезность и искренность.</div>
-    </li>
-    <li>
-      <button type="button" aria-expanded="false" aria-controls="faq-4" id="faq-q4">Подойдёт ли это для узкой ниши?</button>
-      <div class="faq-answer" id="faq-4" role="region" aria-labelledby="faq-q4">Узкая ниша часто плюс: меньше шума, проще выделиться. Лента и мониторинг лидеров работают эффективнее.</div>
-    </li>
-    <li>
-      <button type="button" aria-expanded="false" aria-controls="faq-5" id="faq-q5">Сколько времени это занимает в неделю?</button>
-      <div class="faq-answer" id="faq-5" role="region" aria-labelledby="faq-q5">Обычно 2–4 часа: очередь дня, правка черновиков, публикация. Лента и генерация автоматизированы.</div>
-    </li>
-    <li>
-      <button type="button" aria-expanded="false" aria-controls="faq-6" id="faq-q6">Можно ли обойтись без вашего инструмента?</button>
-      <div class="faq-answer" id="faq-6" role="region" aria-labelledby="faq-q6">Да. Инструмент экономит время: одна лента, готовые черновики. Масштаб без рутины.</div>
-    </li>
-  </ul>
-</section>
-
-<section class="section section-wide" id="book">
-  <div class="cta-card">
-    <h2>Записаться на демо (30 минут)</h2>
-    <p>Покажем ленту, черновики и темы под вашу нишу.</p>
-    <div class="cta-sub">Без обязательств. После демо у вас будет понятный план на 7 дней.</div>
-    <div class="btn-row">
-      <a href="mailto:hello@myvoices.app?subject=Запись на демо MyVOICE's (30 мин)" class="btn hero-cta">Записаться на демо</a>
-      <a href="mailto:hello@myvoices.app?subject=Запись демо MyVOICE's" class="btn btn-secondary hero-cta-secondary">Получить запись демо</a>
-    </div>
-  </div>
-</section>
-
 <script>
-(function() {
-  document.querySelectorAll('.faq-accordion button').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var li = btn.closest('li');
-      var isOpen = li.classList.contains('is-open');
-      document.querySelectorAll('.faq-accordion li.is-open').forEach(function(o) {
-        o.classList.remove('is-open');
-        o.querySelector('button').setAttribute('aria-expanded', 'false');
-      });
-      if (!isOpen) {
-        li.classList.add('is-open');
-        btn.setAttribute('aria-expanded', 'true');
+  (function () {
+    var previewImage = document.getElementById('hero-preview-image');
+    var previewTabs = Array.prototype.slice.call(document.querySelectorAll('.preview-tab'));
+    var previewCallouts = Array.prototype.slice.call(document.querySelectorAll('.preview-callout'));
+    var slides = [
+      {
+        src: '/static/landing-comment.jpg',
+        alt: 'Панель генерации комментария: пост, автор, цель и варианты ответа'
+      },
+      {
+        src: '/static/landing-news.jpg',
+        alt: 'Раздел Новости: фильтры, список материалов и действия по генерации поста'
+      },
+      {
+        src: '/static/landing-reddit.png',
+        alt: 'Раздел Reddit: сабреддиты, лента постов и приоритетные действия'
       }
-    });
-  });
+    ];
 
-  var heroImg = document.getElementById('hero-screenshot-img');
-  var heroBadges = [document.getElementById('hero-badge-comment'), document.getElementById('hero-badge-news'), document.getElementById('hero-badge-reddit')];
-  var heroSlides = [
-    { src: '/static/landing-comment.jpg', alt: 'Панель генерации комментария: пост, автор, цель, варианты длины и результат' },
-    { src: '/static/landing-news.jpg', alt: 'Раздел Новости: лента новостей, Score и кнопка «Сделать пост»' },
-    { src: '/static/landing-reddit.png', alt: 'Раздел Reddit: лента постов из сабреддитов, фильтры, статусы и кнопка «Сделать пост»' }
-  ];
-  function setHeroSlide(index) {
-    if (!heroImg || index < 0 || index >= heroSlides.length) return;
-    heroImg.src = heroSlides[index].src;
-    heroImg.alt = heroSlides[index].alt;
-    heroBadges.forEach(function(b, i) {
-      if (b) b.classList.toggle('active', i === index);
-    });
-  }
-  heroBadges.forEach(function(badge, index) {
-    if (badge && heroImg) {
-      badge.addEventListener('click', function() { setHeroSlide(index); });
+    function setPreviewSlide(index) {
+      if (!previewImage || !slides[index]) {
+        return;
+      }
+      previewImage.src = slides[index].src;
+      previewImage.alt = slides[index].alt;
+      previewTabs.forEach(function (tab, tabIndex) {
+        var active = tabIndex === index;
+        tab.classList.toggle('is-active', active);
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      previewCallouts.forEach(function (callout) {
+        var visible = index === 0;
+        callout.style.display = visible ? '' : 'none';
+        callout.setAttribute('aria-hidden', visible ? 'false' : 'true');
+      });
     }
-  });
 
-  var screenshotModal = document.getElementById('landing-screenshot-modal');
-  var screenshotModalImg = document.getElementById('landing-screenshot-modal-img');
-  var screenshotModalClose = document.getElementById('landing-screenshot-modal-close');
-  function openScreenshotModal(src, alt) {
-    if (screenshotModal && screenshotModalImg) {
-      screenshotModalImg.src = src;
-      screenshotModalImg.alt = alt || '';
-      screenshotModal.classList.add('is-open');
-      screenshotModal.removeAttribute('hidden');
-      document.body.style.overflow = 'hidden';
-    }
-  }
-  function closeScreenshotModal() {
-    if (screenshotModal) {
-      screenshotModal.classList.remove('is-open');
-      screenshotModal.setAttribute('hidden', '');
-      document.body.style.overflow = '';
-    }
-  }
-  if (screenshotModalClose) screenshotModalClose.addEventListener('click', closeScreenshotModal);
-  if (screenshotModal) {
-    screenshotModal.addEventListener('click', function(e) {
-      if (e.target === screenshotModal) closeScreenshotModal();
+    previewTabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        var index = Number(tab.getAttribute('data-slide') || '0');
+        setPreviewSlide(index);
+      });
     });
-    screenshotModal.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') { closeScreenshotModal(); e.preventDefault(); }
+
+    setPreviewSlide(0);
+
+    var faqItems = Array.prototype.slice.call(document.querySelectorAll('.faq-item'));
+
+    function closeFaqItem(item) {
+      var trigger = item.querySelector('.faq-trigger');
+      var answer = item.querySelector('.faq-answer');
+      item.classList.remove('is-open');
+      if (trigger) {
+        trigger.setAttribute('aria-expanded', 'false');
+      }
+      if (answer) {
+        answer.style.maxHeight = '0px';
+        answer.style.opacity = '0';
+      }
+    }
+
+    function openFaqItem(item) {
+      var trigger = item.querySelector('.faq-trigger');
+      var answer = item.querySelector('.faq-answer');
+      item.classList.add('is-open');
+      if (trigger) {
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+      if (answer) {
+        answer.style.maxHeight = answer.scrollHeight + 'px';
+        answer.style.opacity = '1';
+      }
+    }
+
+    faqItems.forEach(function (item) {
+      var trigger = item.querySelector('.faq-trigger');
+      if (!trigger) {
+        return;
+      }
+      trigger.addEventListener('click', function () {
+        var isOpen = item.classList.contains('is-open');
+        faqItems.forEach(closeFaqItem);
+        if (!isOpen) {
+          openFaqItem(item);
+        }
+      });
     });
-  }
-})();
+
+    window.addEventListener('resize', function () {
+      faqItems.forEach(function (item) {
+        if (!item.classList.contains('is-open')) {
+          return;
+        }
+        var answer = item.querySelector('.faq-answer');
+        if (answer) {
+          answer.style.maxHeight = answer.scrollHeight + 'px';
+        }
+      });
+    });
+  })();
 </script>
 {% endblock %}

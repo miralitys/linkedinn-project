@@ -16,8 +16,8 @@ def _get_length_range(length: str) -> tuple[int, int]:
 
 
 def _count_chars(text: str) -> int:
-    """Подсчитывает количество знаков (включая пробелы и знаки препинания)."""
-    return len(text)
+    """Подсчитывает количество знаков без пробелов и переносов."""
+    return len("".join((text or "").split()))
 
 
 async def _adjust_post_length(post_text: str, length: str, llm) -> str:
@@ -31,13 +31,13 @@ async def _adjust_post_length(post_text: str, length: str, llm) -> str:
     if current_chars < min_chars:
         # Нужно расширить пост
         diff = min_chars - current_chars
-        adjustment_prompt = f"""Пост слишком короткий ({current_chars} знаков). Нужно минимум {min_chars} знаков.
-Расширь пост, добавив примерно {diff} знаков. Сохрани структуру и смысл, добавь детали, разверни мысли.
+        adjustment_prompt = f"""Пост слишком короткий ({current_chars} знаков без пробелов). Нужно минимум {min_chars} знаков без пробелов.
+Расширь пост, добавив примерно {diff} знаков без пробелов. Сохрани структуру и смысл, добавь детали, разверни мысли.
 
 Текущий пост:
 {post_text}
 
-Верни расширенный пост длиной минимум {min_chars} знаков (максимум {max_chars} знаков)."""
+Верни расширенный пост длиной минимум {min_chars} и максимум {max_chars} знаков без пробелов."""
         response = await llm.chat([
             {"role": "user", "content": adjustment_prompt}
         ])
@@ -51,13 +51,13 @@ async def _adjust_post_length(post_text: str, length: str, llm) -> str:
     else:  # current_chars > max_chars
         # Нужно сократить пост
         diff = current_chars - max_chars
-        adjustment_prompt = f"""Пост слишком длинный ({current_chars} знаков). Нужно максимум {max_chars} знаков.
-Сократи пост примерно на {diff} знаков. Сохрани структуру и смысл, убери повторы, сожми формулировки.
+        adjustment_prompt = f"""Пост слишком длинный ({current_chars} знаков без пробелов). Нужно максимум {max_chars} знаков без пробелов.
+Сократи пост примерно на {diff} знаков без пробелов. Сохрани структуру и смысл, убери повторы, сожми формулировки.
 
 Текущий пост:
 {post_text}
 
-Верни сокращенный пост длиной максимум {max_chars} знаков (минимум {min_chars} знаков)."""
+Верни сокращенный пост длиной минимум {min_chars} и максимум {max_chars} знаков без пробелов."""
         response = await llm.chat([
             {"role": "user", "content": adjustment_prompt}
         ])

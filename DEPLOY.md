@@ -39,6 +39,7 @@
    | `OPENAI_API_KEY`| Твой ключ OpenAI (для агентов). |
    | `AUTH_ADMIN_EMAIL` | Email для входа админа. |
    | `AUTH_ADMIN_PASSWORD` | Пароль для входа админа. |
+   | `LFAS_ENABLE_SCHEDULER` | `true` для одного инстанса. Если запустишь несколько API-реплик, оставь `true` только у одной, у остальных `false`. |
 
    При необходимости добавь остальные из `.env.example` (LinkedIn OAuth, RapidAPI, Playwright path и т.д.).
 

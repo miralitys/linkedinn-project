@@ -1,7 +1,7 @@
 # app/routers/people.py
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,6 +22,8 @@ async def list_people(
     segment_id: Optional[int] = None,
     company_id: Optional[int] = None,
     is_kol: Optional[bool] = None,
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
 ):
@@ -34,6 +36,7 @@ async def list_people(
         q = q.where(Person.company_id == company_id)
     if is_kol is not None:
         q = q.where(Person.is_kol == is_kol)
+    q = q.limit(limit).offset(offset)
     r = await session.execute(q)
     return list(r.scalars().all())
 

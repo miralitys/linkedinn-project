@@ -1,7 +1,7 @@
 # app/routers/drafts.py
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -24,6 +24,8 @@ def _avatar_str(avatar) -> str:
 async def list_drafts(
     status: Optional[str] = None,
     type: Optional[str] = None,
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
 ):
@@ -32,6 +34,7 @@ async def list_drafts(
         q = q.where(Draft.status == status)
     if type:
         q = q.where(Draft.type == type)
+    q = q.limit(limit).offset(offset)
     r = await session.execute(q)
     return list(r.scalars().all())
 

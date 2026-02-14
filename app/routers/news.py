@@ -672,16 +672,16 @@ def _news_item_to_dict(n: NewsItem) -> dict:
     }
 
 
-async def _save_fetched_news_to_db(session: AsyncSession, items: List[dict]) -> int:
-    """Добавляет в БД только новые новости (по link). Возвращает количество добавленных."""
+async def _save_fetched_news_to_db(session: AsyncSession, items: List[dict]) -> tuple[int, list[int]]:
+    """Добавляет в БД только новые новости (по link). Возвращает (количество, ids)."""
     if not items:
-        return 0
+        return 0, []
     links = [it.get("link") or "" for it in items if it.get("link")]
     if not links:
-        return 0
+        return 0, []
     r = await session.execute(select(NewsItem.link).where(NewsItem.link.in_(links)))
     existing = {row[0] for row in r.fetchall()}
-    added = 0
+    added_rows: list[NewsItem] = []
     for it in items:
         link = (it.get("link") or "").strip()
         if not link or link in existing:
@@ -701,22 +701,22 @@ async def _save_fetched_news_to_db(session: AsyncSession, items: List[dict]) -> 
             except (ValueError, TypeError):
                 pass
         published_iso_str = published.isoformat() if isinstance(published, datetime) else (published or "")
-        session.add(
-            NewsItem(
-                link=link[:2048],
-                title=(it.get("title") or "")[:1024],
-                summary=it.get("summary"),
-                content=it.get("content"),
-                published=pub_dt,
-                published_iso=published_iso_str or None,
-                source=it.get("source"),
-                source_url=it.get("source_url"),
-            )
+        row = NewsItem(
+            link=link[:2048],
+            title=(it.get("title") or "")[:1024],
+            summary=it.get("summary"),
+            content=it.get("content"),
+            published=pub_dt,
+            published_iso=published_iso_str or None,
+            source=it.get("source"),
+            source_url=it.get("source_url"),
         )
-        added += 1
-    if added:
+        session.add(row)
+        added_rows.append(row)
+    if added_rows:
         await session.flush()
-    return added
+    added_ids = [n.id for n in added_rows if n.id is not None]
+    return len(added_rows), added_ids
 
 
 @router.get("")
@@ -724,6 +724,8 @@ async def _save_fetched_news_to_db(session: AsyncSession, items: List[dict]) -> 
 async def get_news_merged(
     session: AsyncSession = Depends(get_session),
     source_filter: Optional[str] = Query(None, alias="source", description="Фильтр по источнику"),
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
 ):
     """
     Лента новостей из БД. Данные хранятся в БД; новые подгружаются при POST /news/refresh или по расписанию раз в час.
@@ -731,14 +733,15 @@ async def get_news_merged(
     q = select(NewsItem).order_by(NewsItem.published.desc().nullslast(), NewsItem.id.desc())
     if source_filter:
         q = q.where(NewsItem.source == source_filter)
+    q = q.limit(limit).offset(offset)
     r = await session.execute(q)
     rows = list(r.scalars().all())
     items = [_news_item_to_dict(n) for n in rows]
     return {"items": items}
 
 
-async def _run_scoring_for_pending_news() -> None:
-    """Фоновая задача: проставить score всем новостям, у которых relevance_score ещё не задан."""
+async def _run_scoring_for_pending_news(item_ids: Optional[list[int]] = None) -> None:
+    """Фоновая задача: проставить score новостям, у которых relevance_score ещё не задан."""
     from app.models import User
     async with session_scope() as session:
         try:
@@ -746,9 +749,11 @@ async def _run_scoring_for_pending_news() -> None:
             row = r.first()
             user_id = row[0] if row else 1
             setup = await get_setup_for_scoring(session, user_id)
-            r = await session.execute(
-                select(NewsItem).where(NewsItem.relevance_score.is_(None)).order_by(NewsItem.id.asc())
-            )
+            q = select(NewsItem).where(NewsItem.relevance_score.is_(None))
+            if item_ids:
+                q = q.where(NewsItem.id.in_(item_ids))
+            q = q.order_by(NewsItem.id.asc())
+            r = await session.execute(q)
             pending = list(r.scalars().all())
             if not pending:
                 return
@@ -773,16 +778,25 @@ async def _run_scoring_for_pending_news() -> None:
 
 
 @router.post("/refresh")
-async def refresh_news(session: AsyncSession = Depends(get_session)):
+async def refresh_news(
+    session: AsyncSession = Depends(get_session),
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+):
     """Загрузить новости из RSS, добавить новые в БД и вернуть актуальный список из БД. По новым запускается скоринг."""
     try:
         items = await _fetch_news_from_feeds()
-        added = await _save_fetched_news_to_db(session, items)
+        added, added_ids = await _save_fetched_news_to_db(session, items)
         await session.commit()
-        # Запускаем скоринг по всем новостям без score (в т.ч. только что добавленным)
-        asyncio.create_task(_run_scoring_for_pending_news())
+        if added_ids:
+            asyncio.create_task(_run_scoring_for_pending_news(item_ids=added_ids))
         # Возвращаем список из БД
-        r = await session.execute(select(NewsItem).order_by(NewsItem.published.desc().nullslast(), NewsItem.id.desc()))
+        r = await session.execute(
+            select(NewsItem)
+            .order_by(NewsItem.published.desc().nullslast(), NewsItem.id.desc())
+            .limit(limit)
+            .offset(offset)
+        )
         rows = list(r.scalars().all())
         out = [_news_item_to_dict(n) for n in rows]
         return {"items": out, "refreshed": True, "added": added}
@@ -799,10 +813,12 @@ async def run_news_refresh() -> None:
     async with session_scope() as session:
         try:
             items = await _fetch_news_from_feeds()
-            await _save_fetched_news_to_db(session, items)
+            _added, added_ids = await _save_fetched_news_to_db(session, items)
         except Exception as e:
             logger.exception("Scheduled news refresh failed: %s", e)
-    asyncio.create_task(_run_scoring_for_pending_news())
+            return
+    if added_ids:
+        asyncio.create_task(_run_scoring_for_pending_news(item_ids=added_ids))
 
 
 @router.patch("/items/{item_id}/score")

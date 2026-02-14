@@ -21,15 +21,14 @@ async def get_reddit_sources_count(session: AsyncSession, user_id: int) -> int:
 
 async def get_rss_sources_count(session: AsyncSession, user_id: int) -> int:
     """Количество RSS-источников: контакты с feed_url."""
-    from app.models import Person
     r = await session.execute(
-        select(Person.id).where(
+        select(func.count()).select_from(Person).where(
             Person.user_id == user_id,
             Person.feed_url.isnot(None),
             Person.feed_url != "",
         )
     )
-    return len(r.fetchall())
+    return int(r.scalar() or 0)
 
 
 async def _get_subreddit_names_count(session: AsyncSession, user_id: int) -> int:

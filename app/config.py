@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     lfas_llm_provider: str = "openrouter"
     lfas_llm_model: str = "anthropic/claude-sonnet-4.5"
     lfas_first_month_strict: int = 1
+    lfas_enable_scheduler: bool = True  # фоновые задачи (RSS/Reddit/analytics) при старте приложения
     lfas_host: str = "0.0.0.0"
     lfas_port: int = 8000
     linkedin_client_id: Optional[str] = None

@@ -1,17 +1,28 @@
 # app/routers/agents_routes.py
+from __future__ import annotations
 import json
 import logging
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from app.db import get_session
+from app.db import get_session, session_scope
 from app.deps import get_current_user_id
-from app.models import Draft, DraftStatus, DraftType, KnowledgeBase, SalesAvatar
+from app.models import ContactPost, Draft, DraftStatus, DraftType, KnowledgeBase, SalesAvatar
 from app.plans import get_plan
 from app.services.usage import GENERATION_AGENTS, check_generation_limit, increment_usage
+from app.services.comment_jobs import (
+    create_comment_job,
+    get_comment_job,
+    mark_comment_job_done,
+    mark_comment_job_error,
+)
 from app.routers.setup import _kb_key
 from app.schemas import AgentRunPayload, AgentRunResponse
+from agents.llm_client import get_llm_client
+from agents.comment_pipeline.pipeline import prepare_comment_pipeline, finalize_comment_variants
 from agents.registry import AGENTS, run_agent
 
 router = APIRouter(prefix="/agents", tags=["agents"])
@@ -33,6 +44,153 @@ def _avatar_to_str(avatar) -> str:
     return "\n".join(parts)
 
 
+def _merge_reply_variants(existing: object, patch: dict[str, str]) -> dict[str, str]:
+    base = existing if isinstance(existing, dict) else {}
+    merged = {
+        "short": (patch.get("short") if patch.get("short") is not None else base.get("short", "")) or "",
+        "medium": (patch.get("medium") if patch.get("medium") is not None else base.get("medium", "")) or "",
+        "long": (patch.get("long") if patch.get("long") is not None else base.get("long", "")) or "",
+    }
+    return merged
+
+
+async def _complete_comment_fast_job(
+    *,
+    job_id: str,
+    user_id: int,
+    post_id: int,
+    short_text: str,
+    pipeline_ctx: dict,
+    llm_provider: str | None = None,
+) -> None:
+    try:
+        llm = get_llm_client(provider=llm_provider) if llm_provider else None
+        medium_long = await finalize_comment_variants(
+            pipeline_ctx,
+            variants=["medium", "long"],
+            fallback_variants={"medium", "long"},
+            llm=llm,
+        )
+        async with session_scope() as bg_session:
+            q = (
+                select(ContactPost)
+                .options(selectinload(ContactPost.person))
+                .where(ContactPost.id == post_id)
+            )
+            r = await bg_session.execute(q)
+            post = r.scalar_one_or_none()
+            if not post:
+                await mark_comment_job_error(job_id, error="post_not_found")
+                return
+            if post.person and post.person.user_id is not None and post.person.user_id != user_id:
+                await mark_comment_job_error(job_id, error="post_forbidden")
+                return
+            merged = _merge_reply_variants(
+                post.reply_variants,
+                {
+                    "short": short_text or "",
+                    "medium": medium_long.get("medium", ""),
+                    "long": medium_long.get("long", ""),
+                },
+            )
+            post.reply_variants = merged
+        ready = [k for k in ("short", "medium", "long") if (merged.get(k) or "").strip()]
+        await mark_comment_job_done(job_id, ready_variants=ready, pending_variants=[])
+    except Exception as e:
+        _LOG.exception("Fast comment background job failed: %s", e)
+        await mark_comment_job_error(job_id, error=str(e))
+
+
+async def _run_comment_agent_fast(
+    payload: dict,
+    session: AsyncSession,
+    user_id: int,
+) -> dict:
+    post_id_raw = payload.get("post_id")
+    try:
+        post_id = int(post_id_raw)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="post_id is required for fast_mode")
+
+    q = (
+        select(ContactPost)
+        .options(selectinload(ContactPost.person))
+        .where(ContactPost.id == post_id)
+    )
+    r = await session.execute(q)
+    post = r.scalar_one_or_none()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    if post.person and post.person.user_id is not None and post.person.user_id != user_id:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    post_text = (payload.get("post_text") or post.content or "").strip()
+    if not post_text:
+        return {
+            "comments": {"short": "", "medium": "", "long": ""},
+            "raw": "",
+            "background_pending": False,
+            "post_id": post_id,
+        }
+
+    goal = payload.get("goal") or "network"
+    author = payload.get("author") if isinstance(payload.get("author"), dict) else None
+    products = payload.get("products") if isinstance(payload.get("products"), list) else []
+    answers_66 = payload.get("author_answers_66") or payload.get("fingerprint") or {}
+    llm_provider = payload.get("llm_provider")
+    llm = get_llm_client(provider=llm_provider) if llm_provider else None
+
+    pipeline_ctx = await prepare_comment_pipeline(
+        post_text=post_text,
+        author_answers_66=answers_66,
+        products=products,
+        mode=goal,
+        author=author,
+        llm=llm,
+    )
+    short_result = await finalize_comment_variants(
+        pipeline_ctx,
+        variants=["short"],
+        fallback_variants=set(),
+        llm=llm,
+    )
+    short_text = (short_result.get("short") or "").strip()
+    merged_short = _merge_reply_variants(
+        post.reply_variants,
+        {"short": short_text, "medium": None, "long": None},
+    )
+    post.reply_variants = merged_short
+    await session.commit()
+
+    job = await create_comment_job(
+        user_id=user_id,
+        post_id=post_id,
+        post_title=post.title or "",
+        ready_variants=[k for k in ("short",) if (merged_short.get(k) or "").strip()],
+        pending_variants=["medium", "long"],
+    )
+    job_id = job["job_id"]
+    asyncio.create_task(
+        _complete_comment_fast_job(
+            job_id=job_id,
+            user_id=user_id,
+            post_id=post_id,
+            short_text=merged_short.get("short", ""),
+            pipeline_ctx=pipeline_ctx,
+            llm_provider=llm_provider,
+        )
+    )
+
+    return {
+        "comments": merged_short,
+        "raw": str(merged_short),
+        "background_pending": True,
+        "job_id": job_id,
+        "post_id": post_id,
+        "post_title": post.title or "",
+    }
+
+
 @router.post("/{agent_name}/run", response_model=AgentRunResponse)
 async def run_agent_endpoint(
     agent_name: str,
@@ -47,6 +205,17 @@ async def run_agent_endpoint(
     except Exception as e:
         _LOG.exception("Agent %s failed: %s", agent_name, e)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/comment_agent/jobs/{job_id}")
+async def get_comment_agent_job_status(
+    job_id: str,
+    user_id: int = Depends(get_current_user_id),
+):
+    job = await get_comment_job(job_id, user_id=user_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
 
 
 async def _run_agent_impl(
@@ -180,7 +349,10 @@ async def _run_agent_impl(
             payload.setdefault("icp", icp_desc)
 
     try:
-        result = await run_agent(agent_name, payload)
+        if agent_name == "comment_agent" and bool(payload.get("fast_mode")):
+            result = await _run_comment_agent_fast(payload, session, user_id)
+        else:
+            result = await run_agent(agent_name, payload)
     except ValueError as e:
         msg = str(e)
         if "OPENROUTER_API_KEY" in msg and "not set" in msg.lower():

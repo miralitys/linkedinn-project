@@ -125,6 +125,17 @@
           <button type="button" id="view-reddit-rewrite-btn" class="btn primary view-post-rewrite-btn" aria-label="{{ tr.reddit_rewrite_btn }}">{{ tr.reddit_rewrite_btn }}</button>
           <button type="button" id="view-reddit-copy-btn" class="btn secondary btn-sm view-post-copy-btn view-post-rewrite-btn">{{ tr.reddit_copy }}</button>
         </div>
+        <div id="view-reddit-generate-progress" class="generate-progress" style="display: none;" aria-live="off">
+          <div class="generate-progress-head">
+            <span class="generate-progress-title">{{ tr.posts_gen_progress_title }}</span>
+            <span id="view-reddit-generate-progress-time" class="generate-progress-time">0:00</span>
+          </div>
+          <div id="view-reddit-generate-progress-track" class="generate-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="{{ tr.posts_gen_progress_title }}">
+            <span id="view-reddit-generate-progress-fill" class="generate-progress-fill" style="width: 0%;"></span>
+          </div>
+          <ul id="view-reddit-generate-progress-steps" class="generate-progress-steps"></ul>
+          <p id="view-reddit-generate-progress-note" class="generate-progress-note"></p>
+        </div>
         <div class="view-post-rewrite-output">
           <div class="view-post-rewrite-output-header">
             <span class="view-post-rewrite-result-label">{{ tr.reddit_result }}</span>
@@ -278,6 +289,109 @@
   }
   .view-post-char-count-too-short,
   .view-post-char-count-too-long {
+    color: var(--error, #ef4444);
+    font-weight: 500;
+  }
+  .generate-progress {
+    margin-top: var(--space-2);
+    padding: var(--space-3);
+    border: 1px solid #dbe3f1;
+    border-radius: var(--radius);
+    background: #f8fafc;
+  }
+  .generate-progress.is-done {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+  }
+  .generate-progress.is-error {
+    border-color: #fecaca;
+    background: #fef2f2;
+  }
+  .generate-progress-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+  }
+  .generate-progress-title {
+    font-size: var(--text-12);
+    font-weight: 600;
+    color: var(--text);
+  }
+  .generate-progress-time {
+    font-size: var(--text-12);
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .generate-progress-track {
+    position: relative;
+    height: 6px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    overflow: hidden;
+  }
+  .generate-progress-fill {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #6366f1, #818cf8);
+    transition: width 0.35s ease;
+  }
+  .generate-progress-steps {
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: var(--space-1);
+  }
+  .generate-progress-step {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-12);
+    color: var(--text-muted);
+    line-height: 1.35;
+  }
+  .generate-progress-step-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #cbd5e1;
+    flex-shrink: 0;
+  }
+  .generate-progress-step.is-active {
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .generate-progress-step.is-active .generate-progress-step-dot {
+    background: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.16);
+  }
+  .generate-progress-step.is-done {
+    color: var(--success, #10b981);
+  }
+  .generate-progress-step.is-done .generate-progress-step-dot {
+    background: var(--success, #10b981);
+  }
+  .generate-progress-step.is-error {
+    color: var(--error, #ef4444);
+  }
+  .generate-progress-step.is-error .generate-progress-step-dot {
+    background: var(--error, #ef4444);
+  }
+  .generate-progress-note {
+    margin: var(--space-2) 0 0;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: var(--text-muted);
+  }
+  .generate-progress.is-done .generate-progress-note {
+    color: var(--success, #10b981);
+    font-weight: 600;
+  }
+  .generate-progress.is-error .generate-progress-note {
     color: var(--error, #ef4444);
     font-weight: 500;
   }
@@ -1032,6 +1146,7 @@
   function closeViewRedditDrawer() {
     viewModal.classList.remove('is-open');
     viewModal.setAttribute('aria-hidden', 'true');
+    hideRedditGenerationProgress();
   }
   document.getElementById('view-reddit-drawer-close').addEventListener('click', closeViewRedditDrawer);
   document.getElementById('view-reddit-backdrop').addEventListener('click', closeViewRedditDrawer);
@@ -1042,6 +1157,7 @@
     opts = opts || {};
     viewModal.classList.add('is-open');
     viewModal.removeAttribute('aria-hidden');
+    hideRedditGenerationProgress();
     currentViewId = id;
     fetch('/reddit/posts/' + id).then(r => r.json()).then(p => {
       if (p.status === 'new') {
@@ -1139,7 +1255,7 @@
     const lengthSelect = document.getElementById('view-reddit-length');
     if (!ta || !countEl || !lengthSelect) return;
     const text = ta.value || '';
-    const charCount = text.length;
+    const charCount = text.replace(/\s+/g, '').length;
     const length = lengthSelect.value || 'medium';
     const ranges = {
       short: { min: 600, max: 900 },
@@ -1149,7 +1265,7 @@
     const range = ranges[length] || ranges.medium;
     const isValid = charCount >= range.min && charCount <= range.max;
     const status = isValid ? 'valid' : (charCount < range.min ? 'too-short' : 'too-long');
-    countEl.textContent = charCount + ' / ' + range.min + '–' + range.max + ' ' + uiText(tr.reddit_chars, 'chars', 'знаков');
+    countEl.textContent = charCount + ' / ' + range.min + '–' + range.max + ' ' + uiText(tr.reddit_chars, 'chars (no spaces)', 'знаков без пробелов');
     countEl.className = 'view-post-char-count view-post-char-count-' + status;
     updateRedditRewriteButtonsState();
   }
@@ -1167,6 +1283,128 @@
       copyBtn.classList.remove('primary'); copyBtn.classList.add('secondary');
       rewriteBtn.classList.remove('secondary'); rewriteBtn.classList.add('primary');
     }
+  }
+
+  const redditGenerateProgress = document.getElementById('view-reddit-generate-progress');
+  const redditGenerateProgressTrack = document.getElementById('view-reddit-generate-progress-track');
+  const redditGenerateProgressFill = document.getElementById('view-reddit-generate-progress-fill');
+  const redditGenerateProgressTime = document.getElementById('view-reddit-generate-progress-time');
+  const redditGenerateProgressSteps = document.getElementById('view-reddit-generate-progress-steps');
+  const redditGenerateProgressNote = document.getElementById('view-reddit-generate-progress-note');
+  const redditProgressStages = [
+    (tr.posts_gen_stage_prepare || uiText(null, 'Preparing post context', 'Собираем контекст поста')),
+    (tr.posts_gen_stage_voice || uiText(null, 'Applying author voice', 'Применяем стиль автора')),
+    (uiText(null, 'Generating post draft', 'Генерируем пост')),
+    (uiText(null, 'Checking and adjusting length', 'Проверяем и корректируем длину')),
+    (tr.posts_gen_stage_finalize || uiText(null, 'Reviewing and formatting', 'Проверяем и форматируем'))
+  ];
+  const redditProgressDetails = [
+    (tr.posts_gen_detail_prepare_context || uiText(null, 'Analyzing topic, tone, and key message.', 'Анализируем тему, тональность и ключевой посыл.')),
+    (tr.posts_gen_detail_prepare_author || uiText(null, 'Applying the selected author\'s style and vocabulary.', 'Применяем стиль и словарь выбранного автора.')),
+    (uiText(null, 'Drafting one post for the selected goal.', 'Готовим единый пост под выбранную цель.')),
+    (uiText(null, 'Verifying selected length and adjusting if needed.', 'Проверяем выбранную длину и корректируем при необходимости.')),
+    (tr.posts_gen_detail_review || uiText(null, 'Checking readability, logic, and tone consistency.', 'Проверяем читабельность, логику и соответствие тону.'))
+  ];
+  const redditProgressStageOffsetsMs = [0, 1400, 4200, 8600, 13800];
+  let redditProgressTimer = null;
+  let redditProgressHideTimer = null;
+  let redditProgressStartedAt = 0;
+  let redditProgressActiveStage = 0;
+
+  function formatRedditProgressElapsed(ms) {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const min = Math.floor(total / 60);
+    const sec = String(total % 60).padStart(2, '0');
+    return min + ':' + sec;
+  }
+  function computeRedditProgressStage(ms) {
+    let idx = 0;
+    for (let i = 0; i < redditProgressStageOffsetsMs.length; i++) {
+      if (ms >= redditProgressStageOffsetsMs[i]) idx = i;
+    }
+    return idx;
+  }
+  function computeRedditProgressPercent(ms) {
+    const rampMs = 38000;
+    const maxPercentBeforeDone = 94;
+    return Math.max(6, Math.min(maxPercentBeforeDone, Math.round((ms / rampMs) * maxPercentBeforeDone)));
+  }
+  function getRedditProgressDetail(ms, mode) {
+    if (mode === 'done') return uiText(null, 'Done. Post is ready to publish.', 'Готово. Пост готов к публикации.');
+    if (mode === 'error') return (tr.posts_generation_failed || uiText(null, 'Failed to complete generation.', 'Не удалось завершить генерацию.'));
+    if (ms >= 45000) return (tr.posts_gen_hint_slow || uiText(null, 'Running extra validation. It can take up to 1-2 minutes.', 'Идёт дополнительная проверка. Иногда это занимает до 1-2 минут.'));
+    return redditProgressDetails[redditProgressActiveStage] || '';
+  }
+  function renderRedditProgressSteps(mode) {
+    if (!redditGenerateProgressSteps) return;
+    redditGenerateProgressSteps.innerHTML = redditProgressStages.map(function(label, idx) {
+      var cls = '';
+      if (mode === 'done') cls = ' is-done';
+      else if (mode === 'error') {
+        if (idx < redditProgressActiveStage) cls = ' is-done';
+        else if (idx === redditProgressActiveStage) cls = ' is-error';
+      } else {
+        if (idx < redditProgressActiveStage) cls = ' is-done';
+        else if (idx === redditProgressActiveStage) cls = ' is-active';
+      }
+      return '<li class="generate-progress-step' + cls + '"><span class="generate-progress-step-dot" aria-hidden="true"></span><span>' + escapeHtml(label) + '</span></li>';
+    }).join('');
+  }
+  function updateRedditProgressTick() {
+    if (!redditGenerateProgress) return;
+    const elapsed = Date.now() - redditProgressStartedAt;
+    redditProgressActiveStage = computeRedditProgressStage(elapsed);
+    if (redditGenerateProgressTime) redditGenerateProgressTime.textContent = formatRedditProgressElapsed(elapsed);
+    const percent = computeRedditProgressPercent(elapsed);
+    if (redditGenerateProgressFill) redditGenerateProgressFill.style.width = percent + '%';
+    if (redditGenerateProgressTrack) redditGenerateProgressTrack.setAttribute('aria-valuenow', String(percent));
+    renderRedditProgressSteps('running');
+    if (redditGenerateProgressNote) redditGenerateProgressNote.textContent = getRedditProgressDetail(elapsed, 'running');
+  }
+  function clearRedditProgressTimers() {
+    if (redditProgressTimer) { clearInterval(redditProgressTimer); redditProgressTimer = null; }
+    if (redditProgressHideTimer) { clearTimeout(redditProgressHideTimer); redditProgressHideTimer = null; }
+  }
+  function hideRedditGenerationProgress() {
+    clearRedditProgressTimers();
+    if (!redditGenerateProgress) return;
+    redditGenerateProgress.style.display = 'none';
+    redditGenerateProgress.classList.remove('is-done', 'is-error');
+    if (redditGenerateProgressFill) redditGenerateProgressFill.style.width = '0%';
+    if (redditGenerateProgressTrack) redditGenerateProgressTrack.setAttribute('aria-valuenow', '0');
+    if (redditGenerateProgressTime) redditGenerateProgressTime.textContent = '0:00';
+    if (redditGenerateProgressSteps) redditGenerateProgressSteps.innerHTML = '';
+    if (redditGenerateProgressNote) redditGenerateProgressNote.textContent = '';
+  }
+  function startRedditGenerationProgress() {
+    if (!redditGenerateProgress) return;
+    clearRedditProgressTimers();
+    redditGenerateProgress.classList.remove('is-done', 'is-error');
+    redditGenerateProgress.style.display = 'block';
+    redditProgressStartedAt = Date.now();
+    redditProgressActiveStage = 0;
+    updateRedditProgressTick();
+    redditProgressTimer = setInterval(updateRedditProgressTick, 350);
+  }
+  function finalizeRedditGenerationProgress(mode) {
+    if (!redditGenerateProgress) return;
+    clearRedditProgressTimers();
+    const elapsed = Date.now() - redditProgressStartedAt;
+    if (redditGenerateProgressTime) redditGenerateProgressTime.textContent = formatRedditProgressElapsed(elapsed);
+    if (mode === 'done') {
+      redditProgressActiveStage = redditProgressStages.length - 1;
+      redditGenerateProgress.classList.add('is-done');
+      if (redditGenerateProgressFill) redditGenerateProgressFill.style.width = '100%';
+      if (redditGenerateProgressTrack) redditGenerateProgressTrack.setAttribute('aria-valuenow', '100');
+      renderRedditProgressSteps('done');
+      if (redditGenerateProgressNote) redditGenerateProgressNote.textContent = getRedditProgressDetail(elapsed, 'done');
+      redditProgressHideTimer = setTimeout(hideRedditGenerationProgress, 1800);
+      return;
+    }
+    redditGenerateProgress.classList.add('is-error');
+    renderRedditProgressSteps('error');
+    if (redditGenerateProgressNote) redditGenerateProgressNote.textContent = getRedditProgressDetail(elapsed, 'error');
+    redditProgressHideTimer = setTimeout(hideRedditGenerationProgress, 3200);
   }
 
   document.getElementById('view-reddit-rewrite-btn').addEventListener('click', async () => {
@@ -1187,6 +1425,7 @@
     btn.disabled = true;
     btn.textContent = uiText(tr.reddit_generating, 'Generating…', 'Генерация…');
     if (ta) ta.value = uiText(tr.reddit_generating, 'Generating…', 'Генерация…');
+    startRedditGenerationProgress();
     updateRedditCharCount();
     try {
       const res = await fetch('/agents/news_post_agent/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ payload }) });
@@ -1198,16 +1437,19 @@
         }
         if (ta) ta.value = uiText(tr.server_error, 'Server error', 'Ошибка сервера') + ' (' + res.status + '): ' + errMsg;
         updateRedditCharCount();
+        finalizeRedditGenerationProgress('error');
         return;
       }
       var data;
       try { data = JSON.parse(text); } catch (parseErr) {
         if (ta) ta.value = uiText(tr.load_error, 'Error', 'Ошибка') + ': response is not JSON. ' + (text ? text.slice(0, 200) : '');
         updateRedditCharCount();
+        finalizeRedditGenerationProgress('error');
         return;
       }
       const postResult = data.result && data.result.post ? data.result.post : '';
-      if (ta) ta.value = (postResult || '').trim() || uiText(tr.reddit_generate_failed, 'Failed to generate post.', 'Не удалось сгенерировать пост.');
+      const postResultText = (postResult || '').trim();
+      if (ta) ta.value = postResultText || uiText(tr.reddit_generate_failed, 'Failed to generate post.', 'Не удалось сгенерировать пост.');
       updateRedditCharCount();
       if (currentViewId != null && postResult) {
         fetch('/reddit/posts/' + currentViewId, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reply_variants: { post: postResult.trim() }, status: 'in_progress' }) })
@@ -1223,9 +1465,11 @@
           })
           .catch(() => {});
       }
+      finalizeRedditGenerationProgress(postResultText ? 'done' : 'error');
     } catch (err) {
       if (ta) ta.value = uiText(tr.load_error, 'Error', 'Ошибка') + ': ' + (err && err.message ? err.message : uiText(null, 'Failed to connect to server.', 'Не удалось подключиться к серверу.'));
       updateRedditCharCount();
+      finalizeRedditGenerationProgress('error');
     } finally {
       btn.disabled = false;
       btn.textContent = uiText(tr.reddit_rewrite_btn, 'Rewrite', 'Переписать');

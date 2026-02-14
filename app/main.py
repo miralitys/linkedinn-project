@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, Request
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
@@ -44,56 +45,60 @@ async def lifespan(app: FastAPI):
                 raise
     settings.memory_dir.mkdir(parents=True, exist_ok=True)
     settings.prompts_dir.mkdir(parents=True, exist_ok=True)
-    # Автоматическая подгрузка постов: по расписанию и один раз после старта
-    scheduler.add_job(
-        posts.run_auto_sync,
-        "interval",
-        hours=6,
-        id="posts_auto_sync",
-        replace_existing=True,
-    )
-    scheduler.add_job(
-        linkedin_oauth.run_linkedin_analytics_sync,
-        "interval",
-        hours=24,
-        id="linkedin_analytics_sync",
-        replace_existing=True,
-    )
-    # Новости и Reddit: раз в час подгружаем новые в БД
-    scheduler.add_job(
-        news.run_news_refresh,
-        "interval",
-        hours=1,
-        id="news_refresh",
-        replace_existing=True,
-    )
-    scheduler.add_job(
-        reddit.run_reddit_sync_all,
-        "interval",
-        hours=1,
-        id="reddit_sync_all",
-        replace_existing=True,
-    )
-    scheduler.start()
+    if settings.lfas_enable_scheduler:
+        # Автоматическая подгрузка постов: по расписанию и один раз после старта
+        scheduler.add_job(
+            posts.run_auto_sync,
+            "interval",
+            hours=6,
+            id="posts_auto_sync",
+            replace_existing=True,
+        )
+        scheduler.add_job(
+            linkedin_oauth.run_linkedin_analytics_sync,
+            "interval",
+            hours=24,
+            id="linkedin_analytics_sync",
+            replace_existing=True,
+        )
+        # Новости и Reddit: раз в час подгружаем новые в БД
+        scheduler.add_job(
+            news.run_news_refresh,
+            "interval",
+            hours=1,
+            id="news_refresh",
+            replace_existing=True,
+        )
+        scheduler.add_job(
+            reddit.run_reddit_sync_all,
+            "interval",
+            hours=1,
+            id="reddit_sync_all",
+            replace_existing=True,
+        )
+        scheduler.start()
 
-    async def sync_once_after_start():
-        await asyncio.sleep(15)
-        try:
-            await posts.run_auto_sync()
-        except Exception as e:
-            logging.exception("Posts auto-sync at startup: %s", e)
-        try:
-            await news.run_news_refresh()
-        except Exception as e:
-            logging.exception("News refresh at startup: %s", e)
-        try:
-            await reddit.run_reddit_sync_all()
-        except Exception as e:
-            logging.exception("Reddit sync at startup: %s", e)
+        async def sync_once_after_start():
+            await asyncio.sleep(15)
+            try:
+                await posts.run_auto_sync()
+            except Exception as e:
+                logging.exception("Posts auto-sync at startup: %s", e)
+            try:
+                await news.run_news_refresh()
+            except Exception as e:
+                logging.exception("News refresh at startup: %s", e)
+            try:
+                await reddit.run_reddit_sync_all()
+            except Exception as e:
+                logging.exception("Reddit sync at startup: %s", e)
 
-    asyncio.create_task(sync_once_after_start())
+        asyncio.create_task(sync_once_after_start())
+    else:
+        logging.info("Background scheduler is disabled (LFAS_ENABLE_SCHEDULER=false)")
     yield
-    scheduler.shutdown()
+    if settings.lfas_enable_scheduler and scheduler.running:
+        scheduler.shutdown(wait=False)
 
 
 app = FastAPI(title="MyVOICE's", description="LinkedIn Funnel Agent System", lifespan=lifespan)
@@ -124,6 +129,7 @@ from app.middleware.auth import AuthMiddleware
 from app.middleware.normalize_path import NormalizePathMiddleware
 app.add_middleware(AuthMiddleware)
 app.add_middleware(NormalizePathMiddleware)
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.session_secret or "lfas-change-me-in-production",

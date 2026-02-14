@@ -193,6 +193,7 @@
       <div id="view-post-reply-single" class="view-post-reply-single"></div>
       <div id="view-post-reply-all" class="view-post-reply-all" style="display: none;"></div>
       <button type="button" id="view-post-show-all-variants" class="btn btn-ghost btn-sm" style="display: none;">{{ tr.posts_show_all_variants }}</button>
+      <p id="view-post-background-note" class="view-post-background-note" style="display: none;"></p>
     </div>
     <div class="view-post-comment-written-wrap">
       <label class="view-post-checkbox-label" for="view-post-comment-written">
@@ -738,6 +739,50 @@
   .empty-state-title,
   .error-state-text { font-size: 18px; line-height: 24px; font-weight: 600; color: #111827; }
   .empty-state-desc { max-width: 560px; margin-left: auto; margin-right: auto; font-size: 14px; line-height: 20px; color: #4b5563; }
+  .view-post-background-note { margin: var(--space-3) 0 0; font-size: var(--text-13); color: var(--text-muted); }
+  .view-post-background-note.is-error { color: var(--danger); }
+  .posts-job-toast-container {
+    position: fixed;
+    top: var(--space-5);
+    right: var(--space-5);
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-width: min(360px, calc(100vw - 24px));
+    pointer-events: none;
+  }
+  .posts-job-toast {
+    pointer-events: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    border-radius: var(--radius);
+    box-shadow: var(--elevation-modal);
+    padding: var(--space-3) var(--space-3) var(--space-2);
+  }
+  .posts-job-toast-title { font-size: var(--text-13); font-weight: 700; color: var(--text); margin: 0 0 2px; }
+  .posts-job-toast-text { font-size: var(--text-13); color: var(--text-muted); margin: 0; }
+  .posts-job-toast-actions { margin-top: var(--space-2); display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2); }
+  .posts-job-toast-open {
+    border: 1px solid #c7d2fe;
+    background: #eef2ff;
+    color: #4338ca;
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    font-size: var(--text-12);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .posts-job-toast-close {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px;
+  }
 
   @media (max-width: 980px) {
     .main-wrap { padding: 24px !important; }
@@ -750,6 +795,7 @@
   }
   @media (max-width: 768px) {
     .main-wrap { padding: 16px !important; }
+    .posts-job-toast-container { top: var(--space-3); right: var(--space-3); left: var(--space-3); max-width: none; }
     .posts-header-top { flex-direction: column; align-items: stretch; }
     .posts-header-actions { width: 100%; flex-wrap: wrap; }
     .posts-header-actions .btn { flex: 1; min-width: 180px; }
@@ -1165,6 +1211,7 @@ btn.textContent = (tr.posts_copied || 'Copied');
   }
   const viewPostSegmentedWrap = document.querySelector('.view-post-segmented');
   const viewPostShowAllBtn = document.getElementById('view-post-show-all-variants');
+  const viewPostBackgroundNote = document.getElementById('view-post-background-note');
   const isEnglishLocale = (String(window.__locale || '').toLowerCase() === 'en');
   function trWithLocaleFallback(key, enFallback, ruFallback) {
     const value = tr && tr[key];
@@ -1197,6 +1244,269 @@ btn.textContent = (tr.posts_copied || 'Copied');
   let generationProgressHideTimer = null;
   let generationProgressStartedAt = 0;
   let generationProgressActiveStage = 0;
+  const FAST_COMMENT_JOBS_STORAGE_KEY = 'posts_fast_comment_jobs_v1';
+  let fastCommentJobs = {};
+  let fastCommentPollTimer = null;
+  let fastCommentPollInFlight = false;
+  function getFastCommentBackgroundHint() {
+    return trWithLocaleFallback(
+      'posts_fast_short_ready',
+      'Short variant is ready. Medium and long are generating in background.',
+      'Короткий вариант готов. Средний и длинный генерируются в фоне.'
+    );
+  }
+  function setBackgroundGenerationNote(message, tone) {
+    if (!viewPostBackgroundNote) return;
+    const text = String(message || '').trim();
+    if (!text) {
+      viewPostBackgroundNote.style.display = 'none';
+      viewPostBackgroundNote.textContent = '';
+      viewPostBackgroundNote.classList.remove('is-error');
+      return;
+    }
+    viewPostBackgroundNote.textContent = text;
+    viewPostBackgroundNote.style.display = 'block';
+    viewPostBackgroundNote.classList.toggle('is-error', tone === 'error');
+  }
+  function getStoredFastCommentJobs() {
+    try {
+      const raw = localStorage.getItem(FAST_COMMENT_JOBS_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_) {
+      return [];
+    }
+  }
+  function persistFastCommentJobs() {
+    try {
+      const list = Object.values(fastCommentJobs || {});
+      localStorage.setItem(FAST_COMMENT_JOBS_STORAGE_KEY, JSON.stringify(list));
+    } catch (_) {}
+  }
+  function upsertFastCommentJob(job) {
+    if (!job || !job.job_id) return;
+    const jobId = String(job.job_id);
+    fastCommentJobs[jobId] = {
+      job_id: jobId,
+      post_id: Number(job.post_id || 0) || null,
+      post_title: String(job.post_title || ''),
+      started_at: String(job.started_at || new Date().toISOString()),
+    };
+    persistFastCommentJobs();
+    ensureFastCommentPolling();
+  }
+  function removeFastCommentJob(jobId) {
+    if (!jobId || !fastCommentJobs[jobId]) return;
+    delete fastCommentJobs[jobId];
+    persistFastCommentJobs();
+    stopFastCommentPollingIfIdle();
+  }
+  function findPendingFastCommentJobByPostId(postId) {
+    const target = Number(postId || 0);
+    if (!target) return null;
+    const all = Object.values(fastCommentJobs || {});
+    for (let i = 0; i < all.length; i += 1) {
+      const item = all[i];
+      if (Number(item.post_id || 0) === target) return item;
+    }
+    return null;
+  }
+  function isDrawerOpenForPost(postId) {
+    if (!viewPostModal || viewPostModal.hasAttribute('hidden')) return false;
+    return Number(currentViewPostId || 0) === Number(postId || -1);
+  }
+  function ensureFastJobToastContainer() {
+    let container = document.getElementById('posts-job-toast-container');
+    if (container) return container;
+    container = document.createElement('div');
+    container.id = 'posts-job-toast-container';
+    container.className = 'posts-job-toast-container';
+    document.body.appendChild(container);
+    return container;
+  }
+  function showFastCommentDoneToast(postId, postTitle) {
+    const container = ensureFastJobToastContainer();
+    const title = trWithLocaleFallback(
+      'posts_background_done_title',
+      'Generation finished',
+      'Генерация завершена'
+    );
+    const body = trWithLocaleFallback(
+      'posts_background_done_body',
+      'Medium and long variants are ready for:',
+      'Средний и длинный варианты готовы для:'
+    );
+    const openLabel = trWithLocaleFallback(
+      'posts_background_open_post',
+      'Open post',
+      'Открыть пост'
+    );
+
+    const toast = document.createElement('div');
+    toast.className = 'posts-job-toast';
+    toast.setAttribute('role', 'status');
+    const safeTitle = document.createElement('p');
+    safeTitle.className = 'posts-job-toast-title';
+    safeTitle.textContent = title;
+    const safeBody = document.createElement('p');
+    safeBody.className = 'posts-job-toast-text';
+    safeBody.textContent = body + ' ' + (postTitle || (tr.posts_post_default || 'Post'));
+    const actions = document.createElement('div');
+    actions.className = 'posts-job-toast-actions';
+    const openBtn = document.createElement('button');
+    openBtn.type = 'button';
+    openBtn.className = 'posts-job-toast-open';
+    openBtn.textContent = openLabel;
+    openBtn.addEventListener('click', function() {
+      openViewPostModal(postId, { focusDraft: true });
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    });
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'posts-job-toast-close';
+    closeBtn.setAttribute('aria-label', tr.posts_close || 'Close');
+    closeBtn.textContent = '×';
+    closeBtn.addEventListener('click', function() {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    });
+    actions.appendChild(openBtn);
+    actions.appendChild(closeBtn);
+    toast.appendChild(safeTitle);
+    toast.appendChild(safeBody);
+    toast.appendChild(actions);
+    container.appendChild(toast);
+    setTimeout(function() {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 12000);
+  }
+  function mergePostIntoCache(post) {
+    if (!post || typeof post !== 'object') return;
+    const postId = Number(post.id || 0);
+    if (!postId) return;
+    const idx = postsCache.findIndex((item) => Number(item.id || 0) === postId);
+    if (idx >= 0) postsCache[idx] = Object.assign({}, postsCache[idx], post);
+  }
+  async function refreshPostFromServer(postId) {
+    const numericId = Number(postId || 0);
+    if (!numericId) return null;
+    try {
+      const r = await fetch('/posts/' + numericId, { credentials: 'include' });
+      if (!r.ok) return null;
+      const post = await r.json();
+      mergePostIntoCache(post);
+      renderPostsList(postsCache);
+      if (isDrawerOpenForPost(numericId) && post && post.reply_variants && typeof post.reply_variants === 'object') {
+        showingAllVariants = false;
+        viewPostReplyResult.style.display = 'block';
+        showReplyVariantsUI(post.reply_variants);
+        clearBackgroundGenerationNote();
+        updateGenerateReplyButtonLabel();
+      }
+      return post;
+    } catch (_) {
+      return null;
+    }
+  }
+  function clearBackgroundGenerationNote() {
+    setBackgroundGenerationNote('', 'info');
+  }
+  async function handleFastCommentJobDone(jobState) {
+    const postId = Number(jobState.post_id || 0);
+    if (!postId) return;
+    const post = await refreshPostFromServer(postId);
+    const title = (post && (post.title || post.content)) || jobState.post_title || (tr.posts_post_default || 'Post');
+    if (isDrawerOpenForPost(postId)) {
+      clearBackgroundGenerationNote();
+      if (typeof window.toast === 'function') {
+        window.toast(
+          trWithLocaleFallback(
+            'posts_fast_all_ready',
+            'Medium and long variants are ready.',
+            'Средний и длинный варианты готовы.'
+          ),
+          'success'
+        );
+      }
+      return;
+    }
+    showFastCommentDoneToast(postId, title);
+  }
+  function handleFastCommentJobError(jobState) {
+    const postId = Number(jobState.post_id || 0);
+    const message = trWithLocaleFallback(
+      'posts_fast_generation_failed',
+      'Background generation failed. You can retry from the post drawer.',
+      'Фоновая генерация не завершилась. Можно повторить из окна поста.'
+    );
+    if (isDrawerOpenForPost(postId)) setBackgroundGenerationNote(message, 'error');
+    if (typeof window.toast === 'function') window.toast(message, 'error');
+  }
+  async function pollFastCommentJobsOnce() {
+    if (fastCommentPollInFlight) return;
+    const jobIds = Object.keys(fastCommentJobs || {});
+    if (!jobIds.length) {
+      stopFastCommentPollingIfIdle();
+      return;
+    }
+    fastCommentPollInFlight = true;
+    try {
+      await Promise.all(jobIds.map(async function(jobId) {
+        const stored = fastCommentJobs[jobId];
+        if (!stored) return;
+        try {
+          const res = await fetch('/agents/comment_agent/jobs/' + encodeURIComponent(jobId), { credentials: 'include' });
+          if (res.status === 404) {
+            removeFastCommentJob(jobId);
+            return;
+          }
+          if (!res.ok) return;
+          const jobState = await res.json();
+          if (!jobState || typeof jobState !== 'object') return;
+          fastCommentJobs[jobId] = {
+            job_id: String(jobState.job_id || jobId),
+            post_id: Number(jobState.post_id || stored.post_id || 0) || null,
+            post_title: String(jobState.post_title || stored.post_title || ''),
+            started_at: String(stored.started_at || new Date().toISOString()),
+          };
+          persistFastCommentJobs();
+          const status = String(jobState.status || '').toLowerCase();
+          if (status === 'running' || !status) return;
+          removeFastCommentJob(jobId);
+          if (status === 'done') await handleFastCommentJobDone(jobState);
+          else handleFastCommentJobError(jobState);
+        } catch (_) {}
+      }));
+    } finally {
+      fastCommentPollInFlight = false;
+    }
+  }
+  function ensureFastCommentPolling() {
+    if (fastCommentPollTimer || !Object.keys(fastCommentJobs || {}).length) return;
+    fastCommentPollTimer = setInterval(pollFastCommentJobsOnce, 2500);
+    pollFastCommentJobsOnce();
+  }
+  function stopFastCommentPollingIfIdle() {
+    if (Object.keys(fastCommentJobs || {}).length) return;
+    if (fastCommentPollTimer) {
+      clearInterval(fastCommentPollTimer);
+      fastCommentPollTimer = null;
+    }
+  }
+  function loadStoredFastCommentJobs() {
+    const stored = getStoredFastCommentJobs();
+    fastCommentJobs = {};
+    stored.forEach(function(item) {
+      if (!item || !item.job_id) return;
+      const jobId = String(item.job_id);
+      fastCommentJobs[jobId] = {
+        job_id: jobId,
+        post_id: Number(item.post_id || 0) || null,
+        post_title: String(item.post_title || ''),
+        started_at: String(item.started_at || new Date().toISOString()),
+      };
+    });
+    if (Object.keys(fastCommentJobs).length) ensureFastCommentPolling();
+  }
   function renderLinkedInMetrics(metrics, historyDaily) {
     if (!viewPostLinkedInMetrics) return;
     const order = ['IMPRESSION', 'MEMBERS_REACHED', 'REACTION', 'COMMENT', 'RESHARE'];
@@ -1478,6 +1788,7 @@ btn.textContent = (tr.posts_copied || 'Copied');
     viewPostModal.style.display = 'flex';
     currentViewPostId = id;
     hideGenerationProgress();
+    clearBackgroundGenerationNote();
     fetch('/posts/' + id).then(r => r.json()).then(p => {
       currentViewPostContent = p.content || '';
       currentViewPostUrl = p.post_url || '#';
@@ -1512,6 +1823,8 @@ btn.textContent = (tr.posts_copied || 'Copied');
         if (viewPostReplyAll) { viewPostReplyAll.style.display = 'none'; viewPostReplyAll.innerHTML = ''; }
       }
       updateGenerateReplyButtonLabel();
+      const pendingFastJob = findPendingFastCommentJobByPostId(id);
+      if (pendingFastJob) setBackgroundGenerationNote(getFastCommentBackgroundHint(), 'info');
       const commentWrittenCb = document.getElementById('view-post-comment-written');
       if (commentWrittenCb) commentWrittenCb.checked = !!p.comment_written;
       const markedMeta = document.getElementById('view-post-comment-written-desc');
@@ -1547,12 +1860,13 @@ btn.textContent = (tr.posts_copied || 'Copied');
     const goal = document.getElementById('view-post-goal').value;
     const authorIndex = document.getElementById('view-post-author-select').value;
     const author = (authorIndex !== '' && viewPostAuthorsList.length) ? viewPostAuthorsList[parseInt(authorIndex, 10)] : null;
-    const payload = { post_text: postText, goal };
+    const payload = { post_text: postText, goal, post_id: currentViewPostId, fast_mode: true };
     if (author) payload.author = { full_name: author.full_name, role: author.role || '', history: author.history || '', linkedin_url: author.linkedin_url || '' };
     if (viewPostSetupDraft.products && viewPostSetupDraft.products.length) payload.products = viewPostSetupDraft.products;
     viewPostGenerateReply.disabled = true;
     viewPostGenerateReply.textContent = tr.posts_generating || 'Generating…';
     startGenerationProgress();
+    clearBackgroundGenerationNote();
     viewPostReplyResult.style.display = 'block';
     if (viewPostSegmentedWrap) viewPostSegmentedWrap.style.display = 'none';
     if (viewPostShowAllBtn) viewPostShowAllBtn.style.display = 'none';
@@ -1574,15 +1888,25 @@ btn.textContent = (tr.posts_copied || 'Copied');
         viewPostReplySingle.innerHTML = '<p style="color: var(--text-muted); font-size: var(--text-14);">' + (tr.posts_error_not_json || 'Error: response is not JSON.') + '</p>';
         return;
       }
-      const comments = data.result?.comments || data.result || {};
+      const result = (data && data.result && typeof data.result === 'object') ? data.result : (data || {});
+      const comments = (result.comments && typeof result.comments === 'object') ? result.comments : result;
       if (typeof comments !== 'object' || (!comments.short && !comments.medium && !comments.long)) {
         viewPostReplySingle.innerHTML = '<p style="color: var(--text-muted); font-size: var(--text-14);">' + (tr.posts_no_variants || 'No variants.') + ' ' + (data.detail || JSON.stringify(comments).slice(0, 150)) + '…</p>';
         return;
       }
       showingAllVariants = false;
       showReplyVariantsUI(comments);
-      if (currentViewPostId != null) {
-        fetch('/posts/' + currentViewPostId, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reply_variants: { short: comments.short || '', medium: comments.medium || '', long: comments.long || '' } }) }).catch(() => {});
+      const hasBackgroundPending = !!result.background_pending && !!result.job_id;
+      if (hasBackgroundPending) {
+        upsertFastCommentJob({
+          job_id: String(result.job_id),
+          post_id: Number(result.post_id || currentViewPostId || 0),
+          post_title: String(result.post_title || document.getElementById('view-post-modal-title').textContent || ''),
+          started_at: new Date().toISOString(),
+        });
+        setBackgroundGenerationNote(getFastCommentBackgroundHint(), 'info');
+      } else {
+        clearBackgroundGenerationNote();
       }
       generationSucceeded = true;
     } catch (err) {
@@ -1914,6 +2238,9 @@ btn.textContent = (tr.posts_copied || 'Copied');
     viewPostSetupDraft = { authors: draft.authors || [], products: draft.products || [] };
     fillAuthorSelect(draft.authors);
   }).catch(() => { viewPostSetupDraft = { authors: [], products: [] }; fillAuthorSelect([]); });
+
+  loadStoredFastCommentJobs();
+  ensureFastCommentPolling();
 
   // Загружаем посты сразу, чтобы лента не оставалась пустой при медленном ответе /people
   loadPosts();

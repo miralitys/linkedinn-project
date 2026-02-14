@@ -78,6 +78,8 @@ async def list_posts(
     sort: str = Query("desc", description="desc|asc"),
     archived: Optional[str] = Query(None, description="false = only visible, true = only archived"),
     max_per_contact: Optional[int] = Query(None, description="макс. постов на контакт (напр. 3 = последние 3 по каждому)"),
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
 ):
@@ -110,6 +112,8 @@ async def list_posts(
         q = q.where(ContactPost.archived == False)
     order = ContactPost.posted_at.desc() if sort == "desc" else ContactPost.posted_at.asc()
     q = q.order_by(order)
+    if max_per_contact is None:
+        q = q.limit(limit).offset(offset)
     r = await session.execute(q)
     posts = list(r.scalars().all())
     if max_per_contact is not None and max_per_contact > 0:
@@ -120,6 +124,7 @@ async def list_posts(
         for pid in sorted(by_person.keys()):
             posts.extend(by_person[pid][:max_per_contact])
         posts.sort(key=lambda p: p.posted_at, reverse=(sort == "desc"))
+        posts = posts[offset: offset + limit]
     return [_post_to_read(p) for p in posts]
 
 

@@ -1,317 +1,1089 @@
 {% extends "base_landing.html" %}
-{% block title %}MyVOICE's — B2B leads from LinkedIn: feed and drafts{% endblock %}
+{% block title %}MyVOICE's — Turn LinkedIn conversations into B2B pipeline{% endblock %}
 {% block head %}
-  <meta name="description" content="MyVOICE's brings your contacts' posts, news and Reddit into one feed and helps you write comments and posts in your voice quickly.">
-  <meta property="og:title" content="MyVOICE's — B2B leads from LinkedIn: feed and drafts">
-  <meta property="og:description" content="MyVOICE's brings your contacts' posts, news and Reddit into one feed and helps you write comments and posts in your voice quickly.">
+  <meta name="description" content="MyVOICE's unifies contacts, news, and Reddit into one feed so your team can turn LinkedIn conversations into predictable B2B pipeline.">
+  <meta property="og:title" content="MyVOICE's — Turn LinkedIn conversations into B2B pipeline">
+  <meta property="og:description" content="One feed, faster drafts, and a confident daily workflow for LinkedIn comments and posts.">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="MyVOICE's — B2B leads from LinkedIn: feed and drafts">
-  <meta name="twitter:description" content="MyVOICE's brings your contacts' posts, news and Reddit into one feed and helps you write comments and posts in your voice quickly.">
+  <meta name="twitter:title" content="MyVOICE's — Turn LinkedIn conversations into B2B pipeline">
+  <meta name="twitter:description" content="One feed, faster drafts, and a confident daily workflow for LinkedIn comments and posts.">
 {% endblock %}
 
 {% block content %}
 <style>
-  .hero { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-10); align-items: center; margin-bottom: 80px; }
-  .hero-text { max-width: 720px; }
-  .hero-label { font-size: var(--text-12); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: var(--space-2); }
-  .hero h1 { font-size: clamp(1.5rem, 4vw, var(--text-32)); font-weight: 700; line-height: 1.25; letter-spacing: -0.02em; margin: 0 0 var(--space-4); color: var(--text); }
-  .hero-desc { font-size: var(--text-16); color: var(--text-muted); line-height: 1.65; margin: 0 0 var(--space-6); }
-  .hero-cta-row { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-6); }
-  .hero-cta { display: inline-block; background: var(--primary); color: white; font-weight: 500; padding: 0.75rem 1.5rem; border-radius: var(--radius-pill); transition: background var(--motion-fast); }
-  .hero-cta:hover { background: var(--primary-hover); color: white; text-decoration: none; }
-  .hero-cta-secondary { display: inline-block; background: transparent; color: var(--text); font-weight: 500; padding: 0.75rem 1.5rem; border-radius: var(--radius-pill); border: 1px solid var(--border); transition: border-color var(--motion-fast), color var(--motion-fast); }
-  .hero-cta-secondary:hover { border-color: var(--primary); color: var(--primary); text-decoration: none; }
-  .hero-bullets { display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--text-14); color: var(--text-muted); }
-  .hero-bullets span { display: flex; align-items: center; gap: var(--space-2); }
-  .hero-bullets span::before { content: ''; width: 4px; height: 4px; background: var(--accent); border-radius: 50%; flex-shrink: 0; }
-  .hero-screenshot { border-radius: var(--radius-lg); border: 1px solid var(--border); overflow: hidden; background: var(--surface-alt); aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: var(--text-14); }
-  .hero-screenshot img { width: 100%; height: 100%; object-fit: cover; }
-  .hero-badges { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
-  .hero-badge { font-size: var(--text-12); font-weight: 500; padding: 4px 10px; border-radius: var(--radius-pill); background: var(--surface-alt); border: 1px solid var(--border); color: var(--text-muted); }
-  .hero-badge-btn { cursor: pointer; transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast); }
-  .hero-badge-btn:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
-  .hero-badge-btn.active { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); font-weight: 600; }
-  .landing-screenshot-modal { position: fixed; inset: 0; z-index: 200; display: none; align-items: center; justify-content: center; padding: var(--space-6); background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
-  .landing-screenshot-modal.is-open { display: flex; }
-  .landing-screenshot-modal-content { position: relative; max-width: 90vw; max-height: 90vh; border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.25); background: var(--surface); }
-  .landing-screenshot-modal-content img { display: block; width: 100%; height: auto; max-height: 90vh; object-fit: contain; }
-  .landing-screenshot-modal-close { position: absolute; top: var(--space-2); right: var(--space-2); width: 40px; height: 40px; border: none; background: rgba(0,0,0,0.5); color: #fff; font-size: 1.5rem; line-height: 1; cursor: pointer; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; transition: background var(--motion-fast); }
-  .landing-screenshot-modal-close:hover { background: rgba(0,0,0,0.8); }
+  .home-page {
+    display: grid;
+    gap: 56px;
+  }
 
-  .section { margin-bottom: 80px; }
-  .section .section-title,
-  .section .section-desc,
-  .section .section-sub,
-  .section p { max-width: 720px; }
-  .section-wide { max-width: none; }
-  .section-fullwidth { max-width: none; }
-  .section-fullwidth .section-title,
-  .section-fullwidth .section-desc,
-  .section-fullwidth .section-sub,
-  .section-fullwidth p { max-width: none; }
-  .section-title { font-size: var(--text-24); font-weight: 700; letter-spacing: -0.02em; margin: 0 0 var(--space-4); color: var(--text); }
-  .section-desc { font-size: var(--text-16); color: var(--text-muted); line-height: 1.65; margin: 0 0 var(--space-6); }
-  .section-sub { font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; margin: 0; }
-  .section p { margin: 0 0 var(--space-4); color: var(--text); font-size: var(--text-16); line-height: 1.65; }
-  .section p:last-child { margin-bottom: 0; }
+  .home-page > section {
+    width: 100%;
+    max-width: 1160px;
+    margin: 0 auto;
+  }
 
-  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin: var(--space-6) 0; }
-  .stat-card { background: var(--surface-alt); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-6); }
-  .stat-card .num { font-size: var(--text-32); font-weight: 700; letter-spacing: -0.02em; color: var(--text); margin-bottom: var(--space-2); }
-  .stat-card .label { font-size: var(--text-14); color: var(--text-muted); line-height: 1.4; }
-  .section a.arrow { font-size: var(--text-14); color: var(--accent); display: inline-flex; align-items: center; gap: var(--space-2); margin-top: var(--space-2); }
-  .section a.arrow:hover { text-decoration: none; }
+  .surface-card {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow-card);
+    transition: transform 220ms ease-out, box-shadow 220ms ease-out, border-color 220ms ease-out, background-color 180ms ease-out;
+  }
 
-  .features-list { margin: 0; padding: 0; list-style: none; }
-  .features-list li { margin-bottom: var(--space-8); padding-bottom: var(--space-8); border-bottom: 1px solid var(--border); }
-  .features-list li:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-  .features-list h3 { font-size: var(--text-18); font-weight: 600; margin: 0 0 var(--space-2); color: var(--text); }
-  .features-list p { margin: 0; font-size: var(--text-16); color: var(--text-muted); line-height: 1.6; }
+  .section-head {
+    margin-bottom: 32px;
+  }
 
-  .stats-two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin: var(--space-6) 0; }
-  .stat-card .num { font-size: var(--text-32); }
+  .section-head h2 {
+    margin: 0;
+    font-size: clamp(30px, 4vw, 40px);
+    line-height: 1.18;
+    font-weight: 650;
+    color: var(--neutral-900);
+    letter-spacing: -0.02em;
+  }
 
-  .faq-list { margin: 0; padding: 0; list-style: none; }
-  .faq-list li { margin-bottom: var(--space-6); }
-  .faq-list dt { font-size: var(--text-16); font-weight: 600; margin: 0 0 var(--space-2); color: var(--text); }
-  .faq-list dd { margin: 0; font-size: var(--text-16); color: var(--text-muted); line-height: 1.6; }
+  .section-head p {
+    margin: 12px 0 0;
+    max-width: 720px;
+    font-size: 16px;
+    line-height: 1.62;
+    font-weight: 400;
+    color: var(--neutral-500);
+  }
 
-  .cta-card { background: var(--surface-alt); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-8); margin: var(--space-10) 0; box-shadow: var(--elevation-2); }
-  .cta-card h2 { margin: 0 0 var(--space-3); font-size: var(--text-24); font-weight: 700; }
-  .cta-card p { margin: 0 0 var(--space-4); color: var(--text-muted); font-size: var(--text-16); line-height: 1.6; }
-  .cta-card .btn { display: inline-block; background: var(--primary); color: white; font-weight: 500; padding: 0.75rem 1.5rem; border-radius: var(--radius-pill); margin-top: var(--space-2); }
-  .cta-card .btn:hover { background: var(--primary-hover); color: white; text-decoration: none; }
+  .section-head-nowrap h2,
+  .section-head-nowrap p {
+    white-space: nowrap;
+  }
 
-  .how-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin: var(--space-6) 0; }
-  .how-step { max-width: 100%; }
-  .how-step-num { font-size: var(--text-12); font-weight: 600; color: var(--accent); margin-bottom: var(--space-2); }
-  .how-step h3 { font-size: var(--text-18); font-weight: 600; margin: 0 0 var(--space-2); color: var(--text); }
-  .how-step p { font-size: var(--text-14); color: var(--text-muted); line-height: 1.6; margin: 0 0 var(--space-3); }
-  .fit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); margin: var(--space-6) 0; }
-  .fit-card { padding: var(--space-4); border-radius: var(--radius); border: 1px solid var(--border); }
-  .fit-card h3 { font-size: var(--text-16); font-weight: 600; margin: 0 0 var(--space-3); color: var(--text); }
-  .fit-card ul { margin: 0; padding-left: 1.2em; font-size: var(--text-14); color: var(--text-muted); line-height: 1.65; }
+  .section-head-nowrap p {
+    max-width: none;
+  }
 
-  .faq-accordion { margin: 0; padding: 0; list-style: none; }
-  .faq-accordion li { border-bottom: 1px solid var(--border); }
-  .faq-accordion button { width: 100%; padding: var(--space-4) var(--space-4) var(--space-4) 0; min-height: 48px; text-align: left; font-size: var(--text-16); font-weight: 600; color: var(--text); background: none; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
-  .faq-accordion button:hover { color: var(--accent); }
-  .faq-accordion button::after { content: '+'; font-size: 1.2em; color: var(--text-muted); flex-shrink: 0; }
-  .faq-accordion li.is-open button::after { content: '−'; }
-  .faq-accordion .faq-answer { padding: 0 var(--space-4) var(--space-4) 0; font-size: var(--text-16); color: var(--text-muted); line-height: 1.65; display: none; }
-  .faq-accordion li.is-open .faq-answer { display: block; }
+  .home-btn {
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 32px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    font-size: 15px;
+    line-height: 1;
+    font-weight: 600;
+    text-decoration: none;
+    transition: filter 200ms ease-out, transform 120ms ease-out, color 200ms ease-out, background-color 200ms ease-out, border-color 200ms ease-out, box-shadow 200ms ease-out;
+    cursor: pointer;
+    white-space: nowrap;
+  }
 
-  .cta-card .cta-sub { font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-2); }
-  .cta-card .btn-row { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-4); }
-  .cta-card .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
-  .cta-card .btn-secondary:hover { border-color: var(--primary); color: var(--primary); background: transparent; text-decoration: none; }
+  .home-btn:active {
+    transform: scale(0.98);
+  }
 
-  @media (max-width: 768px) {
-    .hero { grid-template-columns: 1fr; }
-    .hero-text { max-width: none; }
-    .stats-grid { grid-template-columns: 1fr; }
-    .stats-two { grid-template-columns: 1fr; }
-    .how-steps { grid-template-columns: 1fr; }
-    .fit-grid { grid-template-columns: 1fr; }
+  .home-btn:focus-visible,
+  .preview-tab:focus-visible,
+  .faq-trigger:focus-visible {
+    outline: 2px solid #a5b4fc;
+    outline-offset: 2px;
+  }
+
+  .home-btn-primary {
+    color: #ffffff;
+    background: var(--primary-600);
+    box-shadow: 0 12px 28px rgba(93, 92, 255, 0.3);
+  }
+
+  .home-btn-primary:hover {
+    color: #ffffff;
+    background: var(--primary-700);
+    transform: translateY(-2px);
+  }
+
+  .home-btn-secondary {
+    color: var(--neutral-900);
+    background: #ffffff;
+    border: 1.5px solid rgba(15, 23, 42, 0.12);
+  }
+
+  .home-btn-secondary:hover {
+    color: var(--neutral-900);
+    border-color: var(--primary-400);
+    background: #f8faff;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
+    gap: 48px;
+    align-items: start;
+  }
+
+  .hero-copy h1 {
+    margin: 0;
+    max-width: 720px;
+    font-size: clamp(44px, 6vw, 64px);
+    line-height: 1.08;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--neutral-900);
+  }
+
+  .hero-highlight {
+    font-weight: 700;
+    background: linear-gradient(135deg, #5d5cff, #7c7bff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hero-sub {
+    margin: 20px 0 0;
+    max-width: 560px;
+    font-size: 18px;
+    line-height: 1.62;
+    font-weight: 400;
+    color: #475569;
+  }
+
+  .hero-actions {
+    margin-top: 32px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .hero-trust-note {
+    margin: 10px 0 0;
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: 500;
+    color: var(--neutral-500);
+  }
+
+  .hero-login-link {
+    margin: 12px 0 0;
+    font-size: 14px;
+    line-height: 22px;
+    color: var(--neutral-500);
+  }
+
+  .hero-login-link a {
+    font-weight: 600;
+  }
+
+  .hero-bullets {
+    margin: 24px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 16px;
+    max-width: 640px;
+  }
+
+  .hero-bullets li {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    font-size: 15px;
+    line-height: 24px;
+    color: var(--neutral-500);
+  }
+
+  .hero-bullets li strong {
+    color: var(--neutral-900);
+    font-weight: 600;
+  }
+
+  .hero-bullets svg {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex: 0 0 auto;
+    color: var(--success-600);
+    stroke-width: 1.5;
+  }
+
+  .hero-preview {
+    align-self: flex-start;
+    margin-top: 0;
+    transform: none;
+    border-radius: 20px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: #ffffff;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+    padding: 6px;
+  }
+
+  .preview-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .preview-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 500;
+    color: #3730a3;
+    background: #eef2ff;
+  }
+
+  .preview-status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--primary-600);
+  }
+
+  .preview-meta {
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 500;
+    color: var(--neutral-500);
+  }
+
+  .preview-screen {
+    position: relative;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--neutral-100);
+    min-height: 360px;
+  }
+
+  .preview-screen img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 360px;
+    object-fit: cover;
+    object-position: center top;
+    transform: scale(1.06);
+    transform-origin: center top;
+    filter: saturate(1.03) contrast(1.02);
+  }
+
+  .preview-callout {
+    position: absolute;
+    z-index: 2;
+    min-height: 26px;
+    padding: 0 10px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(4px);
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 500;
+    color: var(--neutral-700);
+  }
+
+  .preview-callout-feed {
+    top: 12px;
+    left: 12px;
+  }
+
+  .preview-callout-comments {
+    top: 12px;
+    right: 12px;
+  }
+
+  .preview-callout-persona {
+    left: 12px;
+    bottom: 12px;
+  }
+
+  .preview-tabs {
+    margin-top: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 36px;
+    padding: 3px;
+    border-radius: 999px;
+    background: var(--neutral-100);
+    border: 1px solid var(--neutral-200);
+  }
+
+  .preview-tab {
+    height: 30px;
+    border-radius: 999px;
+    border: none;
+    background: transparent;
+    color: var(--neutral-600);
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 500;
+    padding: 0 12px;
+    cursor: pointer;
+    transition: background 180ms ease-out, color 180ms ease-out;
+  }
+
+  .preview-tab:hover {
+    color: var(--primary-700);
+  }
+
+  .preview-tab.is-active {
+    background: var(--primary-100);
+    color: var(--primary-700);
+  }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+    align-items: stretch;
+  }
+
+  .step-card {
+    padding: 32px;
+    min-height: 100%;
+    border-radius: 20px;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    background: #ffffff;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+    transition: border-color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
+  }
+
+  .step-card:hover {
+    border-color: rgba(93, 92, 255, 0.28);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
+  }
+
+  .step-badge {
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 600;
+    color: #3730a3;
+    background: #eef2ff;
+  }
+
+  .step-icon {
+    margin-top: 14px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--primary-50);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-600);
+  }
+
+  .step-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 1.75;
+  }
+
+  .step-card h3 {
+    margin: 14px 0 8px;
+    font-size: 22px;
+    line-height: 1.25;
+    font-weight: 600;
+    color: var(--neutral-900);
+  }
+
+  .step-card p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 24px;
+    color: var(--neutral-500);
+  }
+
+  .step-meta {
+    margin-top: 12px;
+    font-size: 13px;
+    line-height: 20px;
+    font-weight: 600;
+    color: var(--primary-700);
+  }
+
+  .fit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    align-items: stretch;
+  }
+
+  .fit-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    padding: 32px;
+    min-height: 100%;
+    box-shadow: var(--shadow-card);
+  }
+
+  .fit-card-positive {
+    background: #f2fbf6;
+    border-color: #d7f2e2;
+  }
+
+  .fit-card-negative {
+    background: #fafbfc;
+    border-color: #e6e8ec;
+  }
+
+  .fit-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 18px;
+    line-height: 24px;
+    font-weight: 700;
+    color: var(--neutral-900);
+  }
+
+  .fit-title svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 1.75;
+    flex: 0 0 auto;
+  }
+
+  .fit-title.fit-positive svg {
+    color: var(--success-600);
+  }
+
+  .fit-title.fit-negative svg {
+    color: var(--neutral-400);
+  }
+
+  .fit-card ul {
+    margin: 0;
+    padding-left: 20px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .fit-card li {
+    font-size: 15px;
+    line-height: 24px;
+    color: var(--neutral-500);
+  }
+
+  .fit-help {
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 22px;
+    color: var(--neutral-500);
+  }
+
+  .fit-help a {
+    font-weight: 600;
+  }
+
+  .text-card {
+    max-width: 920px;
+    padding: 40px;
+    border-radius: 20px;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    background: #ffffff;
+  }
+
+  .text-card,
+  .faq-card {
+    margin: 0 auto;
+  }
+
+  .text-card h2 {
+    margin: 0;
+    font-size: clamp(30px, 4vw, 40px);
+    line-height: 1.18;
+    font-weight: 650;
+    color: var(--neutral-900);
+  }
+
+  .text-card p {
+    margin: 14px 0 0;
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--neutral-500);
+    max-width: 720px;
+  }
+
+  .key-pill {
+    margin-top: 16px;
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(93, 92, 255, 0.18);
+    background: #eef2ff;
+    color: #3730a3;
+    font-size: 13px;
+    line-height: 1.35;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  }
+
+  .quote-note {
+    margin-top: 16px;
+    padding: 4px 0 4px 12px;
+    border-left: 2px solid #8e8fff;
+    font-size: 14px;
+    line-height: 22px;
+    color: var(--neutral-500);
+  }
+
+  .faq-card {
+    padding: 0;
+    max-width: 920px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .faq-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 12px;
+  }
+
+  .faq-item {
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 18px;
+    background: #ffffff;
+    padding: 0 28px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .faq-trigger {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 26px 0;
+    min-height: 72px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    cursor: pointer;
+    color: var(--neutral-900);
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+    transition: background-color 180ms ease-out, color 180ms ease-out;
+  }
+
+  .faq-trigger:hover {
+    background: #fbfcff;
+  }
+
+  .faq-trigger svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 1.5;
+    color: var(--neutral-500);
+    flex: 0 0 auto;
+    transition: transform 180ms ease-out;
+  }
+
+  .faq-item.is-open .faq-trigger svg {
+    transform: rotate(180deg);
+  }
+
+  .faq-item.is-open {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+  }
+
+  .faq-answer {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-4px);
+    overflow: hidden;
+    transition: max-height 240ms ease, opacity 220ms ease, transform 220ms ease;
+  }
+
+  .faq-item.is-open .faq-answer {
+    transform: translateY(0);
+  }
+
+  .faq-answer p {
+    margin: 0;
+    max-width: 720px;
+    padding: 0 0 24px;
+    font-size: 15px;
+    line-height: 24px;
+    color: var(--neutral-500);
+  }
+
+  .demo-card {
+    padding: 48px;
+    border-radius: 22px;
+    background: linear-gradient(180deg, #f8f9ff 0%, #ffffff 100%);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  }
+
+  .demo-card h2 {
+    margin: 0;
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: var(--neutral-900);
+  }
+
+  .demo-card p {
+    margin: 12px 0 0;
+    max-width: 720px;
+    font-size: 16px;
+    line-height: 26px;
+    color: var(--neutral-500);
+  }
+
+  .demo-actions {
+    margin-top: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .demo-actions .home-btn-primary {
+    height: 56px;
+    padding: 0 32px;
+    box-shadow: 0 16px 34px rgba(93, 92, 255, 0.34);
+  }
+
+  .demo-actions .home-btn-secondary {
+    color: var(--neutral-600);
+    border-color: var(--neutral-300);
+  }
+
+  .demo-chips {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .demo-chips li {
+    min-height: 32px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    border: 1px solid var(--neutral-200);
+    background: var(--neutral-100);
+    font-size: 13px;
+    line-height: 1;
+    font-weight: 500;
+    color: var(--neutral-600);
+  }
+
+  @media (max-width: 1080px) {
+    .hero {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .hero-copy h1,
+    .hero-sub {
+      max-width: none;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .home-page {
+      gap: 44px;
+    }
+
+    .section-head-nowrap h2,
+    .section-head-nowrap p {
+      white-space: normal;
+    }
+
+    .steps-grid,
+    .fit-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .faq-card,
+    .text-card {
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hero-actions,
+    .demo-actions {
+      width: 100%;
+      flex-direction: column;
+    }
+
+    .hero-actions .home-btn,
+    .demo-actions .home-btn {
+      width: 100%;
+    }
+
+    .preview-screen,
+    .preview-screen img {
+      min-height: 240px;
+    }
+
+    .preview-callout {
+      min-height: 24px;
+      padding: 0 8px;
+      font-size: 11px;
+    }
+
+    .preview-callout-persona {
+      display: none;
+    }
+
+    .demo-card {
+      padding: 32px 24px;
+    }
+
+    .demo-card h2 {
+      font-size: 26px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation: none !important;
+      transition: none !important;
+    }
   }
 </style>
 
-<section class="hero">
-  <div class="hero-text">
-    <p class="hero-label">MyVOICE's</p>
-    <h1>Get steady B2B leads from LinkedIn by joining the right conversations</h1>
-    <p class="hero-desc">MyVOICE's brings your contacts' posts, news and Reddit into one feed and helps you write comments and posts in your voice in minutes.</p>
-    <div class="hero-cta-row">
-      <a href="/login" class="hero-cta">Log in</a>
-    </div>
-    <div class="hero-bullets">
-      <span>One feed: contacts, news and Reddit</span>
-      <span>Comment and post drafts in 2 minutes, no salesy tone</span>
-      <span>Jump into discussions your leads actually read</span>
-    </div>
-  </div>
-  <div class="hero-visual">
-    <div class="hero-screenshot" aria-hidden="true">
-      <img id="hero-screenshot-img" src="/static/landing-hero.png" alt="Post feed and comment generation: Reddit post and Rewrite this post block with result" width="800" height="600" style="width:100%;height:100%;object-fit:cover;">
-    </div>
-    <div class="hero-badges">
-      <button type="button" class="hero-badge hero-badge-btn" id="hero-badge-comment" aria-label="Show screenshot: comment generation">Comments</button>
-      <button type="button" class="hero-badge hero-badge-btn" id="hero-badge-news" aria-label="Show screenshot: News section">News</button>
-      <button type="button" class="hero-badge hero-badge-btn" id="hero-badge-reddit" aria-label="Show screenshot: Reddit section">Reddit</button>
-    </div>
-  </div>
-</section>
+<div class="home-page">
+  <section class="hero" id="top">
+    <div class="hero-copy">
+      <h1>Turn <span class="hero-highlight">LinkedIn conversations</span> into a predictable B2B pipeline</h1>
+      <p class="hero-sub">MyVOICE's combines contacts, news, and Reddit into one operational feed so your team can decide faster and publish relevant comments in a consistent voice.</p>
 
-<div id="landing-screenshot-modal" class="landing-screenshot-modal" role="dialog" aria-modal="true" aria-label="Screenshot: comment generation panel" hidden>
-  <div class="landing-screenshot-modal-content">
-    <button type="button" class="landing-screenshot-modal-close" id="landing-screenshot-modal-close" aria-label="Close">×</button>
-    <img src="/static/landing-comment.jpg" alt="Comment generation panel: post, author, goal, length variants and result" id="landing-screenshot-modal-img">
-  </div>
+      <div class="hero-actions">
+        <a href="/en/pricing" class="home-btn home-btn-primary">Start 7-day free trial</a>
+        <a href="#how" class="home-btn home-btn-secondary">See how it works</a>
+      </div>
+      <p class="hero-trust-note">Cancel in one click · Card required only for trial</p>
+
+      <p class="hero-login-link">Already have an account? <a href="/login">Log in</a></p>
+
+      <ul class="hero-bullets">
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="currentColor"/></svg>
+          <span><strong>One operational feed.</strong> Contacts, News, and Reddit in one decision flow.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="currentColor"/></svg>
+          <span><strong>Drafts in your tone.</strong> Fast variants without random “salesy” wording.</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="currentColor"/></svg>
+          <span><strong>Minutes, not hours.</strong> Less manual routine, more high-quality outreach touches.</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="hero-preview" aria-label="Product preview">
+      <div class="preview-top">
+        <span class="preview-status">Live feed</span>
+        <span class="preview-meta">3 sources · 1 workflow</span>
+      </div>
+      <div class="preview-screen">
+        <img id="hero-preview-image" src="/static/landing-comment.jpg" alt="Comment generation panel with author, goal and response variants" loading="eager">
+        <span class="preview-callout preview-callout-feed">Unified feed</span>
+        <span class="preview-callout preview-callout-comments">3 comment options</span>
+        <span class="preview-callout preview-callout-persona">Persona & tone</span>
+      </div>
+      <div class="preview-tabs" role="tablist" aria-label="Preview sections">
+        <button class="preview-tab is-active" type="button" role="tab" aria-selected="true" data-slide="0">Comments</button>
+        <button class="preview-tab" type="button" role="tab" aria-selected="false" data-slide="1">News</button>
+        <button class="preview-tab" type="button" role="tab" aria-selected="false" data-slide="2">Reddit</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="section-head section-head-nowrap">
+      <h2>How it works</h2>
+      <p>Three structured steps to make LinkedIn a managed channel for B2B communication and lead generation.</p>
+    </div>
+
+    <div class="steps-grid">
+      <article class="step-card surface-card">
+        <span class="step-badge">Step 1</span>
+        <span class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h10M4 17h7" stroke="currentColor"/></svg>
+        </span>
+        <h3>Connect key sources</h3>
+        <p>Add contacts, topics, companies, news, and subreddits relevant to your niche.</p>
+        <p class="step-meta">Setup in 2 minutes</p>
+      </article>
+
+      <article class="step-card surface-card">
+        <span class="step-badge">Step 2</span>
+        <span class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16v10H9l-5 4V5z" stroke="currentColor"/></svg>
+        </span>
+        <h3>Get relevant opportunities</h3>
+        <p>The system builds your feed and immediately suggests drafts for your context.</p>
+        <p class="step-meta">Drafts available instantly</p>
+      </article>
+
+      <article class="step-card surface-card">
+        <span class="step-badge">Step 3</span>
+        <span class="step-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 12l4 4L19 6" stroke="currentColor"/></svg>
+        </span>
+        <h3>Publish with confidence</h3>
+        <p>Pick the best option, publish quickly, and keep a steady outreach rhythm.</p>
+        <p class="step-meta">Publish in 30 seconds</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="section-head section-head-nowrap">
+      <h2>Who it is for (and who it is not)</h2>
+      <p>The platform is built for B2B teams and experts who value consistency, message quality, and reputation in their niche.</p>
+    </div>
+
+    <div class="fit-grid">
+      <article class="fit-card fit-card-positive surface-card">
+        <div class="fit-title fit-positive">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="currentColor"/></svg>
+          Good fit
+        </div>
+        <ul>
+          <li>B2B founders working in long sales-cycle markets</li>
+          <li>Sales leads who rely on trust and fast reaction</li>
+          <li>Marketers who need one reliable content workflow</li>
+        </ul>
+      </article>
+
+      <article class="fit-card fit-card-negative surface-card">
+        <div class="fit-title fit-negative">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor"/></svg>
+          Not a fit
+        </div>
+        <ul>
+          <li>If you want leads tomorrow without involvement</li>
+          <li>If you are not ready to reply to people personally</li>
+          <li>If you need full autopilot with zero control</li>
+        </ul>
+      </article>
+    </div>
+
+    <p class="fit-help">Not sure yet? <a href="#demo">Book a demo</a> and we will map a realistic workflow for your niche in 30 minutes.</p>
+  </section>
+
+  <section id="crisis">
+    <article class="text-card surface-card">
+      <h2>Why being in the conversation matters</h2>
+      <p>In B2B, decisions are rarely made after a single touchpoint. Buyers observe how you think, where you engage, and whether your input is consistently useful. Visible presence in the right discussions builds trust faster than cold outbound alone.</p>
+      <span class="key-pill">Main idea: visibility + consistency = trust and inbound opportunities</span>
+    </article>
+  </section>
+
+  <section id="why">
+    <article class="text-card surface-card">
+      <h2>Why LinkedIn right now</h2>
+      <p>In modern B2B buying journeys, public proof of expertise often comes before the first sales call. LinkedIn is where many “who should we work with?” decisions are formed.</p>
+      <p class="quote-note">When your team has one feed and fast high-quality drafts, you respond earlier than competitors and look consistently credible in every relevant thread.</p>
+    </article>
+  </section>
+
+  <section id="faq">
+    <div class="section-head">
+      <h2>FAQ</h2>
+      <p>Short answers about rollout, expected outcomes, and team workflow.</p>
+    </div>
+
+    <div class="faq-card surface-card">
+      <ul class="faq-list" role="list">
+        <li class="faq-item">
+          <button class="faq-trigger" type="button" aria-expanded="false">
+            <span>How quickly should we expect first signals?</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor"/></svg>
+          </button>
+          <div class="faq-answer"><p>First signals usually appear in 2–4 weeks. A stable flow comes when the team keeps a consistent cadence for a few months.</p></div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-trigger" type="button" aria-expanded="false">
+            <span>How much weekly time does the team need?</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor"/></svg>
+          </button>
+          <div class="faq-answer"><p>Typically 2–4 hours per week. That is enough to review the feed, pick opportunities, and publish strong replies.</p></div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-trigger" type="button" aria-expanded="false">
+            <span>Do we need to react to every post?</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor"/></svg>
+          </button>
+          <div class="faq-answer"><p>No. Relevance and quality matter more than volume. A few precise touches per week are enough when they match your ICP.</p></div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-trigger" type="button" aria-expanded="false">
+            <span>Does it work in narrow niches?</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor"/></svg>
+          </button>
+          <div class="faq-answer"><p>Yes, often even better. In narrow B2B segments it is easier to see who consistently adds value and understands the context.</p></div>
+        </li>
+
+        <li class="faq-item">
+          <button class="faq-trigger" type="button" aria-expanded="false">
+            <span>Can we start without heavy setup?</span>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor"/></svg>
+          </button>
+          <div class="faq-answer"><p>Yes. Initial setup can be done in one focused session: add sources, check feed quality, and launch your first draft-assisted cycle.</p></div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="demo">
+    <div class="demo-card surface-card">
+      <h2>Book a demo (30 minutes)</h2>
+      <p>We will show a feed tailored to your niche, review key scenarios, and provide a clear 7-day execution plan right after the session.</p>
+
+      <div class="demo-actions">
+        <a href="mailto:hello@myvoices.app?subject=MyVOICE's demo request (30 min)" class="home-btn home-btn-primary">Book a demo</a>
+        <a href="mailto:hello@myvoices.app?subject=MyVOICE's demo recording request" class="home-btn home-btn-secondary">Get recording</a>
+      </div>
+
+      <ul class="demo-chips" aria-label="Demo value points">
+        <li>We will map your niche</li>
+        <li>We will show your feed</li>
+        <li>We will give a 7-day plan</li>
+      </ul>
+    </div>
+  </section>
 </div>
 
-<section class="section section-fullwidth" id="crisis">
-  <h2 class="section-title">Why being in the conversation matters</h2>
-  <p class="section-desc">In B2B, decisions are made on trust. On LinkedIn that’s visible: profile, posts, comments. When you show up regularly in your leads’ discussions, they recognize you and reach out more.</p>
-  <p class="section-sub">On a demo we’ll show which topics and voices in your niche get the fastest response.</p>
-</section>
-
-<section class="section section-wide" id="how">
-  <h2 class="section-title">How it works</h2>
-  <p class="section-desc">Three steps to consistent LinkedIn content.</p>
-  <div class="how-steps">
-    <div class="how-step">
-      <div class="how-step-num">Step 1</div>
-      <h3>Connect your sources</h3>
-      <p>Add contacts, thought leaders, companies, topics, subreddits and news sources.</p>
-    </div>
-    <div class="how-step">
-      <div class="how-step-num">Step 2</div>
-      <h3>Get your feed and drafts</h3>
-      <p>The feed updates automatically. We suggest comment and post drafts in your tone.</p>
-    </div>
-    <div class="how-step">
-      <div class="how-step-num">Step 3</div>
-      <h3>Publish content regularly</h3>
-      <p>The feed surfaces opportunities; you turn them into comments and posts quickly.</p>
-    </div>
-  </div>
-</section>
-
-<section class="section section-wide" id="features">
-  <h2 class="section-title">Who it’s for (and who it’s not)</h2>
-  <div class="fit-grid">
-    <div class="fit-card">
-      <h3>Good fit</h3>
-      <ul>
-        <li>B2B and long sales cycles</li>
-        <li>You sell expertise, not discounts</li>
-        <li>You have 2–4 hours a week for content and engagement</li>
-      </ul>
-    </div>
-    <div class="fit-card">
-      <h3>Not a fit</h3>
-      <ul>
-        <li>You need leads tomorrow with no effort</li>
-        <li>You want everything on autopilot with no engagement</li>
-        <li>B2C mass market without a focus on expertise</li>
-      </ul>
-    </div>
-  </div>
-</section>
-
-<section class="section section-fullwidth" id="why">
-  <h2 class="section-title">Why LinkedIn</h2>
-  <p class="section-desc">Trust in cold ads is falling. In B2B people choose by referrals and visible expertise. LinkedIn puts that right in the feed: who posts what and how they engage.</p>
-</section>
-
-<section class="section section-wide" id="faq">
-  <h2 class="section-title">FAQ</h2>
-  <ul class="faq-accordion" role="list">
-    <li>
-      <button type="button" aria-expanded="false" aria-controls="faq-1" id="faq-q1">Will I see the same growth as in case studies?</button>
-      <div class="faq-answer" id="faq-1" role="region" aria-labelledby="faq-q1">Results depend on niche and consistency. We provide the system and drafts; consistency matters most.</div>
-    </li>
-    <li>
-      <button type="button" aria-expanded="false" aria-controls="faq-2" id="faq-q2">How long until I see results?</button>
-      <div class="faq-answer" id="faq-2" role="region" aria-labelledby="faq-q2">Warm replies often within weeks. A steady flow of leads usually takes a few months of consistent work.</div>
-    </li>
-    <li>
-      <button type="button" aria-expanded="false" aria-controls="faq-3" id="faq-q3">Do I need to comment on every post?</button>
-      <div class="faq-answer" id="faq-3" role="region" aria-labelledby="faq-q3">No. 3–5 quality comments or posts per week is enough. Usefulness and authenticity matter.</div>
-    </li>
-    <li>
-      <button type="button" aria-expanded="false" aria-controls="faq-4" id="faq-q4">Does it work for a narrow niche?</button>
-      <div class="faq-answer" id="faq-4" role="region" aria-labelledby="faq-q4">Narrow niches often work better: less noise, easier to stand out. The feed and thought-leader monitoring are more effective.</div>
-    </li>
-    <li>
-      <button type="button" aria-expanded="false" aria-controls="faq-5" id="faq-q5">How much time per week?</button>
-      <div class="faq-answer" id="faq-5" role="region" aria-labelledby="faq-q5">Typically 2–4 hours: daily queue, editing drafts, publishing. The feed and generation are automated.</div>
-    </li>
-    <li>
-      <button type="button" aria-expanded="false" aria-controls="faq-6" id="faq-q6">Can I do without your tool?</button>
-      <div class="faq-answer" id="faq-6" role="region" aria-labelledby="faq-q6">Yes. The tool saves time: one feed, ready drafts. Scale without the grind.</div>
-    </li>
-  </ul>
-</section>
-
-<section class="section section-wide" id="book">
-  <div class="cta-card">
-    <h2>Book a demo (30 min)</h2>
-    <p>We’ll show the feed, drafts and topics for your niche.</p>
-    <div class="cta-sub">No commitment. After the demo you’ll have a clear 7-day plan.</div>
-    <div class="btn-row">
-      <a href="mailto:hello@myvoices.app?subject=MyVOICE's demo (30 min)" class="btn hero-cta">Book a demo</a>
-      <a href="mailto:hello@myvoices.app?subject=MyVOICE's demo recording" class="btn btn-secondary hero-cta-secondary">Get demo recording</a>
-    </div>
-  </div>
-</section>
-
 <script>
-(function() {
-  document.querySelectorAll('.faq-accordion button').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var li = btn.closest('li');
-      var isOpen = li.classList.contains('is-open');
-      document.querySelectorAll('.faq-accordion li.is-open').forEach(function(o) {
-        o.classList.remove('is-open');
-        o.querySelector('button').setAttribute('aria-expanded', 'false');
-      });
-      if (!isOpen) {
-        li.classList.add('is-open');
-        btn.setAttribute('aria-expanded', 'true');
+  (function () {
+    var previewImage = document.getElementById('hero-preview-image');
+    var previewTabs = Array.prototype.slice.call(document.querySelectorAll('.preview-tab'));
+    var previewCallouts = Array.prototype.slice.call(document.querySelectorAll('.preview-callout'));
+    var slides = [
+      {
+        src: '/static/landing-comment.jpg',
+        alt: 'Comment generation panel with author, goal and response variants'
+      },
+      {
+        src: '/static/landing-news.jpg',
+        alt: 'News section with filters, feed rows and post generation actions'
+      },
+      {
+        src: '/static/landing-reddit.png',
+        alt: 'Reddit section with subreddit controls and execution workflow'
       }
-    });
-  });
+    ];
 
-  var heroImg = document.getElementById('hero-screenshot-img');
-  var heroBadges = [document.getElementById('hero-badge-comment'), document.getElementById('hero-badge-news'), document.getElementById('hero-badge-reddit')];
-  var heroSlides = [
-    { src: '/static/landing-comment.jpg', alt: 'Comment generation panel: post, author, goal, length variants and result' },
-    { src: '/static/landing-news.jpg', alt: 'News section: news feed, Score and Make post button' },
-    { src: '/static/landing-reddit.png', alt: 'Reddit section: feed from subreddits, filters, statuses and Make post button' }
-  ];
-  function setHeroSlide(index) {
-    if (!heroImg || index < 0 || index >= heroSlides.length) return;
-    heroImg.src = heroSlides[index].src;
-    heroImg.alt = heroSlides[index].alt;
-    heroBadges.forEach(function(b, i) {
-      if (b) b.classList.toggle('active', i === index);
-    });
-  }
-  heroBadges.forEach(function(badge, index) {
-    if (badge && heroImg) {
-      badge.addEventListener('click', function() { setHeroSlide(index); });
+    function setPreviewSlide(index) {
+      if (!previewImage || !slides[index]) {
+        return;
+      }
+      previewImage.src = slides[index].src;
+      previewImage.alt = slides[index].alt;
+      previewTabs.forEach(function (tab, tabIndex) {
+        var active = tabIndex === index;
+        tab.classList.toggle('is-active', active);
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      previewCallouts.forEach(function (callout) {
+        var visible = index === 0;
+        callout.style.display = visible ? '' : 'none';
+        callout.setAttribute('aria-hidden', visible ? 'false' : 'true');
+      });
     }
-  });
 
-  var screenshotModal = document.getElementById('landing-screenshot-modal');
-  var screenshotModalImg = document.getElementById('landing-screenshot-modal-img');
-  var screenshotModalClose = document.getElementById('landing-screenshot-modal-close');
-  function openScreenshotModal(src, alt) {
-    if (screenshotModal && screenshotModalImg) {
-      screenshotModalImg.src = src;
-      screenshotModalImg.alt = alt || '';
-      screenshotModal.classList.add('is-open');
-      screenshotModal.removeAttribute('hidden');
-      document.body.style.overflow = 'hidden';
-    }
-  }
-  function closeScreenshotModal() {
-    if (screenshotModal) {
-      screenshotModal.classList.remove('is-open');
-      screenshotModal.setAttribute('hidden', '');
-      document.body.style.overflow = '';
-    }
-  }
-  if (screenshotModalClose) screenshotModalClose.addEventListener('click', closeScreenshotModal);
-  if (screenshotModal) {
-    screenshotModal.addEventListener('click', function(e) {
-      if (e.target === screenshotModal) closeScreenshotModal();
+    previewTabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        var index = Number(tab.getAttribute('data-slide') || '0');
+        setPreviewSlide(index);
+      });
     });
-    screenshotModal.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') { closeScreenshotModal(); e.preventDefault(); }
+
+    setPreviewSlide(0);
+
+    var faqItems = Array.prototype.slice.call(document.querySelectorAll('.faq-item'));
+
+    function closeFaqItem(item) {
+      var trigger = item.querySelector('.faq-trigger');
+      var answer = item.querySelector('.faq-answer');
+      item.classList.remove('is-open');
+      if (trigger) {
+        trigger.setAttribute('aria-expanded', 'false');
+      }
+      if (answer) {
+        answer.style.maxHeight = '0px';
+        answer.style.opacity = '0';
+      }
+    }
+
+    function openFaqItem(item) {
+      var trigger = item.querySelector('.faq-trigger');
+      var answer = item.querySelector('.faq-answer');
+      item.classList.add('is-open');
+      if (trigger) {
+        trigger.setAttribute('aria-expanded', 'true');
+      }
+      if (answer) {
+        answer.style.maxHeight = answer.scrollHeight + 'px';
+        answer.style.opacity = '1';
+      }
+    }
+
+    faqItems.forEach(function (item) {
+      var trigger = item.querySelector('.faq-trigger');
+      if (!trigger) {
+        return;
+      }
+      trigger.addEventListener('click', function () {
+        var isOpen = item.classList.contains('is-open');
+        faqItems.forEach(closeFaqItem);
+        if (!isOpen) {
+          openFaqItem(item);
+        }
+      });
     });
-  }
-})();
+
+    window.addEventListener('resize', function () {
+      faqItems.forEach(function (item) {
+        if (!item.classList.contains('is-open')) {
+          return;
+        }
+        var answer = item.querySelector('.faq-answer');
+        if (answer) {
+          answer.style.maxHeight = answer.scrollHeight + 'px';
+        }
+      });
+    });
+  })();
 </script>
 {% endblock %}

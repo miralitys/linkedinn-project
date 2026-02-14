@@ -122,6 +122,8 @@ async def list_reddit_posts(
     period: Optional[str] = Query(None, description="all|week|month"),
     sort: str = Query("desc", description="desc|asc"),
     status_filter: Optional[str] = Query(None, alias="status", description="new|in_progress|done|hidden"),
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
 ):
@@ -146,7 +148,7 @@ async def list_reddit_posts(
         since = datetime.utcnow() - timedelta(days=days)
         q = q.where(RedditPost.posted_at >= since)
         order = RedditPost.posted_at.desc() if sort == "desc" else RedditPost.posted_at.asc()
-        q = q.order_by(order)
+        q = q.order_by(order).limit(limit).offset(offset)
         r = await session.execute(q)
         posts = list(r.scalars().all())
         return [_reddit_post_to_read(p) for p in posts]
@@ -156,17 +158,23 @@ async def list_reddit_posts(
         raise HTTPException(status_code=500, detail=f"Failed to load posts: {str(e)}")
 
 
-async def _sync_one_subreddit(session: AsyncSession, subreddit: str, user_id: int, limit: int = 25, sort: str = "hot") -> int:
-    """Загрузить посты из r/{subreddit} и добавить новые в БД. Возвращает количество добавленных."""
+async def _sync_one_subreddit(
+    session: AsyncSession,
+    subreddit: str,
+    user_id: int,
+    limit: int = 25,
+    sort: str = "hot",
+) -> tuple[int, list[int]]:
+    """Загрузить посты из r/{subreddit} и добавить новые в БД."""
     items = await fetch_subreddit_posts(subreddit, limit=limit, sort=sort)
     if not items:
-        return 0
+        return 0, []
     sub = items[0]["subreddit"]
     r = await session.execute(
         select(RedditPost.reddit_id).where(RedditPost.subreddit == sub, RedditPost.user_id == user_id)
     )
     existing = {row[0] for row in r.fetchall()}
-    added = 0
+    added_rows: list[RedditPost] = []
     for it in items:
         if it["reddit_id"] in existing:
             continue
@@ -183,8 +191,8 @@ async def _sync_one_subreddit(session: AsyncSession, subreddit: str, user_id: in
             num_comments=it.get("num_comments"),
         )
         session.add(post)
+        added_rows.append(post)
         existing.add(it["reddit_id"])
-        added += 1
     # Сохраняем сабреддит в список (игнорируем дубликаты)
     try:
         r = await session.execute(
@@ -194,7 +202,10 @@ async def _sync_one_subreddit(session: AsyncSession, subreddit: str, user_id: in
             session.add(SavedSubreddit(user_id=user_id, name=sub))
     except Exception:
         pass
-    return added
+    if added_rows:
+        await session.flush()
+    added_ids = [p.id for p in added_rows if p.id is not None]
+    return len(added_rows), added_ids
 
 
 @router.post("/sync")
@@ -206,25 +217,31 @@ async def sync_subreddit(
     user_id: int = Depends(get_current_user_id),
 ):
     """Загрузить посты из r/{subreddit} и добавить новые в БД."""
-    added = await _sync_one_subreddit(session, subreddit, user_id, limit=limit, sort=sort)
+    added, _added_ids = await _sync_one_subreddit(session, subreddit, user_id, limit=limit, sort=sort)
     await session.commit()
     return {"synced": added, "subreddit": subreddit.strip().lower()}
 
 
-async def _run_scoring_for_pending_reddit() -> None:
-    """Фоновая задача: проставить score всем постам Reddit, у которых relevance_score ещё не задан."""
+async def _run_scoring_for_pending_reddit(post_ids: Optional[list[int]] = None) -> None:
+    """Фоновая задача: проставить score постам Reddit, у которых relevance_score ещё не задан."""
     async with session_scope() as session:
         try:
-            r = await session.execute(
-                select(RedditPost).where(RedditPost.relevance_score.is_(None)).order_by(RedditPost.id.asc())
-            )
+            q = select(RedditPost).where(RedditPost.relevance_score.is_(None))
+            if post_ids:
+                q = q.where(RedditPost.id.in_(post_ids))
+            q = q.order_by(RedditPost.id.asc())
+            r = await session.execute(q)
             pending = list(r.scalars().all())
             if not pending:
                 return
             logger.info("Scoring %d pending reddit posts", len(pending))
+            setup_cache: dict[int, dict] = {}
             for post in pending:
                 uid = post.user_id or 1
-                setup = await get_setup_for_scoring(session, uid)
+                setup = setup_cache.get(uid)
+                if setup is None:
+                    setup = await get_setup_for_scoring(session, uid)
+                    setup_cache[uid] = setup
                 try:
                     payload = {
                         "title": post.title or "",
@@ -252,19 +269,24 @@ async def refresh_reddit(
     """Обновить посты по всем сохранённым сабреддитам: подгрузить новые в БД. По новым запускается скоринг."""
     subreddits = await _get_saved_subreddit_names(session, user_id)
     total_added = 0
+    added_ids: list[int] = []
     for sub in subreddits or []:
         try:
-            total_added += await _sync_one_subreddit(session, sub, user_id, limit=50, sort="new")
+            added, ids = await _sync_one_subreddit(session, sub, user_id, limit=50, sort="new")
+            total_added += added
+            added_ids.extend(ids)
         except Exception:
             pass
     await session.commit()
-    asyncio.create_task(_run_scoring_for_pending_reddit())
+    if added_ids:
+        asyncio.create_task(_run_scoring_for_pending_reddit(post_ids=added_ids))
     return {"refreshed": True, "added": total_added, "subreddits": len(subreddits or [])}
 
 
 async def run_reddit_sync_all() -> None:
     """Фоновая задача: синхрон по всем сохранённым сабреддитам (раз в час). По новым постам запускается скоринг."""
     from app.models import User
+    added_ids: list[int] = []
     async with session_scope() as session:
         try:
             r = await session.execute(select(User.id))
@@ -273,12 +295,14 @@ async def run_reddit_sync_all() -> None:
                 subreddits = await _get_saved_subreddit_names(session, uid)
                 for sub in subreddits or []:
                     try:
-                        await _sync_one_subreddit(session, sub, uid, limit=50, sort="new")
+                        _added, ids = await _sync_one_subreddit(session, sub, uid, limit=50, sort="new")
+                        added_ids.extend(ids)
                     except Exception:
                         pass
         except Exception as e:
             logger.exception("Scheduled reddit sync failed: %s", e)
-    asyncio.create_task(_run_scoring_for_pending_reddit())
+    if added_ids:
+        asyncio.create_task(_run_scoring_for_pending_reddit(post_ids=added_ids))
 
 
 async def _get_saved_subreddit_names(session: AsyncSession, user_id: int) -> list:

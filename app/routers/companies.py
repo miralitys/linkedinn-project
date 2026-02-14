@@ -1,5 +1,5 @@
 # app/routers/companies.py
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,11 +13,13 @@ router = APIRouter(prefix="/companies", tags=["companies"])
 
 @router.get("", response_model=list[CompanyRead])
 async def list_companies(
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
 ):
     q = select(Company).where(Company.user_id == user_id)
-    r = await session.execute(q.order_by(func.lower(Company.name)))
+    r = await session.execute(q.order_by(func.lower(Company.name)).limit(limit).offset(offset))
     return list(r.scalars().all())
 
 

@@ -4,6 +4,7 @@ import pytest
 
 from agents.comment_pipeline.author_directive import compile_author_directive
 from agents.comment_pipeline.config import MODE_HARD_AD, MODE_NATIVE_AD, MODE_NETWORK, POLICIES
+from agents.comment_pipeline.detectors import detect_language_mismatch
 from agents.comment_pipeline.review import _quick_review, rule_compliance_check
 
 
@@ -254,6 +255,44 @@ def test_rule_compliance_colon():
         MODE_NETWORK,
     )
     assert "colon" in flags
+
+
+def test_detect_language_mismatch_for_english():
+    text_ru = "Это короткий комментарий на русском языке, в котором почти нет английских слов."
+    assert detect_language_mismatch(text_ru, "English") is True
+
+
+def test_detect_language_mismatch_for_russian():
+    text_en = "This is an English comment and it should fail when Russian output is expected."
+    assert detect_language_mismatch(text_en, "Russian") is True
+
+
+def test_rule_compliance_language_mismatch_flag():
+    policy = POLICIES[MODE_NETWORK]
+    flags = rule_compliance_check(
+        "Это русский комментарий, хотя пост на английском и ответ должен быть только на английском.",
+        policy,
+        None,
+        [],
+        MODE_NETWORK,
+        expected_language="English",
+    )
+    assert "language_mismatch" in flags
+
+
+def test_quick_review_language_mismatch_has_patch_plan():
+    result = _quick_review(
+        "Это русский комментарий для английского поста, что не должно проходить.",
+        "short",
+        POLICIES[MODE_NETWORK],
+        None,
+        [],
+        MODE_NETWORK,
+        expected_language="English",
+    )
+    assert result["pass"] is False
+    assert "language_mismatch" in result["flags"]
+    assert isinstance(result["patch_plan"], list) and len(result["patch_plan"]) > 0
 
 
 def test_sanitize_punctuation():

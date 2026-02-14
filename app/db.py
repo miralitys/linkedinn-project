@@ -11,6 +11,27 @@ from app.models import Base
 
 # SQLite: need check_same_thread=False for aiosqlite.
 # Postgres (Supabase): отключаем prepared statement cache — Supabase/pgbouncer не поддерживает его в transaction mode.
+PERFORMANCE_INDEXES = (
+    "CREATE INDEX IF NOT EXISTS idx_companies_user_id ON companies (user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_people_user_id ON people (user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_people_user_status ON people (user_id, status)",
+    "CREATE INDEX IF NOT EXISTS idx_people_user_is_kol ON people (user_id, is_kol)",
+    "CREATE INDEX IF NOT EXISTS idx_people_company_id ON people (company_id)",
+    "CREATE INDEX IF NOT EXISTS idx_people_segment_id ON people (segment_id)",
+    "CREATE INDEX IF NOT EXISTS idx_touches_person_created_at ON touches (person_id, created_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_contact_posts_person_posted_at ON contact_posts (person_id, posted_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_contact_posts_person_archived_posted_at ON contact_posts (person_id, archived, posted_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_contact_posts_person_post_url ON contact_posts (person_id, post_url)",
+    "CREATE INDEX IF NOT EXISTS idx_reddit_posts_user_posted_at ON reddit_posts (user_id, posted_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_reddit_posts_user_subreddit ON reddit_posts (user_id, subreddit)",
+    "CREATE INDEX IF NOT EXISTS idx_reddit_posts_relevance_score_id ON reddit_posts (relevance_score, id)",
+    "CREATE INDEX IF NOT EXISTS idx_saved_subreddits_user_id ON saved_subreddits (user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_news_items_published_id ON news_items (published, id)",
+    "CREATE INDEX IF NOT EXISTS idx_news_items_source_published ON news_items (source, published)",
+    "CREATE INDEX IF NOT EXISTS idx_drafts_user_created_at ON drafts (user_id, created_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_drafts_user_status ON drafts (user_id, status)",
+    "CREATE INDEX IF NOT EXISTS idx_usage_user_month_agent ON usage (user_id, year_month, agent_name)",
+)
 _connect_args = {}
 _poolclass = None
 _engine_kw = {"echo": False}
@@ -189,6 +210,11 @@ async def init_db() -> None:
             # Используем Base.metadata.create_all для Postgres (уже вызывается выше)
             # Дополнительно проверяем существование через try/except
             pass
+        for sql in PERFORMANCE_INDEXES:
+            try:
+                await conn.execute(text(sql))
+            except Exception:
+                pass
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
