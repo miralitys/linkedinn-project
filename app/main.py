@@ -308,6 +308,27 @@ try:
                 status_code=500,
             )
 
+    @app.get("/ui/posts-premium-preview", response_class=HTMLResponse)
+    async def ui_posts_premium_preview(request: Request):
+        try:
+            tz = getattr(settings, "display_timezone", None) or "UTC"
+            ctx = _app_context(request)
+            return templates.TemplateResponse(
+                request,
+                "posts_premium_preview.html",
+                {"request": request, **ctx, "display_timezone": tz},
+            )
+        except Exception as e:
+            import traceback
+            logging.exception("Error rendering /ui/posts-premium-preview: %s", e)
+            tb = traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")
+            return HTMLResponse(
+                "<html><body style=\"font-family:sans-serif;padding:2rem;max-width:900px;margin:0 auto;\">"
+                "<h1>Ошибка загрузки</h1><p>Не удалось открыть preview-страницу.</p>"
+                "<pre style=\"background:#f1f5f9;padding:1rem;overflow:auto;font-size:12px;white-space:pre-wrap;\">" + tb + "</pre></body></html>",
+                status_code=500,
+            )
+
     @app.get("/ui/reddit", response_class=HTMLResponse)
     async def ui_reddit(request: Request):
         return templates.TemplateResponse(

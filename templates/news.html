@@ -1,13 +1,16 @@
 {% extends "base.html" %}
 {% block title %}{{ tr.news_title }} — MyVOICE's{% endblock %}
 {% block content %}
-<div class="news-page-wrap">
+<div class="news-page-wrap news-premium-shell">
 <header class="news-page-header">
   <div class="news-header-top">
     <h1 class="news-page-title">{{ tr.news_title }}</h1>
     <div class="news-header-actions">
       <button type="button" id="news-make-post-btn" class="btn secondary btn-icon-text" aria-label="{{ tr.news_make_post_from_text }}" title="{{ tr.news_make_post_from_text }}">{{ tr.news_make_post_from_text }}</button>
-      <button type="button" id="news-refresh-btn" class="btn secondary btn-icon-text news-refresh-btn" aria-label="{{ tr.posts_refresh }}" title="{{ tr.posts_refresh }}"><span aria-hidden="true">↻</span> {{ tr.posts_refresh }}</button>
+      <button type="button" id="news-refresh-btn" class="btn secondary btn-icon-text news-refresh-btn" aria-label="{{ tr.posts_refresh }}" title="{{ tr.posts_refresh }}">
+        <span class="refresh-icon" aria-hidden="true">↻</span>
+        <span class="refresh-text">{{ tr.posts_refresh }}</span>
+      </button>
     </div>
   </div>
   <p class="news-header-desc">{{ tr.news_lead }}</p>
@@ -31,6 +34,10 @@
         <option value="red">{{ tr.reddit_score_red }}</option>
       </select>
     </div>
+    <div class="news-toolbar-search-field">
+      <label class="news-toolbar-label" for="news-search">{{ tr.common_search|default('Search' if locale == 'en' else 'Поиск', true) }}</label>
+      <input type="search" id="news-search" class="news-toolbar-search-input" placeholder="{{ tr.posts_search_placeholder|default('Search by author or keyword' if locale == 'en' else 'Поиск по автору или ключевому слову', true) }}" aria-label="{{ tr.common_search|default('Search' if locale == 'en' else 'Поиск', true) }}">
+    </div>
   </div>
 </header>
 
@@ -39,9 +46,15 @@
     <div class="news-skeleton-card"></div>
     <div class="news-skeleton-card"></div>
     <div class="news-skeleton-card"></div>
+    <div class="news-skeleton-card"></div>
+    <div class="news-skeleton-card"></div>
+    <div class="news-skeleton-card"></div>
   </div>
   <div id="news-list"></div>
   <div id="news-empty" class="news-empty-state" style="display: none;">
+    <div class="news-empty-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M7 9h10M7 13h6"/></svg>
+    </div>
     <p class="news-empty-title">{{ tr.news_empty_title }}</p>
     <p class="news-empty-desc">{{ tr.news_empty_desc }}</p>
     <button type="button" id="news-empty-retry" class="btn primary">{{ tr.news_refresh }}</button>
@@ -162,48 +175,52 @@
 </div>
 
 <style>
-  /* ——— Страница новостей: аккуратный, читаемый дизайн ——— */
+  /* Shared News/Reddit design */
   .news-page-wrap { margin-top: 0; }
   .news-page-header { margin-bottom: var(--space-6); }
   .news-header-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-2); }
   .news-header-actions { display: flex; align-items: center; gap: var(--space-2); }
-  .news-page-title { font-size: 1.25rem; font-weight: 700; margin: 0; color: var(--text); letter-spacing: -0.02em; }
-  .news-header-desc { margin: 0 0 var(--space-4); font-size: var(--text-12); color: var(--text-muted); line-height: 1.5; max-width: 42rem; }
-  .news-toolbar-row { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; }
+  .news-page-title { font-size: 1.375rem; font-weight: 700; margin: 0; color: var(--text); letter-spacing: -0.02em; }
+  .news-header-desc { margin: 0 0 var(--space-4); font-size: var(--text-14); color: var(--text-muted); line-height: 1.55; max-width: 48rem; }
+  .news-toolbar-row { display: flex; align-items: flex-start; gap: var(--space-4); row-gap: var(--space-3); flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3) var(--space-4); }
   .news-toolbar-row-reddit { align-items: flex-start; }
-  .news-toolbar-row-reddit .news-toolbar-field { gap: var(--space-2); }
-  .news-toolbar-field { display: flex; flex-direction: column; gap: var(--space-1); }
-  .news-toolbar-label { font-size: var(--text-12); font-weight: 500; color: var(--text-muted); margin: 0; text-transform: uppercase; letter-spacing: 0.04em; }
-  .news-toolbar-select { min-width: 160px; height: 2.25rem; padding: 0 var(--space-3); font-size: var(--text-14); border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); box-sizing: border-box; }
+  .news-toolbar-row-reddit .news-toolbar-field { gap: var(--space-2); flex: 0 0 auto; min-width: 180px; }
+  .news-toolbar-field { display: flex; flex-direction: column; gap: var(--space-1); min-width: 180px; }
+  .news-toolbar-label { font-size: 0.8125rem; font-weight: 500; color: var(--text-muted); margin: 0; text-transform: none; letter-spacing: 0; line-height: 1.2; }
+  .news-toolbar-select { min-width: 160px; height: 2.25rem; padding: 0 var(--space-3); font-size: var(--text-14); border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; color: var(--text); box-sizing: border-box; margin-bottom: 0; }
   .news-toolbar-select:focus { outline: none; border-color: var(--primary); box-shadow: var(--focus-ring); }
   .btn-icon-text { display: inline-flex; align-items: center; gap: var(--space-2); }
   .news-refresh-btn { height: 2.25rem; padding: 0 var(--space-4); }
+  .news-header-top .btn { margin: 0; border-radius: 10px; box-shadow: none; }
+  .news-header-top .btn.secondary { border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+  .news-header-top .btn.secondary:hover { background: #f8fafc; box-shadow: none; }
   .news-feed { margin-top: 0; }
   .news-loading-skeleton { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-4) 0; }
   .news-skeleton-card { height: 160px; border-radius: var(--radius-lg); background: linear-gradient(90deg, var(--border) 25%, var(--surface) 50%, var(--border) 75%); background-size: 200% 100%; animation: news-skeleton-shine 1.2s ease-in-out infinite; }
   @keyframes news-skeleton-shine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-  .news-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6); margin-bottom: var(--space-4); cursor: pointer; transition: box-shadow var(--motion-normal), border-color var(--motion-fast), transform var(--motion-fast); box-shadow: 0 1px 3px rgba(0,0,0,0.04); position: relative; overflow: hidden; }
-  .news-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--primary) 0%, rgba(99,102,241,0.3) 100%); opacity: 0; transition: opacity var(--motion-fast); }
-  .news-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 6px rgba(99,102,241,0.12); border-color: rgba(99,102,241,0.35); }
-  .news-card:hover::before { opacity: 1; }
-  .news-card-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
-  .news-card-meta { font-size: var(--text-12); color: var(--text-muted); }
+  .news-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 18px 16px; margin-bottom: 12px; cursor: pointer; transition: box-shadow var(--motion-normal), border-color var(--motion-fast), transform var(--motion-fast); box-shadow: 0 1px 2px rgba(15,23,42,0.04); position: relative; overflow: hidden; }
+  .news-card::before { content: none; }
+  .news-card:hover { box-shadow: 0 5px 14px rgba(15,23,42,0.08); border-color: #cfd8e6; transform: translateY(-1px); }
+  .news-card-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: 10px; }
+  .news-card-meta { font-size: 0.8125rem; color: var(--text-muted); }
   .news-card-meta a { color: inherit; text-decoration: none; }
   .news-card-meta a:hover { color: var(--primary); }
-  .news-card-open-link { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-12); color: var(--text-muted); text-decoration: none; padding: 2px 6px; border-radius: var(--radius-sm); transition: color var(--motion-fast), background var(--motion-fast); }
-  .news-card-open-link:hover { color: var(--primary); background: var(--bg); text-decoration: none; }
+  .news-card-open-link { display: inline-flex; align-items: center; gap: var(--space-1); font-size: 0.8125rem; color: var(--text-muted); text-decoration: none; padding: 2px 8px; border-radius: 8px; transition: color var(--motion-fast), background var(--motion-fast); }
+  .news-card-open-link:hover { color: var(--primary); background: #f8fafc; text-decoration: none; }
   .news-card-open-link:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-  .news-card-body { margin-bottom: var(--space-3); }
-  .news-card-title { font-size: 0.9375rem; font-weight: 600; margin: 0 0 var(--space-2); line-height: 1.4; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .news-card-body { margin-bottom: 8px; }
+  .news-card-title { font-size: 1.015rem; font-weight: 650; margin: 0 0 8px; line-height: 1.35; color: var(--text); letter-spacing: -0.01em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .news-card-title a { color: inherit; text-decoration: none; }
   .news-card-title a:hover { color: var(--primary); }
-  .news-card-summary { font-size: var(--text-14); line-height: 1.5; color: var(--text); margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .news-card-footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
-  .news-card-footer-left { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-12); color: var(--text-muted); }
-  .news-card-footer-left button { background: none; border: none; padding: 0; font-size: inherit; color: var(--primary); cursor: pointer; font-weight: 500; }
+  .news-card-summary { font-size: 0.92rem; line-height: 1.58; color: var(--text-secondary); margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .news-card-footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid #edf2f7; }
+  .news-card-footer-left { display: flex; align-items: center; gap: var(--space-3); font-size: 0.78rem; color: var(--text-muted); }
+  .news-card-footer-left button { background: none; border: none; padding: 0; font-size: 0.78rem; color: #1d4ed8; cursor: pointer; font-weight: 600; margin: 0; }
   .news-card-footer-left button:hover { text-decoration: underline; }
   .news-card-footer-left button:focus-visible { outline: none; border-radius: var(--radius-sm); box-shadow: var(--focus-ring); }
   .news-card-actions { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+  .news-card-actions .btn { margin: 0; border-radius: 10px; box-shadow: none; height: 36px; padding: 0 12px; line-height: 36px; font-size: 0.75rem; font-weight: 600; }
+  .news-card-actions .btn.primary:hover { box-shadow: none; }
   .news-card-actions .news-card-score,
   .news-card-actions .news-card-score-loading { margin-right: 0; }
   .news-card-link-icon { flex-shrink: 0; color: var(--text-muted); }
@@ -216,7 +233,7 @@
   .news-card-source { font-size: inherit; color: inherit; }
   .news-card-source a { color: var(--primary); font-weight: 500; }
   .news-card-source a:hover { text-decoration: underline; }
-  .news-card-read-more { font-size: var(--text-14); color: var(--primary); background: none; border: none; cursor: pointer; padding: 0; font-weight: 500; }
+  .news-card-read-more { font-size: 0.78rem; color: #1d4ed8; background: none; border: none; cursor: pointer; padding: 0; font-weight: 600; }
   .news-card-read-more:hover { text-decoration: underline; }
   .news-card-read-more:focus-visible { outline: none; border-radius: var(--radius-sm); box-shadow: var(--focus-ring); }
   .news-card-stats { margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border); font-size: var(--text-12); color: var(--text-muted); }
@@ -224,12 +241,12 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 4.5rem;
-    height: 1.5rem;
-    padding: 0 var(--space-2);
-    font-size: var(--text-12);
+    min-width: 3.2rem;
+    height: 1.6rem;
+    padding: 0 10px;
+    font-size: 0.75rem;
     font-weight: 600;
-    border-radius: var(--radius-sm);
+    border-radius: 999px;
     border: 1px solid;
   }
   /* 0-30: красный */
@@ -261,13 +278,13 @@
     align-items: center;
     justify-content: center;
     min-width: 2.5rem;
-    height: 1.5rem;
-    padding: 0 var(--space-2);
-    font-size: var(--text-12);
+    height: 1.6rem;
+    padding: 0 10px;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--text-muted);
-    border-radius: var(--radius-sm);
-    background: var(--bg);
+    border-radius: 999px;
+    background: #f8fafc;
     border: 1px solid var(--border);
   }
   .news-score-refresh-btn {
@@ -662,10 +679,262 @@
     border-color: var(--primary);
     box-shadow: var(--focus-ring);
   }
+  @media (max-width: 1024px) {
+    .news-toolbar-row-reddit { align-items: stretch; }
+    .news-toolbar-row-reddit .news-toolbar-field { min-width: 0; max-width: none; width: 100%; }
+    .news-toolbar-select { min-width: 0; width: 100%; }
+    .news-page-title { font-size: 1.3rem; }
+  }
+  @media (max-width: 768px) {
+    .news-header-top { align-items: flex-start; flex-direction: column; }
+    .news-header-actions { width: 100%; flex-wrap: wrap; }
+    .news-view-panel { width: 100%; max-width: none; }
+    .news-view-header,
+    .news-view-meta,
+    .news-view-source,
+    .news-view-body { padding-left: var(--space-4); padding-right: var(--space-4); }
+    .news-post-from-text-modal { padding: var(--space-3); }
+    .news-post-from-text-panel { max-height: calc(100vh - var(--space-6)); padding: var(--space-4); }
+    .news-post-from-text-fields { flex-direction: column; align-items: stretch; }
+    .news-post-from-text-buttons { flex-wrap: wrap; }
+  }
+
+  /* Premium system overrides */
+  .main-wrap { padding: 32px !important; background: #f9fafb; }
+  .news-premium-shell { max-width: 1160px; margin: 0 auto; }
+  .news-page-title { font-size: 28px; line-height: 32px; font-weight: 700; color: #111827; }
+  .news-header-desc { font-size: 14px; line-height: 20px; color: #4b5563; max-width: 760px; }
+  .news-header-actions { gap: 12px; }
+  .news-header-actions .btn { height: 40px; border-radius: 12px; margin: 0; box-shadow: none; }
+  .news-header-actions .btn.secondary {
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #111827;
+    transition: background 200ms ease-out, border-color 200ms ease-out, transform 120ms ease-out;
+  }
+  .news-header-actions .btn.secondary:hover { background: #f9fafb; border-color: #cbd5e1; }
+  .news-header-actions .btn.secondary:active { transform: scale(0.98); }
+  .news-refresh-btn.is-loading .refresh-icon { animation: premium-refresh-spin 0.9s linear infinite; }
+  @keyframes premium-refresh-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  .news-toolbar-row {
+    min-height: 48px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    box-shadow: none;
+    display: grid;
+    grid-template-columns: auto auto minmax(240px, 1fr);
+    gap: 12px;
+    align-items: end;
+  }
+  .news-toolbar-field { min-width: 220px; display: flex; flex-direction: column; gap: 6px; }
+  .news-toolbar-label {
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+  }
+  .news-toolbar-select,
+  .news-toolbar-search-input {
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #111827;
+    font-size: 14px;
+    margin: 0;
+    box-sizing: border-box;
+  }
+  .news-toolbar-select { min-width: 220px; padding: 0 14px; }
+  .news-toolbar-search-field {
+    justify-self: end;
+    width: min(420px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .news-toolbar-search-input { width: 100%; padding: 0 14px; }
+  .news-toolbar-search-input::placeholder { color: #9ca3af; }
+  .news-toolbar-select:focus,
+  .news-toolbar-search-input:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
+    outline: none;
+  }
+
+  .news-loading-skeleton { gap: 16px; padding: 12px 0; }
+  .news-skeleton-card {
+    height: 164px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    background: linear-gradient(90deg, #f3f4f6 20%, #ffffff 50%, #f3f4f6 80%);
+    background-size: 220% 100%;
+    box-shadow: none;
+  }
+
+  .news-card {
+    position: relative;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    box-shadow: none;
+    cursor: pointer;
+    overflow: visible;
+    transition: border-color 200ms ease-out, transform 200ms ease-out, box-shadow 200ms ease-out;
+  }
+  .news-card:hover { border-color: #cbd5e1; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04); }
+  .news-card:focus-within { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
+  .news-card-top { margin-bottom: 12px; }
+  .news-card-meta { font-size: 13px; line-height: 18px; font-weight: 500; color: #6b7280; }
+  .news-card-open-link { font-size: 12px; line-height: 16px; font-weight: 500; color: #6b7280; border-radius: 10px; padding: 4px 8px; }
+  .news-card-open-link:hover { color: #111827; background: #f9fafb; }
+  .news-card-title {
+    margin: 0 0 8px;
+    font-size: 17px;
+    line-height: 1.25;
+    font-weight: 600;
+    color: #111827;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+  .news-card-summary {
+    margin: 0;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 400;
+    color: #4b5563;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+  }
+  .news-card-summary-wrap { position: relative; }
+  .news-card-summary-wrap::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 24px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0), #ffffff 75%);
+    pointer-events: none;
+  }
+  .news-card-footer {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .news-card-footer-left { display: flex; align-items: center; min-height: 40px; gap: 12px; }
+  .news-card-read-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    color: #4f46e5;
+    background: none;
+    border: none;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+  .news-card-read-more svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.5; fill: none; }
+  .news-card-actions { display: flex; align-items: center; gap: 8px; }
+  .news-card-actions .btn {
+    height: 40px;
+    line-height: 40px;
+    border-radius: 12px;
+    padding: 0 14px;
+    margin: 0;
+    box-shadow: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 200ms ease-out, border-color 200ms ease-out, transform 120ms ease-out;
+  }
+  .news-card-actions .btn:active { transform: scale(0.98); }
+  .news-card-actions .btn.primary { background: #4f46e5; border: 1px solid #4f46e5; color: #ffffff; }
+  .news-card-actions .btn.primary:hover { background: #4338ca; }
+  .news-card-actions .btn.secondary { background: #ffffff; border: 1px solid #d1d5db; color: #111827; }
+  .news-card-actions .btn.secondary:hover { background: #f9fafb; }
+  .news-card-score,
+  .news-card-score-loading {
+    height: 30px;
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 600;
+    border-radius: 999px;
+  }
+  .news-card-score { min-width: 72px; }
+  .news-card-score-loading { min-width: 52px; }
+
+  .news-empty-state,
+  .news-error-state {
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    box-shadow: none;
+    padding: 40px 24px;
+    text-align: center;
+  }
+  .news-empty-icon {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+    color: #64748b;
+  }
+  .news-empty-icon svg { width: 22px; height: 22px; }
+  .news-empty-title,
+  .news-error-text { font-size: 18px; line-height: 24px; font-weight: 600; color: #111827; }
+  .news-empty-desc,
+  .news-error-detail { max-width: 560px; margin-left: auto; margin-right: auto; font-size: 14px; line-height: 20px; color: #4b5563; }
+
+  @media (max-width: 980px) {
+    .main-wrap { padding: 24px !important; }
+    .news-toolbar-row { grid-template-columns: 1fr; }
+    .news-toolbar-field,
+    .news-toolbar-search-field { width: 100%; min-width: 0; justify-self: stretch; }
+    .news-toolbar-select { width: 100%; min-width: 0; }
+    .news-card { padding: 20px; }
+  }
+  @media (max-width: 768px) {
+    .main-wrap { padding: 16px !important; }
+    .news-header-actions { width: 100%; }
+    .news-header-actions .btn { flex: 1; min-width: 180px; }
+    .news-page-title { font-size: 24px; line-height: 30px; }
+    .news-card-footer { align-items: flex-start; }
+    .news-card-actions { width: 100%; }
+    .news-card-actions .btn { flex: 1; }
+  }
 </style>
 <script>
 (function() {
   const tr = window.__tr || {};
+  const isEnglishUiLocale = String(window.__locale || '').toLowerCase() === 'en';
+  function uiText(value, enFallback, ruFallback) {
+    if (typeof value === 'string' && value.trim()) return value;
+    return isEnglishUiLocale ? enFallback : ruFallback;
+  }
   function escapeHtml(s) {
     if (s == null) return '';
     return String(s)
@@ -673,6 +942,12 @@
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  }
+  function normalizeSearchText(value) {
+    return String(value || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+  function getReadMoreIconSvg() {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 9l6 6 6-6"/></svg>';
   }
   var localeForDate = (typeof window.__locale !== 'undefined' && window.__locale === 'en') ? 'en-US' : 'ru-RU';
   function formatDate(iso) {
@@ -688,10 +963,10 @@
       var d = new Date(iso);
       var now = new Date();
       var s = Math.floor((now - d) / 1000);
-      if (s < 60) return (tr.news_time_just_now || 'just now');
-      if (s < 3600) return (tr.news_time_min_ago || '{} min ago').replace('{}', Math.floor(s / 60));
-      if (s < 86400) return (tr.news_time_hr_ago || '{} hr ago').replace('{}', Math.floor(s / 3600));
-      if (s < 604800) return (tr.news_time_days_ago || '{} days ago').replace('{}', Math.floor(s / 86400));
+      if (s < 60) return uiText(tr.news_time_just_now, 'just now', 'только что');
+      if (s < 3600) return uiText(tr.news_time_min_ago, '{} min ago', '{} мин назад').replace('{}', Math.floor(s / 60));
+      if (s < 86400) return uiText(tr.news_time_hr_ago, '{} hr ago', '{} ч назад').replace('{}', Math.floor(s / 3600));
+      if (s < 604800) return uiText(tr.news_time_days_ago, '{} days ago', '{} дн назад').replace('{}', Math.floor(s / 86400));
       return formatDate(iso);
     } catch (e) { return iso; }
   }
@@ -700,10 +975,23 @@
   var emptyEl = document.getElementById('news-empty');
   var errorEl = document.getElementById('news-error');
   var refreshBtn = document.getElementById('news-refresh-btn');
+  var refreshTextEl = refreshBtn ? refreshBtn.querySelector('.refresh-text') : null;
+  var refreshDefaultText = refreshTextEl ? refreshTextEl.textContent : uiText(tr.posts_refresh, 'Refresh', 'Обновить');
+  var newsSearchInput = document.getElementById('news-search');
   var emptyRetryBtn = document.getElementById('news-empty-retry');
   var errorRetryBtn = document.getElementById('news-error-retry');
   var lastNewsItems = [];
   var currentNewsItem = null;
+  var isRefreshInFlight = false;
+
+  function setRefreshLoading(isLoading) {
+    if (!refreshBtn) return;
+    refreshBtn.classList.toggle('is-loading', !!isLoading);
+    refreshBtn.setAttribute('aria-busy', isLoading ? 'true' : 'false');
+    if (refreshTextEl) refreshTextEl.textContent = isLoading
+      ? uiText(tr.posts_updating, 'Updating…', 'Обновление…')
+      : refreshDefaultText;
+  }
 
   function setState(loading, empty, error) {
     if (loadingEl) loadingEl.style.display = loading ? 'flex' : 'none';
@@ -721,6 +1009,7 @@
     var scoreFilterSelect = document.getElementById('news-score-filter');
     var filterVal = sourceFilter ? sourceFilter.value : '';
     var scoreRange = scoreFilterSelect ? scoreFilterSelect.value : '';
+    var searchQuery = normalizeSearchText(newsSearchInput ? newsSearchInput.value : '');
     var withIdx = lastNewsItems.length ? lastNewsItems.map(function(item, idx) { return { item: item, origIdx: idx }; }) : [];
     var filtered = filterVal ? withIdx.filter(function(x) { return x.item.source === filterVal; }) : withIdx;
     if (scoreRange) {
@@ -734,13 +1023,33 @@
         return true;
       });
     }
-    if (filtered.length === 0 && lastNewsItems.length > 0 && (filterVal || scoreRange)) {
+    if (searchQuery) {
+      filtered = filtered.filter(function(x) {
+        var haystack = normalizeSearchText([
+          x.item.source || '',
+          x.item.title || '',
+          x.item.summary || '',
+          x.item.content || ''
+        ].join(' '));
+        return haystack.indexOf(searchQuery) !== -1;
+      });
+    }
+    if (filtered.length === 0 && lastNewsItems.length > 0 && (filterVal || scoreRange || searchQuery)) {
       if (emptyEl) {
         emptyEl.style.display = 'block';
         var titleEl = emptyEl.querySelector('.news-empty-title');
         var descEl = emptyEl.querySelector('.news-empty-desc');
-        if (titleEl) titleEl.textContent = tr.news_empty_title || 'No news';
-        if (descEl) descEl.textContent = filterVal && scoreRange ? (tr.news_empty_filter_both || 'No news for selected filters.') : filterVal ? (tr.news_empty_filter_source || 'Select another source.') : (tr.news_empty_filter_score || 'No news with selected Score.');
+        if (searchQuery) {
+          if (titleEl) titleEl.textContent = uiText(tr.posts_search_empty_title, 'No matching posts', 'Подходящие посты не найдены');
+          if (descEl) descEl.textContent = uiText(tr.posts_search_empty_desc, 'Try another query or clear the search.', 'Измените запрос или очистите поиск.');
+        } else {
+          if (titleEl) titleEl.textContent = uiText(tr.news_empty_title, 'No news', 'Нет новостей');
+          if (descEl) descEl.textContent = filterVal && scoreRange
+            ? uiText(tr.news_empty_filter_both, 'No news for selected filters.', 'Нет новостей по выбранным фильтрам.')
+            : filterVal
+              ? uiText(tr.news_empty_filter_source, 'Select another source.', 'Выберите другой источник.')
+              : uiText(tr.news_empty_filter_score, 'No news with selected Score.', 'Нет новостей с выбранным Score.');
+        }
       }
       if (emptyRetryBtn) emptyRetryBtn.style.display = 'none';
       if (listEl) { listEl.style.display = 'none'; listEl.innerHTML = ''; }
@@ -748,6 +1057,7 @@
       return;
     }
     if (filtered.length === 0 && lastNewsItems.length === 0) {
+      if (emptyRetryBtn) emptyRetryBtn.style.display = 'inline-flex';
       setState(false, true, false);
       listEl.innerHTML = '';
       return;
@@ -758,19 +1068,20 @@
     listEl.innerHTML = filtered.map(function(x) {
       var item = x.item;
       var idx = x.origIdx;
-      var title = escapeHtml(item.title || (tr.news_no_title || 'No title'));
+      var title = escapeHtml(item.title || uiText(tr.news_no_title, 'No title', 'Без заголовка'));
       var link = (item.link || '').trim();
       var summary = escapeHtml(item.summary || '');
       var publishedRel = relativeTime(item.published);
       var sourceName = item.source || 'Land Line Media';
-      var openOrig = tr.open_original || 'Open original';
+      var openOrig = uiText(tr.open_original, 'Open original', 'Открыть оригинал');
       var linkText = link ? '<a href="' + escapeHtml(link) + '" target="_blank" rel="noopener" class="news-card-open-link" title="' + openOrig + '" aria-label="' + openOrig + '" onclick="event.stopPropagation()">' + openOrig + ' <span aria-hidden="true">↗</span></a>' : '';
       var score = item.score !== undefined && item.score !== null ? item.score : null;
       var scoreColorClass = score !== null ? getScoreColorClass(score) : '';
-      var relevanceTitle = (tr.news_relevance_score || 'Relevance: {}').replace('{}', score) + '/100';
+      var scoreLabel = uiText(tr.news_score_label, 'Score', 'Score');
+      var relevanceTitle = uiText(tr.news_relevance_score, 'Relevance: {}', 'Релевантность: {}').replace('{}', score) + '/100';
       var scoreHtml = score !== null 
-        ? '<span class="news-card-score ' + scoreColorClass + '" data-score="' + score + '" title="' + relevanceTitle + '">Score: ' + score + '</span>' 
-        : '<span class="news-card-score-loading" data-index="' + idx + '" title="' + (tr.news_relevance_loading || 'Relevance score...') + '">—</span>';
+        ? '<span class="news-card-score ' + scoreColorClass + '" data-score="' + score + '" title="' + relevanceTitle + '">' + scoreLabel + ': ' + score + '</span>'
+        : '<span class="news-card-score-loading" data-index="' + idx + '" title="' + uiText(tr.news_relevance_loading, 'Relevance score...', 'Оценка релевантности...') + '">—</span>';
       return '<article class="news-card" data-index="' + idx + '" role="button" tabindex="0">' +
         '<div class="news-card-top">' +
           '<span class="news-card-meta">' + escapeHtml(sourceName) + ' · ' + escapeHtml(publishedRel) + '</span>' +
@@ -778,15 +1089,15 @@
         '</div>' +
         '<div class="news-card-body">' +
           '<h2 class="news-card-title">' + title + '</h2>' +
-          (summary ? '<p class="news-card-summary">' + summary + '</p>' : '') +
+          (summary ? '<div class="news-card-summary-wrap"><p class="news-card-summary">' + summary + '</p></div>' : '') +
         '</div>' +
         '<div class="news-card-footer">' +
           '<div class="news-card-footer-left">' +
-            '<button type="button" class="news-card-read-more btn-news-read-full" data-index="' + idx + '" onclick="event.stopPropagation()">' + (tr.news_expand || 'Expand') + '</button>' +
+            '<button type="button" class="news-card-read-more btn-news-read-full" data-index="' + idx + '" onclick="event.stopPropagation()">' + uiText(tr.posts_read_more, 'Read more', 'Читать далее') + ' ' + getReadMoreIconSvg() + '</button>' +
           '</div>' +
           '<div class="news-card-actions">' +
             scoreHtml +
-            '<button type="button" class="btn primary btn-sm btn-news-rewrite-post" data-index="' + idx + '" onclick="event.stopPropagation()">' + (tr.news_make_post || 'Make post') + '</button>' +
+            '<button type="button" class="btn primary btn-sm btn-news-rewrite-post" data-index="' + idx + '" onclick="event.stopPropagation()">' + uiText(tr.news_make_post, 'Make post', 'Сделать пост') + '</button>' +
           '</div>' +
         '</div>' +
         '</article>';
@@ -903,8 +1214,8 @@
     var colorClass = getScoreColorClass(score);
     scoreEl.className = 'news-card-score ' + colorClass;
     scoreEl.setAttribute('data-score', score);
-    scoreEl.textContent = 'Score: ' + score;
-    scoreEl.title = (tr.news_relevance_score || 'Relevance: {}').replace('{}', score + '/100');
+    scoreEl.textContent = uiText(tr.news_score_label, 'Score', 'Score') + ': ' + score;
+    scoreEl.title = uiText(tr.news_relevance_score, 'Relevance: {}', 'Релевантность: {}').replace('{}', score) + '/100';
     // Убираем data-index если был
     scoreEl.removeAttribute('data-index');
     
@@ -916,8 +1227,8 @@
       if (scoreWrap && detailScoreEl) {
         detailScoreEl.className = 'news-card-score ' + colorClass;
         detailScoreEl.setAttribute('data-score', score);
-        detailScoreEl.textContent = 'Score: ' + score;
-        detailScoreEl.title = (tr.news_relevance_score || 'Relevance: {}').replace('{}', score + '/100');
+        detailScoreEl.textContent = uiText(tr.news_score_label, 'Score', 'Score') + ': ' + score;
+        detailScoreEl.title = uiText(tr.news_relevance_score, 'Relevance: {}', 'Релевантность: {}').replace('{}', score) + '/100';
         if (scoreRefreshBtn) {
           scoreRefreshBtn.style.display = 'inline-flex';
           scoreRefreshBtn.onclick = function(e) {
@@ -935,7 +1246,7 @@
     var scoreRefreshBtn = document.getElementById('news-view-score-refresh');
     if (scoreEl) {
       scoreEl.textContent = '…';
-      scoreEl.title = (tr.reddit_score_updating || 'Updating score...');
+      scoreEl.title = uiText(tr.reddit_score_updating, 'Updating score...', 'Обновление оценки...');
     }
     if (scoreRefreshBtn) scoreRefreshBtn.disabled = true;
     try {
@@ -971,8 +1282,8 @@
           var colorClass = getScoreColorClass(score);
           scoreEl.className = 'news-card-score ' + colorClass;
           scoreEl.setAttribute('data-score', score);
-          scoreEl.textContent = 'Score: ' + score;
-          scoreEl.title = (tr.news_relevance_score || 'Relevance: {}').replace('{}', score + '/100');
+          scoreEl.textContent = uiText(tr.news_score_label, 'Score', 'Score') + ': ' + score;
+          scoreEl.title = uiText(tr.news_relevance_score, 'Relevance: {}', 'Релевантность: {}').replace('{}', score) + '/100';
         }
         if (scoreRefreshBtn) {
           scoreRefreshBtn.style.display = 'inline-flex';
@@ -984,14 +1295,14 @@
       } else {
         if (scoreEl) {
           scoreEl.textContent = '—';
-          scoreEl.title = (tr.reddit_score_failed || 'Failed to get score');
+          scoreEl.title = uiText(tr.reddit_score_failed, 'Failed to get score', 'Не удалось получить оценку');
         }
       }
     } catch (e) {
       console.error('Scoring error:', e);
       if (scoreEl) {
         scoreEl.textContent = '—';
-        scoreEl.title = (tr.news_score_update_error || 'Update error');
+        scoreEl.title = uiText(tr.news_score_update_error, 'Update error', 'Ошибка обновления');
       }
     } finally {
       if (scoreRefreshBtn) scoreRefreshBtn.disabled = false;
@@ -1002,16 +1313,16 @@
     setState(true, false, false);
     var url = forceRefresh ? '/news/refresh' : '/news';
     var opts = forceRefresh ? { method: 'POST', headers: { 'Content-Type': 'application/json' } } : {};
-    fetch(url, opts)
+    return fetch(url, opts)
       .then(function(r) {
         if (!r.ok) {
           return r.json().then(function(body) {
-            var detail = (body && body.detail) ? body.detail : r.statusText || (tr.news_load_error || 'Load error');
+            var detail = (body && body.detail) ? body.detail : r.statusText || uiText(tr.news_load_error, 'Load error', 'Ошибка загрузки');
             setErrorDetail(detail);
             throw new Error(detail);
           }).catch(function(e) {
             if (!document.getElementById('news-error-detail').textContent)
-              setErrorDetail(e.message || (tr.news_server_error || 'Server error {}').replace('{}', r.status));
+              setErrorDetail(e.message || uiText(tr.news_server_error, 'Server error {}', 'Ошибка сервера {}').replace('{}', r.status));
             throw e;
           });
         }
@@ -1022,6 +1333,7 @@
         setState(false, false, false);
         lastNewsItems = items;
         if (items.length === 0) {
+          if (emptyRetryBtn) emptyRetryBtn.style.display = 'inline-flex';
           setState(false, true, false);
           listEl.innerHTML = '';
           return;
@@ -1029,13 +1341,14 @@
         renderNewsList();
         // Запускаем скорринг для всех новостей без score
         scoreNewsItems();
-        if (forceRefresh && typeof window.toast === 'function') window.toast(tr.news_updated_toast || 'News updated');
+        if (forceRefresh && typeof window.toast === 'function') window.toast(uiText(tr.news_updated_toast, 'News updated', 'Новости обновлены'));
       })
       .catch(function(err) {
         setState(false, false, true);
         listEl.innerHTML = '';
         if (!document.getElementById('news-error-detail').textContent)
-          setErrorDetail(err && err.message ? err.message : (tr.news_check_connection || 'Check your internet connection.'));
+          setErrorDetail(err && err.message ? err.message : uiText(tr.news_check_connection, 'Check your internet connection.', 'Проверьте подключение к интернету.'));
+        throw err;
       });
   }
   function stripLinksInHtml(html) {
@@ -1063,7 +1376,7 @@
     var scoreWrap = document.getElementById('news-view-score-wrap');
     var scoreEl = document.getElementById('news-view-score');
     var scoreRefreshBtn = document.getElementById('news-view-score-refresh');
-    if (titleEl) titleEl.textContent = item.title || (tr.news_no_title || 'No title');
+    if (titleEl) titleEl.textContent = item.title || uiText(tr.news_no_title, 'No title', 'Без заголовка');
     var dateText = formatDate(item.published);
     // Обновляем score в детальном виде
     if (scoreWrap && scoreEl) {
@@ -1075,8 +1388,8 @@
         var colorClass = getScoreColorClass(score);
         scoreEl.className = 'news-card-score ' + colorClass;
         scoreEl.setAttribute('data-score', score);
-        scoreEl.textContent = 'Score: ' + score;
-        scoreEl.title = (tr.news_relevance_score || 'Relevance: {}').replace('{}', score + '/100');
+        scoreEl.textContent = uiText(tr.news_score_label, 'Score', 'Score') + ': ' + score;
+        scoreEl.title = uiText(tr.news_relevance_score, 'Relevance: {}', 'Релевантность: {}').replace('{}', score) + '/100';
         if (scoreRefreshBtn) {
           scoreRefreshBtn.style.display = 'inline-flex';
           scoreRefreshBtn.onclick = function(e) {
@@ -1087,7 +1400,7 @@
       } else {
         scoreEl.className = 'news-card-score-loading';
         scoreEl.textContent = '—';
-        scoreEl.title = (tr.news_relevance_loading || 'Relevance score...');
+        scoreEl.title = uiText(tr.news_relevance_loading, 'Relevance score...', 'Оценка релевантности...');
         if (scoreRefreshBtn) {
           scoreRefreshBtn.style.display = 'inline-flex';
           scoreRefreshBtn.onclick = function(e) {
@@ -1108,11 +1421,11 @@
       var sName = item.source || 'Land Line Media';
       var sUrl = (item.sourceUrl || 'https://landline.media/news/').trim();
       var sLabel = sName === 'Transport Topics' ? 'ttnews.com' : (sName === 'CDLLife' ? 'cdllife.com' : 'landline.media');
-      sourceEl.innerHTML = (tr.reddit_source || 'Source:') + ' <a href="' + escapeHtml(sUrl) + '" target="_blank" rel="noopener">' + escapeHtml(sName) + '</a> (' + escapeHtml(sLabel) + ')';
+      sourceEl.innerHTML = uiText(tr.reddit_source, 'Source:', 'Источник:') + ' <a href="' + escapeHtml(sUrl) + '" target="_blank" rel="noopener">' + escapeHtml(sName) + '</a> (' + escapeHtml(sLabel) + ')';
     }
     var fallbackContent = item.content || item.summary || '';
     if (bodyEl) {
-      bodyEl.innerHTML = '<p class="news-view-loading">' + (tr.news_loading_full || 'Loading full text…') + '</p>';
+      bodyEl.innerHTML = '<p class="news-view-loading">' + uiText(tr.news_loading_full, 'Loading full text…', 'Загрузка полного текста…') + '</p>';
     }
     if (linkEl) {
       linkEl.href = item.link || '#';
@@ -1237,7 +1550,7 @@
       var ta = document.getElementById('news-write-textarea');
       var postText = bodyEl ? bodyEl.innerText || '' : '';
       postText = postText.trim();
-      if (postText === (tr.news_loading_full || 'Loading full text…') || postText.length < 100) {
+      if (postText === uiText(tr.news_loading_full, 'Loading full text…', 'Загрузка полного текста…') || postText.length < 100) {
         if (currentNewsItem) {
           var fc = currentNewsItem.content || currentNewsItem.summary || '';
           postText = (fc + '').replace(/<[^>]+>/g, ' ').trim();
@@ -1270,11 +1583,11 @@
           var data;
           try { data = JSON.parse(r.text); } catch (_) { if (ta) ta.value = (tr.news_error_not_json || 'Error: response is not JSON.'); updateNewsCharCount(); return; }
           var postTextResult = data.result && data.result.post ? data.result.post : '';
-          if (ta) ta.value = (postTextResult || '').trim() || (tr.reddit_generate_failed || 'Failed to generate post.');
+          if (ta) ta.value = (postTextResult || '').trim() || uiText(tr.reddit_generate_failed, 'Failed to generate post.', 'Не удалось сгенерировать пост.');
           updateNewsCharCount();
         })
         .catch(function(err) {
-          if (ta) ta.value = (tr.news_error_connect || 'Failed to connect to server.') + (err && err.message ? ': ' + err.message : '');
+          if (ta) ta.value = uiText(tr.news_error_connect, 'Failed to connect to server.', 'Не удалось подключиться к серверу.') + (err && err.message ? ': ' + err.message : '');
           updateNewsCharCount();
         })
         .finally(function() {
@@ -1397,11 +1710,11 @@
           var data;
           try { data = JSON.parse(r.text); } catch (_) { if (postFromTextResult) postFromTextResult.value = (tr.news_error_not_json || 'Error: response is not JSON.'); updatePostFromTextCharCount(); return; }
           var postTextResult = data.result && data.result.post ? data.result.post : '';
-          if (postFromTextResult) postFromTextResult.value = (postTextResult || '').trim() || (tr.reddit_generate_failed || 'Failed to generate post.');
+          if (postFromTextResult) postFromTextResult.value = (postTextResult || '').trim() || uiText(tr.reddit_generate_failed, 'Failed to generate post.', 'Не удалось сгенерировать пост.');
           updatePostFromTextCharCount();
         })
         .catch(function(err) {
-          if (postFromTextResult) postFromTextResult.value = (tr.news_error_connect || 'Failed to connect to server.') + (err && err.message ? ': ' + err.message : '');
+          if (postFromTextResult) postFromTextResult.value = uiText(tr.news_error_connect, 'Failed to connect to server.', 'Не удалось подключиться к серверу.') + (err && err.message ? ': ' + err.message : '');
           updatePostFromTextCharCount();
         })
         .finally(function() {
@@ -1416,10 +1729,23 @@
   var newsScoreFilter = document.getElementById('news-score-filter');
   if (sourceFilter) sourceFilter.addEventListener('change', renderNewsList);
   if (newsScoreFilter) newsScoreFilter.addEventListener('change', renderNewsList);
-  if (refreshBtn) refreshBtn.addEventListener('click', function() { loadNews(true); });  /* true = принудительное обновление с серверов */
-  if (emptyRetryBtn) emptyRetryBtn.addEventListener('click', loadNews);
-  if (errorRetryBtn) errorRetryBtn.addEventListener('click', loadNews);
-  loadNews();
+  if (newsSearchInput) newsSearchInput.addEventListener('input', renderNewsList);
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', function() {
+      if (isRefreshInFlight) return;
+      isRefreshInFlight = true;
+      setRefreshLoading(true);
+      loadNews(true)
+        .catch(function() {})
+        .finally(function() {
+          isRefreshInFlight = false;
+          setRefreshLoading(false);
+        });
+    });
+  }
+  if (emptyRetryBtn) emptyRetryBtn.addEventListener('click', function() { loadNews(false).catch(function() {}); });
+  if (errorRetryBtn) errorRetryBtn.addEventListener('click', function() { loadNews(false).catch(function() {}); });
+  loadNews(false).catch(function() {});
 })();
 </script>
 {% endblock %}

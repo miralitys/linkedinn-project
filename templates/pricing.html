@@ -1,503 +1,975 @@
 {% extends "base_landing.html" %}
 {% block title %}{% if locale == 'en' %}Pricing - MyVOICE's{% else %}Тарифы - MyVOICE's{% endif %}{% endblock %}
 {% block head %}
-  <meta name="description" content="{% if locale == 'en' %}Comment on key people's LinkedIn posts faster. No LinkedIn connection - add profiles to watchlist, get new posts, generate 3 comment variants each.{% else %}Комментируй посты ключевых людей в LinkedIn быстрее. Без подключения LinkedIn - watchlist, новые посты, 3 варианта комментария под каждый.{% endif %}">
+  <meta name="description" content="{% if locale == 'en' %}Premium pricing for fast LinkedIn commenting workflow: clear plans, strong Pro value, and transparent trial terms.{% else %}Премиальные тарифы для быстрого workflow комментариев в LinkedIn: понятные планы, акцент на Pro и прозрачные условия trial.{% endif %}">
 {% endblock %}
 
 {% block content %}
 <style>
-  html { scroll-behavior: smooth; }
-  .p2-hero { text-align: center; padding: var(--space-8) 0 var(--space-10); max-width: 720px; margin: 0 auto; }
-  .p2-hero h1 { font-size: clamp(1.875rem, 4.5vw, 2.75rem); font-weight: 700; margin: 0 0 var(--space-4); line-height: 1.2; letter-spacing: -0.03em; color: var(--text); }
-  .p2-hero .sub { font-size: var(--text-18); color: var(--text-muted); margin: 0 auto var(--space-3); line-height: 1.6; max-width: 540px; }
-  .p2-hero-sub2 { font-size: var(--text-14); color: var(--text-muted); margin-bottom: var(--space-6); padding: var(--space-3) var(--space-4); background: var(--surface-alt); border-radius: var(--radius-lg); border-left: 3px solid var(--primary); display: inline-block; line-height: 1.5; }
-  .p2-hero-bullets { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); margin: var(--space-5) 0 var(--space-6); }
-  .p2-hero-bullets span { font-size: var(--text-14); color: var(--text-muted); padding: var(--space-2) var(--space-4); background: var(--surface-alt); border-radius: var(--radius-pill); border: 1px solid var(--border); }
-  .p2-hero-bullets span::before { content: '✓ '; color: var(--success); font-weight: 700; }
-  .p2-hero-cta-block { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: var(--space-8); margin: 0 auto var(--space-4); max-width: 440px; box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 2px 8px rgba(99, 102, 241, 0.08); }
-  .p2-hero-btns { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-3); margin-bottom: var(--space-5); }
-  .p2-hero-btns .btn { padding: 1rem 1.5rem; border-radius: 14px; font-weight: 600; font-size: var(--text-16); text-decoration: none; transition: all 0.2s ease; text-align: center; }
-  .p2-hero-btns .btn-primary { background: linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #4f46e5 100%); color: white; border: none; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); }
-  .p2-hero-btns .btn-primary:hover { color: white; text-decoration: none; box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5); transform: translateY(-2px); }
-  .p2-hero-btns .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
-  .p2-hero-btns .btn-secondary:hover { border-color: var(--primary); color: var(--primary); text-decoration: none; background: rgba(99, 102, 241, 0.04); }
-  .p2-hero-micro-wrap { font-size: var(--text-14); color: var(--text-muted); line-height: 1.7; padding: var(--space-4) 0 0; border-top: 1px solid var(--border); }
-  .p2-hero-micro-wrap p { margin: 0 0 var(--space-2); }
-  .p2-hero-micro-wrap p:last-child { margin-bottom: 0; }
-  .p2-hero-demo { font-size: var(--text-14); margin-top: var(--space-5); }
-  .p2-hero-demo a { text-decoration: none; color: var(--text-muted); opacity: 0.85; transition: color 0.2s ease; }
-  .p2-hero-demo a:hover { color: var(--primary); opacity: 1; }
+  :root {
+    --neutral-50: #f8fafc;
+    --neutral-100: #f1f5f9;
+    --neutral-200: #e2e8f0;
+    --neutral-300: #cbd5e1;
+    --neutral-400: #94a3b8;
+    --neutral-500: #64748b;
+    --neutral-600: #475569;
+    --neutral-900: #0f172a;
+    --primary-50: #eef2ff;
+    --primary-100: #e0e7ff;
+    --primary-400: #818cf8;
+    --primary-500: #6366f1;
+    --primary-600: #4f46e5;
+    --primary-700: #4338ca;
+    --success-600: #059669;
+    --card-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
+  }
 
-  .p2-example { max-width: 900px; margin: var(--space-6) auto; border: 1px solid var(--border); border-radius: 20px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
-  .p2-example-head { padding: var(--space-5); background: var(--surface); font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: var(--text-16); transition: background 0.2s ease; border-bottom: 1px solid var(--border); }
-  .p2-example-head:hover { background: var(--surface-alt); }
-  .p2-example-head::after { content: ''; width: 10px; height: 10px; border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted); transform: rotate(45deg); transition: transform 0.2s ease; }
-  .p2-example.is-open .p2-example-head::after { transform: rotate(-135deg); }
-  .p2-example-body { padding: var(--space-6); background: var(--surface-alt); display: none; }
-  .p2-example.is-open .p2-example-body { display: block; }
-  .p2-example-post { font-size: var(--text-16); color: var(--text); padding: var(--space-5); background: var(--surface); border-radius: 12px; margin-bottom: var(--space-5); font-style: italic; border-left: 4px solid var(--border); line-height: 1.6; }
-  .p2-example-label { font-size: var(--text-12); font-weight: 600; color: var(--primary); margin-bottom: var(--space-2); text-transform: uppercase; letter-spacing: 0.05em; }
-  .p2-example-variant { font-size: var(--text-14); padding: var(--space-4); background: var(--surface); border-radius: 12px; margin-bottom: var(--space-4); border-left: 4px solid var(--primary); box-shadow: 0 2px 8px rgba(99, 102, 241, 0.06); line-height: 1.6; }
-  .p2-example-cta { margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border); }
-  .p2-example-cta .btn { display: inline-block; padding: 1rem 1.5rem; border-radius: 14px; font-weight: 600; font-size: var(--text-16); text-decoration: none; background: linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #4f46e5 100%); color: white; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); transition: all 0.2s ease; }
-  .p2-example-cta .btn:hover { color: white; text-decoration: none; box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5); transform: translateY(-1px); }
+  body {
+    background: var(--neutral-50);
+    color: var(--neutral-900);
+  }
 
-  .p2-trust { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: 1px solid var(--border); margin-bottom: var(--space-4); }
-  .p2-trust-badge { font-size: var(--text-12); padding: 6px 12px; background: var(--surface-alt); border-radius: var(--radius-pill); color: var(--text-muted); font-weight: 500; white-space: nowrap; }
-  .p2-trust-badge::before { content: '✓ '; color: var(--success); font-weight: 700; }
+  .landing-main {
+    max-width: 1200px;
+    padding: 32px;
+  }
 
-  .p2-choose { max-width: 680px; margin: 0 auto var(--space-5); text-align: center; }
-  .p2-choose h2 { font-size: var(--text-24); font-weight: 700; margin: 0 0 var(--space-4); }
-  .p2-choose-segments { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin: var(--space-4) 0; }
-  .p2-choose-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-5); text-align: left; }
-  .p2-choose-card h3 { font-size: var(--text-16); font-weight: 600; margin: 0 0 var(--space-2); }
-  .p2-choose-card p { font-size: var(--text-14); color: var(--text-muted); margin: 0 0 var(--space-2); }
-  .p2-choose-card .rec { font-size: var(--text-14); font-weight: 600; color: var(--primary); }
-  .p2-choose-example { font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-3); font-style: italic; }
+  .pricing-page {
+    width: 100%;
+    max-width: 1160px;
+    margin: 0 auto;
+    display: grid;
+    gap: 24px;
+  }
 
-  .p2-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin: var(--space-6) 0; align-items: stretch; }
-  .p2-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: var(--space-8); display: flex; flex-direction: column; position: relative; box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: box-shadow 0.2s ease, transform 0.2s ease; }
-  .p2-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
-  .p2-card.popular { border: 2px solid var(--primary); background: linear-gradient(180deg, rgba(99, 102, 241, 0.06) 0%, rgba(99, 102, 241, 0.02) 100%); box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15); transform: scale(1.02); }
-  .p2-card.popular:hover { box-shadow: 0 12px 40px rgba(99, 102, 241, 0.2); }
-  .p2-card .badge { position: absolute; top: var(--space-4); right: var(--space-4); font-size: var(--text-12); font-weight: 600; padding: 6px 12px; border-radius: 10px; letter-spacing: 0.02em; }
-  .p2-card.popular .badge { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35); }
-  .p2-card:not(.popular) .badge { background: var(--text); color: white; }
-  .p2-card h3 { font-size: var(--text-24); font-weight: 700; margin: 0 0 var(--space-2); letter-spacing: -0.02em; }
-  .p2-card .for-who { font-size: var(--text-14); color: var(--text-muted); margin-bottom: var(--space-5); line-height: 1.5; }
-  .p2-card .value-bullets { list-style: none; padding: 0; margin: 0 0 var(--space-5); min-height: 6rem; }
-  .p2-card .value-bullets li { display: flex; align-items: flex-start; gap: var(--space-3); font-size: var(--text-14); margin-bottom: var(--space-3); line-height: 1.5; }
-  .p2-card .value-bullets li::before { content: '✓'; color: white; background: var(--success); font-weight: 700; flex-shrink: 0; width: 20px; height: 20px; min-width: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
-  .p2-card .diff { font-size: var(--text-14); font-weight: 600; color: var(--primary); margin: var(--space-3) 0; padding: var(--space-2) var(--space-3); background: rgba(99, 102, 241, 0.08); border-radius: var(--radius); display: inline-block; }
-  .p2-card .p2-diff-pro { font-weight: 700; background: rgba(99, 102, 241, 0.12); }
-  .p2-card .price-row { margin: var(--space-4) 0 var(--space-2); }
-  .p2-card .price { font-size: clamp(1.75rem, 3vw, 2rem); font-weight: 700; letter-spacing: -0.02em; }
-  .p2-card .price-unit { font-size: var(--text-14); color: var(--text-muted); font-weight: 500; }
-  .p2-card .price-note { font-size: var(--text-14); color: var(--text-muted); margin-top: var(--space-1); min-height: 1.25rem; line-height: 1.4; }
-  .p2-card .limits-toggle { font-size: var(--text-14); color: var(--primary); cursor: pointer; margin: var(--space-3) 0 0; font-weight: 500; transition: opacity 0.2s ease; }
-  .p2-card .limits-toggle:hover { text-decoration: underline; opacity: 0.9; }
-  .p2-card .limits { font-size: var(--text-12); color: var(--text-muted); line-height: 1.7; display: none; margin-top: var(--space-2); padding: var(--space-3); background: var(--surface-alt); border-radius: var(--radius); }
-  .p2-card .limits.is-open { display: block; }
-  .p2-card .p2-card-footer { margin-top: auto; padding-top: var(--space-5); border-top: 1px solid var(--border); }
-  .p2-card .btn { display: block; text-align: center; padding: 1rem 1.5rem; border-radius: 14px; font-weight: 600; font-size: var(--text-16); text-decoration: none; margin-top: var(--space-4); transition: all 0.2s ease; }
-  .p2-card .btn-primary { background: linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #4f46e5 100%); color: white; border: none; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); }
-  .p2-card .btn-primary:hover { color: white; text-decoration: none; box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45); transform: translateY(-1px); }
-  .p2-card .btn-outline { background: var(--surface); color: var(--text); border: 1.5px solid var(--border); }
-  .p2-card .btn-outline:hover { border-color: var(--primary); color: var(--primary); text-decoration: none; background: rgba(99, 102, 241, 0.04); }
-  .p2-card .btn-secondary { background: linear-gradient(135deg, #334155 0%, #1e293b 100%); color: white; border: none; box-shadow: 0 2px 8px rgba(30, 41, 59, 0.2); }
-  .p2-card .btn-secondary:hover { opacity: 0.95; color: white; text-decoration: none; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(30, 41, 59, 0.3); }
-  .p2-card .btn-note { font-size: var(--text-12); color: var(--text-muted); margin-top: var(--space-3); text-align: center; line-height: 1.5; padding: 0 var(--space-2); }
+  .p-panel {
+    background: #ffffff;
+    border: 1px solid var(--neutral-200);
+    border-radius: 16px;
+    padding: 24px;
+  }
 
-  .p2-generation { max-width: 780px; margin: 0 auto var(--space-6); padding: var(--space-8); background: var(--surface); border: 1px solid var(--border); border-radius: 20px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
-  .p2-generation h2 { font-size: var(--text-24); font-weight: 700; margin: 0 0 var(--space-5); letter-spacing: -0.02em; }
-  .p2-generation-def { font-size: var(--text-16); color: var(--text); line-height: 1.7; margin: 0; padding: var(--space-5); background: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, rgba(99, 102, 241, 0.02) 100%); border-radius: var(--radius-lg); border-left: 4px solid var(--primary); }
-  .p2-generation .example { font-size: var(--text-14); margin-top: var(--space-4); padding: var(--space-4); background: var(--surface-alt); border-radius: var(--radius); border: 1px solid var(--border); font-weight: 500; color: var(--text); }
-  .p2-generation-total { font-size: var(--text-16); font-weight: 700; margin-top: var(--space-5); padding: var(--space-4); background: rgba(99, 102, 241, 0.1); color: var(--primary); border-radius: var(--radius-lg); text-align: center; border: 1px solid rgba(99, 102, 241, 0.2); }
+  .section-title {
+    margin: 0 0 16px;
+    font-size: 20px;
+    line-height: 26px;
+    font-weight: 600;
+    color: var(--neutral-900);
+  }
 
-  .p2-compare { margin: var(--space-6) 0; max-width: 960px; margin-left: auto; margin-right: auto; }
-  .p2-compare h2 { font-size: var(--text-24); font-weight: 700; margin: 0 0 var(--space-2); text-align: center; letter-spacing: -0.02em; }
-  .p2-compare-intro { text-align: center; font-size: var(--text-16); color: var(--text-muted); margin-bottom: var(--space-6); max-width: 480px; margin-left: auto; margin-right: auto; line-height: 1.5; }
-  .p2-compare-pro-highlights { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: var(--space-6); margin-bottom: var(--space-5); box-shadow: 0 4px 20px rgba(0,0,0,0.04); }
-  .p2-compare-pro-highlights h3 { font-size: var(--text-16); font-weight: 600; margin: 0 0 var(--space-4); color: var(--text); }
-  .p2-compare-pro-highlights ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: var(--space-3); }
-  .p2-compare-pro-highlights li { font-size: var(--text-14); }
-  .p2-compare-anchor { color: var(--primary); text-decoration: none; font-weight: 600; padding: var(--space-3) var(--space-5); background: rgba(99, 102, 241, 0.08); border-radius: 12px; display: inline-block; transition: all 0.2s ease; border: 1px solid rgba(99, 102, 241, 0.2); }
-  .p2-compare-anchor:hover { background: rgba(99, 102, 241, 0.14); text-decoration: none; border-color: rgba(99, 102, 241, 0.35); }
-  .p2-compare-section { margin-bottom: var(--space-3); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-  .p2-compare-section-head { padding: var(--space-4) var(--space-5); background: var(--surface-alt); font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-size: var(--text-16); transition: background 0.2s ease; }
-  .p2-compare-section-head:hover { background: var(--border); }
-  .p2-compare-section-head::after { content: ''; width: 10px; height: 10px; border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted); transform: rotate(45deg); transition: transform 0.2s ease; }
-  .p2-compare-section.is-open .p2-compare-section-head { background: var(--surface-alt); }
-  .p2-compare-section.is-open .p2-compare-section-head::after { transform: rotate(-135deg); }
-  .p2-compare-section-body { padding: var(--space-4); display: none; }
-  .p2-compare-section.is-open .p2-compare-section-body { display: block; }
-  .p2-compare-table { width: 100%; font-size: var(--text-14); border-collapse: collapse; }
-  .p2-compare-table th, .p2-compare-table td { padding: var(--space-3) var(--space-4); text-align: left; border-bottom: 1px solid var(--border); }
-  .p2-compare-table tr:last-child td { border-bottom: none; }
-  .p2-compare-table th { font-weight: 600; color: var(--text-muted); font-size: var(--text-12); text-transform: uppercase; letter-spacing: 0.05em; }
-  .p2-compare-table .col-pro { background: rgba(99, 102, 241, 0.06); font-weight: 600; }
-  .p2-compare-table th.col-pro { color: var(--primary); }
-  .p2-compare-table .yes { color: var(--success); font-weight: 600; }
-  .p2-compare-showall { font-size: var(--text-12); color: var(--primary); cursor: pointer; margin-top: var(--space-2); }
-  .p2-compare-showall:hover { text-decoration: underline; }
+  .muted {
+    margin: 0;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--neutral-600);
+  }
 
-  .p2-social { margin: var(--space-5) 0; }
-  .p2-social h2 { font-size: var(--text-24); font-weight: 700; margin: 0 0 var(--space-2); text-align: center; }
-  .p2-social-context { font-size: var(--text-14); color: var(--text-muted); text-align: center; margin-bottom: var(--space-4); font-style: italic; }
-  .p2-social-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-4); max-width: 800px; margin: 0 auto; }
-  .p2-social-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6); }
-  .p2-social-card h3 { font-size: var(--text-16); font-weight: 600; margin: 0 0 var(--space-4); }
-  .p2-social-metrics { display: flex; gap: var(--space-6); flex-wrap: wrap; }
-  .p2-social-metric { }
-  .p2-social-metric .label { font-size: var(--text-12); color: var(--text-muted); }
-  .p2-social-metric .value { font-size: var(--text-18); font-weight: 700; color: var(--success); }
-  .p2-social-card p { font-size: var(--text-14); color: var(--text-muted); margin: var(--space-4) 0 0; line-height: 1.5; }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: var(--neutral-100);
+    color: var(--neutral-600);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+  }
 
-  .p2-security { max-width: 560px; margin: 0 auto var(--space-4); padding: var(--space-5); background: var(--surface-alt); border-radius: var(--radius-lg); }
-  .p2-security h3 { font-size: var(--text-16); font-weight: 600; margin: 0 0 var(--space-4); }
-  .p2-security ul { list-style: none; padding: 0; margin: 0; font-size: var(--text-14); color: var(--text-muted); }
-  .p2-security li { display: flex; gap: var(--space-2); margin-bottom: var(--space-2); }
-  .p2-security li::before { content: '✓'; color: var(--success); font-weight: 700; }
+  .pill svg {
+    width: 16px;
+    height: 16px;
+    stroke-width: 1.5;
+    stroke: currentColor;
+    fill: none;
+    flex: 0 0 auto;
+  }
 
-  .p2-faq { margin: var(--space-5) 0; max-width: 680px; margin-left: auto; margin-right: auto; }
-  .p2-faq h2 { font-size: var(--text-24); font-weight: 700; margin: 0 0 var(--space-4); text-align: center; }
-  .p2-faq-list { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
-  .p2-faq-item { border-bottom: 1px solid var(--border); }
-  .p2-faq-item:last-child { border-bottom: none; }
-  .p2-faq-item dt { padding: var(--space-4) var(--space-5); font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-  .p2-faq-item dt::after { content: ''; width: 10px; height: 10px; border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted); transform: rotate(45deg); flex-shrink: 0; transition: transform var(--motion-fast); }
-  .p2-faq-item.is-open dt { background: var(--surface-alt); }
-  .p2-faq-item.is-open dt::after { transform: rotate(-135deg); }
-  .p2-faq-item dd { padding: 0 var(--space-5) var(--space-4); font-size: var(--text-14); color: var(--text-muted); line-height: 1.6; display: none; }
-  .p2-faq-item.is-open dd { display: block; padding-top: 0; margin: 0; }
+  .hero {
+    text-align: center;
+    padding: 8px 0;
+  }
 
-  .p2-cta { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: var(--space-10); margin: var(--space-6) 0; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.06); max-width: 800px; margin-left: auto; margin-right: auto; }
-  .p2-cta h2 { font-size: var(--text-32); font-weight: 700; margin: 0 0 var(--space-4); letter-spacing: -0.02em; }
-  .p2-cta > p { font-size: var(--text-18); color: var(--text-muted); margin: 0 auto var(--space-6); line-height: 1.6; max-width: 560px; }
-  .p2-cta-btns { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-4); margin-bottom: var(--space-4); }
-  .p2-cta-btns .btn { padding: 1rem 1.75rem; border-radius: 14px; font-weight: 600; font-size: var(--text-16); text-decoration: none; transition: all 0.2s ease; }
-  .p2-cta-btns .btn-primary { background: linear-gradient(135deg, #818cf8 0%, #6366f1 50%, #4f46e5 100%); color: white; border: none; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); }
-  .p2-cta-btns .btn-primary:hover { color: white; text-decoration: none; box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5); transform: translateY(-1px); }
-  .p2-cta-btns .btn-secondary { background: var(--surface); color: var(--text); border: 1.5px solid var(--border); }
-  .p2-cta-btns .btn-secondary:hover { border-color: var(--primary); color: var(--primary); text-decoration: none; background: rgba(99, 102, 241, 0.04); }
-  .p2-cta-demo { font-size: var(--text-14); margin: var(--space-4) 0 var(--space-5); }
-  .p2-cta-demo a { text-decoration: none; color: var(--text-muted); opacity: 0.9; transition: color 0.2s ease; }
-  .p2-cta-demo a:hover { color: var(--primary); opacity: 1; }
-  .p2-cta-guarantees { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-6); font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; padding-top: var(--space-5); border-top: 1px solid var(--border); }
+  .hero-top-note {
+    margin-bottom: 16px;
+  }
 
-  @media (max-width: 900px) {
-    .p2-cards { grid-template-columns: 1fr; }
-    .p2-choose-segments { grid-template-columns: 1fr; }
-    .p2-social-cards { grid-template-columns: 1fr; }
-    .p2-hero-bullets { flex-direction: column; align-items: center; }
-    .p2-hero-cta-block { margin-left: var(--space-4); margin-right: var(--space-4); padding: var(--space-6); }
-    .p2-card.popular { transform: none; }
+  .hero h1 {
+    margin: 0 auto 16px;
+    max-width: 800px;
+    font-size: clamp(32px, 5vw, 40px);
+    line-height: 1.12;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--neutral-900);
+  }
+
+  .hero-subtitle {
+    margin: 0 auto;
+    max-width: 640px;
+    font-size: clamp(16px, 2.4vw, 18px);
+    line-height: 26px;
+    font-weight: 400;
+    color: var(--neutral-600);
+  }
+
+  .hero-checks {
+    margin: 20px 0 24px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero-micro {
+    margin: 12px 0 0;
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--neutral-500);
+  }
+
+  .p-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 168px;
+    height: 48px;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    padding: 0 20px;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    transition: filter 0.2s ease-out, transform 0.12s ease-out, background-color 0.2s ease-out, border-color 0.2s ease-out, color 0.2s ease-out;
+    cursor: pointer;
+  }
+
+  .p-btn:hover {
+    text-decoration: none;
+  }
+
+  .p-btn:active {
+    transform: scale(0.98);
+  }
+
+  .p-btn-primary {
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
+  }
+
+  .p-btn-primary:hover {
+    color: #ffffff;
+    filter: brightness(1.04);
+  }
+
+  .p-btn-secondary {
+    color: var(--neutral-900);
+    border-color: var(--neutral-300);
+    background: #ffffff;
+  }
+
+  .p-btn-secondary:hover {
+    color: var(--neutral-900);
+    border-color: var(--primary-400);
+    background: var(--primary-50);
+  }
+
+  .p-btn-dark {
+    color: #ffffff;
+    border-color: #1e293b;
+    background: #1e293b;
+  }
+
+  .p-btn-dark:hover {
+    color: #ffffff;
+    filter: brightness(1.05);
+  }
+
+  .choice-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .choice-card {
+    border: 1px solid var(--neutral-200);
+    border-radius: 14px;
+    padding: 20px;
+    background: #ffffff;
+    transition: border-color 0.2s ease-out, transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  }
+
+  .choice-card:hover {
+    border-color: var(--primary-400);
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow);
+  }
+
+  .choice-card h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    line-height: 22px;
+    font-weight: 600;
+    color: var(--neutral-900);
+  }
+
+  .choice-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+    color: var(--primary-700);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.2s ease-out;
+  }
+
+  .choice-link:hover {
+    text-decoration: underline;
+    transform: translateX(2px);
+  }
+
+  .pricing-header {
+    margin-bottom: 18px;
+  }
+
+  .pricing-header .section-title {
+    margin-bottom: 6px;
+  }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .pricing-card {
+    border: 1px solid var(--neutral-200);
+    border-radius: 16px;
+    background: #ffffff;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    transition: border-color 0.2s ease-out, transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  }
+
+  .pricing-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary-400);
+    box-shadow: var(--card-shadow);
+  }
+
+  .pricing-card.pro {
+    border: 2px solid var(--primary-500);
+  }
+
+  .plan-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .plan-name {
+    margin: 0;
+    font-size: 20px;
+    line-height: 26px;
+    font-weight: 600;
+    color: var(--neutral-900);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .badge-popular {
+    background: var(--primary-100);
+    color: var(--primary-700);
+  }
+
+  .badge-subtle {
+    background: var(--neutral-100);
+    color: var(--neutral-600);
+  }
+
+  .plan-note {
+    margin: 0 0 16px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--neutral-600);
+    max-width: 260px;
+  }
+
+  .price-row {
+    margin-bottom: 14px;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .price {
+    font-size: 36px;
+    line-height: 1;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--neutral-900);
+  }
+
+  .price-unit {
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    color: var(--neutral-500);
+  }
+
+  .feature-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 12px;
+  }
+
+  .feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--neutral-900);
+  }
+
+  .feature-item svg {
+    width: 16px;
+    height: 16px;
+    stroke-width: 1.5;
+    stroke: var(--success-600);
+    fill: none;
+    flex: 0 0 auto;
+    margin-top: 2px;
+  }
+
+  .plan-footer {
+    margin-top: auto;
+    padding-top: 20px;
+    display: grid;
+    gap: 8px;
+  }
+
+  .btn-note {
+    margin: 0;
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--neutral-500);
+  }
+
+  .generation-card {
+    display: grid;
+    gap: 12px;
+  }
+
+  .generation-main {
+    margin: 0;
+    padding: 16px;
+    border-radius: 12px;
+    background: var(--neutral-100);
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--neutral-900);
+  }
+
+  .generation-example {
+    margin: 0;
+    padding: 14px;
+    border: 1px dashed var(--neutral-300);
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--neutral-600);
+  }
+
+  .generation-total {
+    margin: 0;
+    padding: 14px;
+    border-radius: 12px;
+    background: var(--primary-50);
+    color: var(--primary-700);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .result-card {
+    border: 1px solid var(--neutral-200);
+    border-radius: 14px;
+    padding: 24px;
+    background: #ffffff;
+    transition: border-color 0.2s ease-out, transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  }
+
+  .result-card:hover {
+    border-color: var(--primary-400);
+    transform: translateY(-2px);
+    box-shadow: var(--card-shadow);
+  }
+
+  .result-value {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 700;
+    color: var(--success-600);
+  }
+
+  .result-label {
+    margin: 8px 0 0;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--neutral-600);
+  }
+
+  .example-accordion {
+    border: 1px solid var(--neutral-200);
+    border-radius: 16px;
+    background: #ffffff;
+    overflow: hidden;
+  }
+
+  .example-toggle {
+    width: 100%;
+    border: none;
+    background: #ffffff;
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 22px;
+    font-weight: 600;
+    color: var(--neutral-900);
+  }
+
+  .example-toggle:hover {
+    background: var(--neutral-50);
+  }
+
+  .chevron {
+    width: 16px;
+    height: 16px;
+    stroke-width: 1.5;
+    stroke: var(--neutral-500);
+    fill: none;
+    transition: transform 0.18s ease;
+    flex: 0 0 auto;
+  }
+
+  .example-accordion.is-open .chevron {
+    transform: rotate(180deg);
+  }
+
+  .example-content {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.22s ease, opacity 0.22s ease;
+  }
+
+  .example-inner {
+    padding: 0 20px 20px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .example-label {
+    margin: 0;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--neutral-500);
+  }
+
+  .example-post {
+    margin: 0;
+    border: 1px solid var(--neutral-200);
+    border-radius: 12px;
+    background: var(--neutral-50);
+    padding: 16px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--neutral-900);
+  }
+
+  .example-variant {
+    margin: 0;
+    border-left: 3px solid var(--primary-500);
+    border-radius: 12px;
+    background: var(--neutral-50);
+    padding: 16px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--neutral-900);
+  }
+
+  .faq-list {
+    border-radius: 16px;
+    background: #ffffff;
+  }
+
+  .faq-item {
+    border-bottom: 1px solid var(--neutral-200);
+  }
+
+  .faq-item:last-child {
+    border-bottom: none;
+  }
+
+  .faq-question {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 18px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 22px;
+    font-weight: 600;
+    color: var(--neutral-900);
+  }
+
+  .faq-item.is-open .faq-question .chevron {
+    transform: rotate(180deg);
+  }
+
+  .faq-answer {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.22s ease, opacity 0.22s ease;
+  }
+
+  .faq-answer p {
+    margin: 0;
+    padding: 0 0 18px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--neutral-600);
+  }
+
+  .bottom-cta {
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+  }
+
+  .bottom-cta h2 {
+    margin: 0;
+    font-size: clamp(24px, 3.8vw, 28px);
+    line-height: 1.15;
+    font-weight: 700;
+    color: var(--neutral-900);
+  }
+
+  .bottom-cta p {
+    margin: 12px auto 24px;
+    max-width: 620px;
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--neutral-600);
+  }
+
+  .bottom-cta .foot {
+    margin-top: 10px;
+    font-size: 12px;
+    line-height: 18px;
+    color: var(--neutral-500);
+  }
+
+  @media (max-width: 1024px) {
+    .landing-main {
+      padding: 24px;
+    }
+
+    .choice-grid,
+    .pricing-grid,
+    .results-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .pricing-card {
+      padding: 24px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .landing-main {
+      padding: 16px;
+    }
+
+    .p-panel {
+      padding: 20px;
+    }
+
+    .hero-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .p-btn {
+      width: 100%;
+    }
+
+    .bottom-cta {
+      padding: 28px 20px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition: none !important;
+      animation: none !important;
+    }
   }
 </style>
 
-<!-- Hero -->
-<section class="p2-hero">
-  <h1>{% if locale == 'en' %}Write LinkedIn comments faster, in your own style{% else %}Пиши комментарии в LinkedIn быстрее, своим стилем{% endif %}</h1>
-  <p class="sub">{% if locale == 'en' %}Add people to watchlist, catch new posts, get 3 comment variants in a minute.{% else %}Добавляешь людей в watchlist, ловишь новые посты, получаешь 3 варианта комментария за минуту.{% endif %}</p>
-  <p class="p2-hero-sub2">{% if locale == 'en' %}No LinkedIn connection: add profiles, get new posts, click Generate.{% else %}Без подключения LinkedIn: добавил людей в watchlist, получил новые посты, нажал Generate.{% endif %}</p>
-  <div class="p2-hero-bullets">
-    <span>{% if locale == 'en' %}$0 today{% else %}$0 сегодня{% endif %}</span>
-    <span>{% if locale == 'en' %}Card needed for trial{% else %}Карта нужна для trial{% endif %}</span>
-    <span>{% if locale == 'en' %}Cancel anytime{% else %}Отмена в любой момент{% endif %}</span>
-    <span>{% if locale == 'en' %}We'll remind 24h before charge{% else %}Напомним за 24 часа до списания{% endif %}</span>
-  </div>
-  <div class="p2-hero-cta-block">
-    <div class="p2-hero-btns">
-      <a href="/login" class="btn btn-primary">{% if locale == 'en' %}Start Pro - 7 days free{% else %}Начать Pro - 7 дней бесплатно{% endif %}</a>
-      <a href="#p2-compare" class="btn btn-secondary">{% if locale == 'en' %}Compare plans{% else %}Сравнить планы{% endif %}</a>
+<div class="pricing-page">
+  <section class="hero">
+    <div class="hero-top-note">
+      <span class="pill">
+        {% if locale == 'en' %}
+          No LinkedIn connection: add profiles, track posts, generate comments.
+        {% else %}
+          Без подключения LinkedIn: добавьте профили, отслеживайте посты, генерируйте комментарии.
+        {% endif %}
+      </span>
     </div>
-    <div class="p2-hero-micro-wrap">
-      <p>{% if locale == 'en' %}$0 today. Card needed for trial. We charge $99 in 7 days if you don't cancel.{% else %}$0 сегодня. Карта нужна для trial. Спишем $99 через 7 дней, если не отменишь.{% endif %}</p>
-      <p>{% if locale == 'en' %}We'll remind you 24 hours before charge.{% else %}Напомним за 24 часа до списания.{% endif %}</p>
-    </div>
-  </div>
-  <p class="p2-hero-demo"><a href="mailto:sales@example.com?subject=Demo%20Request">{% if locale == 'en' %}Request demo{% else %}Запросить демо{% endif %}</a></p>
-</section>
 
-<!-- Example block -->
-<div class="p2-example">
-  <div class="p2-example-head">{% if locale == 'en' %}See example{% else %}Смотреть пример{% endif %}</div>
-  <div class="p2-example-body">
-    <div class="p2-example-label">{% if locale == 'en' %}Post:{% else %}Пост:{% endif %}</div>
-    <div class="p2-example-post">{% if locale == 'en' %}«We just closed our Series A. 3 years of building in stealth, 50 people on the team, and we're just getting started.»{% else %}«Закрыли раунд A. 3 года в стелсе, 50 человек в команде - и это только начало.»{% endif %}</div>
-    <div class="p2-example-label">{% if locale == 'en' %}Variant 1 (short):{% else %}Вариант 1 (short):{% endif %}</div>
-    <div class="p2-example-variant">{% if locale == 'en' %}Congratulations! Huge milestone.{% else %}Поздравляю! Серьёзная веха.{% endif %}</div>
-    <div class="p2-example-label">{% if locale == 'en' %}Variant 2 (medium):{% else %}Вариант 2 (medium):{% endif %}</div>
-    <div class="p2-example-variant">{% if locale == 'en' %}Congratulations on the round! Building in stealth for 3 years - that takes discipline. Best of luck with scaling.{% else %}Поздравляю с раундом! 3 года в стелсе - это про дисциплину. Удачи со скейлингом.{% endif %}</div>
-    <div class="p2-example-label">{% if locale == 'en' %}Variant 3 (long):{% else %}Вариант 3 (long):{% endif %}</div>
-    <div class="p2-example-variant">{% if locale == 'en' %}Congratulations! 50 people in stealth is really impressive. What was the biggest lesson from building the team before the launch? And how did you keep everyone aligned without external validation for so long?{% else %}Поздравляю! 50 человек в стелсе - серьёзно. Что было главным уроком при сборке команды до запуска? И как удавалось держать всех в фокусе без внешней валидации так долго?{% endif %}</div>
-    <div class="p2-example-cta"><a href="/login" class="btn">{% if locale == 'en' %}Do the same in your style{% else %}Сделать так же в своем стиле{% endif %}</a></div>
-  </div>
-</div>
+    <h1>{% if locale == 'en' %}Premium plans for fast, consistent LinkedIn commenting{% else %}Премиальные тарифы для быстрого и системного комментирования в LinkedIn{% endif %}</h1>
+    <p class="hero-subtitle">{% if locale == 'en' %}Clear plan hierarchy, transparent trial terms, and the fastest path to daily visibility with Pro.{% else %}Четкая иерархия тарифов, прозрачные условия trial и самый быстрый путь к ежедневной видимости через Pro.{% endif %}</p>
 
-<!-- Trust strip -->
-<div class="p2-trust">
-  <span class="p2-trust-badge">{% if locale == 'en' %}No LinkedIn connection required{% else %}LinkedIn подключать не нужно{% endif %}</span>
-  <span class="p2-trust-badge">{% if locale == 'en' %}No autoposting: you control every word{% else %}Без автопостинга: ты контролируешь каждое слово{% endif %}</span>
-  <span class="p2-trust-badge">{% if locale == 'en' %}Cancel anytime{% else %}Отмена в любой момент{% endif %}</span>
-  <span class="p2-trust-badge">{% if locale == 'en' %}Secure payments (Stripe){% else %}Оплата безопасно (Stripe){% endif %}</span>
-  <span class="p2-trust-badge">{% if locale == 'en' %}Data isolation{% else %}Данные пользователей изолированы{% endif %}</span>
-  <span class="p2-trust-badge">RU/EN</span>
-</div>
+    <div class="hero-checks">
+      <span class="pill">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+        {% if locale == 'en' %}$0 today{% else %}$0 сегодня{% endif %}
+      </span>
+      <span class="pill">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+        {% if locale == 'en' %}Card required for trial{% else %}Карта нужна для trial{% endif %}
+      </span>
+      <span class="pill">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+        {% if locale == 'en' %}Cancel anytime{% else %}Отмена в любой момент{% endif %}
+      </span>
+      <span class="pill">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+        {% if locale == 'en' %}Reminder 24h before charge{% else %}Напоминание за 24 часа до списания{% endif %}
+      </span>
+    </div>
 
-<!-- How to choose -->
-<section class="p2-choose">
-  <h2>{% if locale == 'en' %}Choice in 10 seconds{% else %}Выбор за 10 секунд{% endif %}</h2>
-  <div class="p2-choose-segments">
-    <div class="p2-choose-card">
-      <h3>{% if locale == 'en' %}Just want to check format and your style{% else %}Хочешь просто проверить формат и свой стиль{% endif %}</h3>
-      <span class="rec">→ Starter</span>
+    <div class="hero-actions">
+      <a href="/login" class="p-btn p-btn-primary">{% if locale == 'en' %}Start Pro - 7 days free{% else %}Начать Pro - 7 дней бесплатно{% endif %}</a>
+      <a href="#plans" class="p-btn p-btn-secondary">{% if locale == 'en' %}Compare plans{% else %}Сравнить планы{% endif %}</a>
     </div>
-    <div class="p2-choose-card">
-      <h3>{% if locale == 'en' %}Comment almost every day, need to react fast{% else %}Комментишь почти каждый день и важно реагировать быстро{% endif %}</h3>
-      <span class="rec">→ Pro</span>
-    </div>
-    <div class="p2-choose-card">
-      <h3>{% if locale == 'en' %}Team, multiple voices, need control and import{% else %}Команда, несколько голосов, нужен контроль и импорт{% endif %}</h3>
-      <span class="rec">→ Enterprise</span>
-    </div>
-  </div>
-  <p class="p2-choose-example">{% if locale == 'en' %}Pro usually enough for a working rhythm: 300 generations = 300 posts = 900 comment variants.{% else %}Pro обычно хватает для ритма: 300 генераций = 300 постов = 900 вариантов комментария.{% endif %}</p>
-</section>
 
-<!-- Pricing cards -->
-<div class="p2-cards">
-  <div class="p2-card">
-    <h3>Starter</h3>
-    <p class="for-who">{% if locale == 'en' %}Check how your style sounds{% else %}Проверить, как звучит твой стиль{% endif %}</p>
-    <ul class="value-bullets">
-      <li>{% if locale == 'en' %}Enough to understand the mechanic{% else %}Хватает, чтобы понять механику{% endif %}</li>
-      <li>{% if locale == 'en' %}For regular use, most choose Pro{% else %}Для регулярного использования почти всегда берут Pro{% endif %}</li>
-      <li>{% if locale == 'en' %}10 profiles in watchlist{% else %}10 профилей в watchlist{% endif %}</li>
-      <li>{% if locale == 'en' %}3 priority profiles{% else %}3 приоритетных профиля{% endif %}</li>
-      <li>{% if locale == 'en' %}30 comment generations in 7 days{% else %}30 генераций комментариев за 7 дней{% endif %}</li>
-    </ul>
-    <div class="diff">{% if locale == 'en' %}For test only{% else %}Только для теста{% endif %}</div>
-    <div class="p2-card-footer">
-      <div class="price-row">
-        <span class="price">{% if locale == 'en' %}7 days free{% else %}7 дней бесплатно{% endif %}</span>
+    <p class="hero-micro">{% if locale == 'en' %}$0 today. If not cancelled, Pro is billed at $99 after 7 days.{% else %}$0 сегодня. Если не отменить, через 7 дней спишется $99 за Pro.{% endif %}</p>
+  </section>
+
+  <section class="p-panel">
+    <h2 class="section-title">{% if locale == 'en' %}Choice in 10 seconds{% else %}Выбор за 10 секунд{% endif %}</h2>
+    <div class="choice-grid">
+      <article class="choice-card">
+        <h3>{% if locale == 'en' %}Need to validate your tone and format{% else %}Нужно проверить формат и ваш стиль{% endif %}</h3>
+        <p class="muted">{% if locale == 'en' %}Short test cycle before regular work.{% else %}Короткий тестовый цикл перед регулярной работой.{% endif %}</p>
+        <a class="choice-link" href="#starter">→ Starter</a>
+      </article>
+      <article class="choice-card">
+        <h3>{% if locale == 'en' %}Daily comments and fast reaction matter{% else %}Нужны ежедневные комментарии и быстрая реакция{% endif %}</h3>
+        <p class="muted">{% if locale == 'en' %}Best value for consistent growth and speed.{% else %}Лучший баланс ценности, скорости и стабильного роста.{% endif %}</p>
+        <a class="choice-link" href="#pro">→ Pro</a>
+      </article>
+      <article class="choice-card">
+        <h3>{% if locale == 'en' %}Team workflow, multiple voices, control{% else %}Командный процесс, несколько голосов, контроль{% endif %}</h3>
+        <p class="muted">{% if locale == 'en' %}For scaled collaboration and managed execution.{% else %}Для масштабной совместной работы и управляемого процесса.{% endif %}</p>
+        <a class="choice-link" href="#enterprise">→ Enterprise</a>
+      </article>
+    </div>
+  </section>
+
+  <section class="p-panel" id="plans">
+    <div class="pricing-header">
+      <h2 class="section-title">{% if locale == 'en' %}Pricing plans{% else %}Тарифные планы{% endif %}</h2>
+      <p class="muted">{% if locale == 'en' %}Pro is optimized for regular usage and fastest conversion to visible outcomes.{% else %}Pro оптимизирован под регулярное использование и самый быстрый выход в измеримый результат.{% endif %}</p>
+    </div>
+
+    <div class="pricing-grid">
+      <article class="pricing-card" id="starter">
+        <div class="plan-head">
+          <h3 class="plan-name">Starter</h3>
+          <span class="badge badge-subtle">{% if locale == 'en' %}Test{% else %}Тест{% endif %}</span>
+        </div>
+        <p class="plan-note">{% if locale == 'en' %}Entry plan to check mechanics and your style fit.{% else %}Стартовый план, чтобы проверить механику и соответствие вашему стилю.{% endif %}</p>
+
+        <div class="price-row">
+          <span class="price">$0</span>
+          <span class="price-unit">/{% if locale == 'en' %}7 days{% else %}7 дней{% endif %}</span>
+        </div>
+
+        <ul class="feature-list">
+          <li class="feature-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>{% if locale == 'en' %}10 profiles in watchlist{% else %}10 профилей в watchlist{% endif %}</li>
+          <li class="feature-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>{% if locale == 'en' %}3 priority profiles{% else %}3 приоритетных профиля{% endif %}</li>
+          <li class="feature-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>{% if locale == 'en' %}30 generations in 7 days{% else %}30 генераций за 7 дней{% endif %}</li>
+          <li class="feature-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>{% if locale == 'en' %}Basic feed monitoring{% else %}Базовый мониторинг ленты{% endif %}</li>
+        </ul>
+
+        <div class="plan-footer">
+          <a href="/login" class="p-btn p-btn-secondary">{% if locale == 'en' %}Try Starter{% else %}Попробовать Starter{% endif %}</a>
+          <p class="btn-note">{% if locale == 'en' %}Card required for trial. Cancel before day 7 to avoid charge.{% else %}Карта нужна для trial. Отмените до 7 дня, чтобы не было списания.{% endif %}</p>
+        </div>
+      </article>
+
+      <article class="pricing-card pro" id="pro">
+        <div class="plan-head">
+          <h3 class="plan-name">Pro</h3>
+          <span class="badge badge-popular">{% if locale == 'en' %}Popular{% else %}Популярный{% endif %}</span>
+        </div>
+        <p class="plan-note">{% if locale == 'en' %}Main plan for daily decisions, fast reactions, and stable publishing rhythm.{% else %}Основной план для ежедневных решений, быстрой реакции и стабильного ритма публикаций.{% endif %}</p>
+
+        <div class="price-row">
+          <span class="price">$99</span>
+          <span class="price-unit">/{% if locale == 'en' %}mo{% else %}мес{% endif %}</span>
+        </div>
+
+        <ul class="feature-list">
+          <li class="feature-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>{% if locale == 'en' %}50 profiles in watchlist{% else %}50 профилей в watchlist{% endif %}</li>
+          <li class="feature-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>{% if locale == 'en' %}20 priority profiles{% else %}20 приоритетных профилей{% endif %}</li>
+          <li class="feature-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>{% if locale == 'en' %}2 personas (e.g. founder + sales){% else %}2 персоны (например, founder + sales){% endif %}</li>
+          <li class="feature-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>{% if locale == 'en' %}300 generations per month{% else %}300 генераций в месяц{% endif %}</li>
+          <li class="feature-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>{% if locale == 'en' %}180-day history + basic analytics{% else %}История 180 дней + базовая аналитика{% endif %}</li>
+        </ul>
+
+        <div class="plan-footer">
+          <a href="/login" class="p-btn p-btn-primary">{% if locale == 'en' %}Start Pro - 7 days free{% else %}Начать Pro - 7 дней бесплатно{% endif %}</a>
+          <p class="btn-note">{% if locale == 'en' %}$0 today, then $99/month after trial if not cancelled.{% else %}$0 сегодня, затем $99/мес после trial, если не отменить.{% endif %}</p>
+        </div>
+      </article>
+
+      <article class="pricing-card" id="enterprise">
+        <div class="plan-head">
+          <h3 class="plan-name">Enterprise</h3>
+          <span class="badge badge-subtle">{% if locale == 'en' %}For teams{% else %}Для команд{% endif %}</span>
+        </div>
+        <p class="plan-note">{% if locale == 'en' %}Managed collaboration, governance, and scale for multiple operators.{% else %}Управляемая совместная работа, контроль и масштаб для нескольких операторов.{% endif %}</p>
+
+        <div class="price-row">
+          <span class="price">$499</span>
+          <span class="price-unit">/{% if locale == 'en' %}mo{% else %}мес{% endif %}</span>
+        </div>
+
+        <ul class="feature-list">
+          <li class="feature-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>{% if locale == 'en' %}100 watchlist profiles, 50 priority{% else %}100 профилей watchlist, 50 приоритетных{% endif %}</li>
+          <li class="feature-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>{% if locale == 'en' %}5 personas + extended analytics{% else %}5 персон + расширенная аналитика{% endif %}</li>
+          <li class="feature-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>{% if locale == 'en' %}Inbox, import/export, team onboarding{% else %}Inbox, импорт/экспорт, обучение команды{% endif %}</li>
+          <li class="feature-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>{% if locale == 'en' %}Priority support and SLA options{% else %}Приоритетная поддержка и SLA-опции{% endif %}</li>
+        </ul>
+
+        <div class="plan-footer">
+          <a href="mailto:sales@example.com?subject=Demo%20Request" class="p-btn p-btn-dark">{% if locale == 'en' %}Request demo{% else %}Запросить демо{% endif %}</a>
+          <p class="btn-note">{% if locale == 'en' %}Invoice and onboarding setup available.{% else %}Доступны инвойс и настройка онбординга.{% endif %}</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="p-panel generation-card">
+    <h2 class="section-title">{% if locale == 'en' %}What counts as a generation?{% else %}Что считается генерацией?{% endif %}</h2>
+    <p class="generation-main">{% if locale == 'en' %}1 generation = 1 post processed with 3 comment variants (short / medium / long).{% else %}1 генерация = обработка 1 поста с 3 вариантами комментария (short / medium / long).{% endif %}</p>
+    <p class="generation-example">{% if locale == 'en' %}Example: 1 post -> Generate -> 3 variants returned = 1 generation used.{% else %}Пример: 1 пост -> Generate -> получили 3 варианта = использована 1 генерация.{% endif %}</p>
+    <p class="generation-total">{% if locale == 'en' %}300 generations in Pro means up to 300 posts handled monthly.{% else %}300 генераций в Pro означает до 300 обработанных постов в месяц.{% endif %}</p>
+  </section>
+
+  <section class="p-panel">
+    <h2 class="section-title">{% if locale == 'en' %}Results{% else %}Результаты{% endif %}</h2>
+    <div class="results-grid">
+      <article class="result-card">
+        <p class="result-value">12 -> 28</p>
+        <p class="result-label">{% if locale == 'en' %}Comments per week after switching to consistent workflow{% else %}Комментариев в неделю после перехода на системный workflow{% endif %}</p>
+      </article>
+      <article class="result-card">
+        <p class="result-value">+40%</p>
+        <p class="result-label">{% if locale == 'en' %}Reply rate on outbound comments{% else %}Рост reply-rate на исходящие комментарии{% endif %}</p>
+      </article>
+      <article class="result-card">
+        <p class="result-value">6h -> 2h</p>
+        <p class="result-label">{% if locale == 'en' %}Average reaction speed to new priority posts{% else %}Средняя скорость реакции на новые приоритетные посты{% endif %}</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="p-panel">
+    <div class="example-accordion" id="example-accordion">
+      <button class="example-toggle" type="button" aria-expanded="false" aria-controls="example-content">
+        <span>{% if locale == 'en' %}See example{% else %}Смотреть пример{% endif %}</span>
+        <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="example-content" id="example-content">
+        <div class="example-inner">
+          <p class="example-label">{% if locale == 'en' %}POST{% else %}ПОСТ{% endif %}</p>
+          <p class="example-post">{% if locale == 'en' %}"We just closed our Series A. 3 years of building in stealth, 50 people on the team, and we're just getting started."{% else %}"Мы закрыли раунд A. 3 года строили продукт в стелсе, команда 50 человек, и это только начало."{% endif %}</p>
+
+          <p class="example-label">{% if locale == 'en' %}VARIANT 1{% else %}ВАРИАНТ 1{% endif %}</p>
+          <p class="example-variant">{% if locale == 'en' %}Congrats on the round, huge milestone and strong execution!{% else %}Поздравляю с раундом, это сильная веха и отличное исполнение!{% endif %}</p>
+
+          <p class="example-label">{% if locale == 'en' %}VARIANT 2{% else %}ВАРИАНТ 2{% endif %}</p>
+          <p class="example-variant">{% if locale == 'en' %}Impressive discipline: three years in stealth and a 50-person team. Good luck with scaling the next stage.{% else %}Впечатляет дисциплина: три года в стелсе и команда из 50 человек. Удачи в масштабировании следующего этапа.{% endif %}</p>
+
+          <p class="example-label">{% if locale == 'en' %}VARIANT 3{% else %}ВАРИАНТ 3{% endif %}</p>
+          <p class="example-variant">{% if locale == 'en' %}Big congratulations. What was the hardest part of keeping product and team alignment before public launch?{% else %}Большие поздравления. Что оказалось самым сложным в синхронизации продукта и команды до публичного запуска?{% endif %}</p>
+
+          <a href="/login" class="p-btn p-btn-primary">{% if locale == 'en' %}Generate in your own style{% else %}Сгенерировать в своем стиле{% endif %}</a>
+        </div>
       </div>
-      <p class="price-note">{% if locale == 'en' %}Card required for trial{% else %}Карта нужна для trial{% endif %}</p>
-      <a href="#" class="limits-toggle">{% if locale == 'en' %}Show limits{% else %}Показать лимиты{% endif %} ▼</a>
-      <div class="limits">10 профилей в watchlist, 3 приоритетных, проверка до 5ч, 30 комментов/7д, 10 постов/7д, 2 RSS, 3 Reddit</div>
-      <a href="/login" class="btn btn-outline">{% if locale == 'en' %}Try Starter{% else %}Попробовать Starter{% endif %}</a>
-      <p class="btn-note">{% if locale == 'en' %}$0 today. Card needed. Can cancel before end of day 7.{% else %}$0 сегодня. Нужна карта. Можно отменить до конца 7-го дня.{% endif %}</p>
     </div>
-  </div>
+  </section>
 
-  <div class="p2-card popular">
-    <span class="badge">{% if locale == 'en' %}Popular{% else %}Популярный{% endif %}</span>
-    <h3>Pro</h3>
-    <p class="for-who">{% if locale == 'en' %}Comment regularly for networking and sales{% else %}Регулярно комментишь ради нетворка и продаж{% endif %}</p>
-    <ul class="value-bullets">
-      <li>{% if locale == 'en' %}20 priority profiles: react earlier{% else %}20 приоритетных профилей: реагируешь раньше{% endif %}</li>
-      <li>{% if locale == 'en' %}2 personas: founder and sales, different styles{% else %}2 персоны: фаундер и sales, разные стили{% endif %}</li>
-      <li>{% if locale == 'en' %}300 generations = 300 posts = 900 comment variants{% else %}300 генераций = 300 постов = 900 вариантов комментария{% endif %}</li>
-      <li>{% if locale == 'en' %}180-day history + basic analytics{% else %}История 180 дней + базовая аналитика{% endif %}</li>
-    </ul>
-    <div class="diff p2-diff-pro">{% if locale == 'en' %}20 priority + 2 personas{% else %}20 приоритетных + 2 персоны{% endif %}</div>
-    <div class="p2-card-footer">
-      <div class="price-row">
-        <span class="price">$99</span>
-        <span class="price-unit">/{% if locale == 'en' %}mo{% else %}мес{% endif %}</span>
-      </div>
-      <p class="price-note">{% if locale == 'en' %}Up to 900 comment variants per month{% else %}Это до 900 вариантов комментария в месяц{% endif %}</p>
-      <a href="#" class="limits-toggle">{% if locale == 'en' %}Show limits{% else %}Показать лимиты{% endif %} ▼</a>
-      <div class="limits">50 профилей в watchlist, 20 приоритетных, проверка до 3ч, 300 комментов/мес, 30 постов/мес, 2 персоны, 5 RSS, 10 Reddit, 180 дней</div>
-      <a href="/login" class="btn btn-primary">{% if locale == 'en' %}Start Pro - 7 days free{% else %}Начать Pro - 7 дней бесплатно{% endif %}</a>
-      <p class="btn-note">{% if locale == 'en' %}$0 today. $99 in 7 days if not cancelled. We'll remind 24h before.{% else %}$0 сегодня. $99 через 7 дней, если не отменить. Напомним за сутки.{% endif %}</p>
-    </div>
-  </div>
+  <section class="p-panel">
+    <h2 class="section-title">FAQ</h2>
+    <div class="faq-list" id="faq-list">
+      <article class="faq-item">
+        <button class="faq-question" type="button" aria-expanded="false">
+          <span>{% if locale == 'en' %}Is a card required for trial?{% else %}Нужна ли карта для trial?{% endif %}</span>
+          <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-answer"><p>{% if locale == 'en' %}Yes. Trial starts at $0, card is required to activate paid-ready access.{% else %}Да. Trial начинается с $0, карта нужна для активации доступа с готовностью к платному тарифу.{% endif %}</p></div>
+      </article>
 
-  <div class="p2-card">
-    <span class="badge">{% if locale == 'en' %}For teams{% else %}Для команд{% endif %}</span>
-    <h3>Enterprise</h3>
-    <p class="for-who">{% if locale == 'en' %}Team, control, multiple voices{% else %}Команда, контроль, несколько голосов{% endif %}</p>
-    <ul class="value-bullets">
-      <li>{% if locale == 'en' %}Inbox: don't lose replies to your comments{% else %}Inbox: не теряешь ответы на комментарии{% endif %}</li>
-      <li>{% if locale == 'en' %}Import/export + team training{% else %}Импорт/экспорт + обучение команды{% endif %}</li>
-      <li>{% if locale == 'en' %}Extended analytics + priority support{% else %}Расширенная аналитика + приоритетная поддержка{% endif %}</li>
-    </ul>
-    <div class="diff">{% if locale == 'en' %}Inbox + training + import{% else %}Inbox + обучение + импорт{% endif %}</div>
-    <div class="p2-card-footer">
-      <div class="price-row">
-        <span class="price">$499</span>
-        <span class="price-unit">/{% if locale == 'en' %}mo{% else %}мес{% endif %}</span>
-      </div>
-      <p class="price-note"></p>
-      <a href="#" class="limits-toggle">{% if locale == 'en' %}Show limits{% else %}Показать лимиты{% endif %} ▼</a>
-      <div class="limits">100 профилей в watchlist, 50 приоритетных, проверка до 1ч, 1000 комментов/мес, 100 постов/мес, 5 персон, 20 RSS, 20 Reddit, 730 дней, inbox, обучение, экспорт/импорт</div>
-      <a href="mailto:sales@example.com?subject=Demo%20Request" class="btn btn-secondary">{% if locale == 'en' %}Request demo{% else %}Запросить демо{% endif %}</a>
-      <p class="btn-note">{% if locale == 'en' %}Invoice, onboarding, access. We reply within 24h.{% else %}Инвойс, внедрение, доступы. Ответим в течение 24 часов.{% endif %}</p>
-    </div>
-  </div>
-</div>
+      <article class="faq-item">
+        <button class="faq-question" type="button" aria-expanded="false">
+          <span>{% if locale == 'en' %}When does billing start?{% else %}Когда начинается списание?{% endif %}</span>
+          <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-answer"><p>{% if locale == 'en' %}For Pro, billing starts after 7 trial days if you keep the subscription active.{% else %}Для Pro списание начинается через 7 дней trial, если подписка остается активной.{% endif %}</p></div>
+      </article>
 
-<!-- What counts as generation -->
-<section class="p2-generation">
-  <h2>{% if locale == 'en' %}What counts as a generation?{% else %}Что считается генерацией?{% endif %}</h2>
-  <p class="p2-generation-def">{% if locale == 'en' %}1 generation = 1 post and 3 comment variants at once (short/medium/long).{% else %}1 генерация = 1 пост и сразу 3 варианта комментария (short/medium/long).{% endif %}</p>
-  <div class="example">{% if locale == 'en' %}Example: Generate on 1 post → 3 variants → 1 generation.{% else %}Пример: Generate на 1 пост → 3 варианта → 1 генерация.{% endif %}</div>
-  <p class="p2-generation-total">{% if locale == 'en' %}Total: 300 generations = up to 300 posts per month.{% else %}Итого: 300 генераций = до 300 постов в месяц.{% endif %}</p>
-</section>
+      <article class="faq-item">
+        <button class="faq-question" type="button" aria-expanded="false">
+          <span>{% if locale == 'en' %}Can I cancel anytime?{% else %}Можно отменить в любой момент?{% endif %}</span>
+          <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-answer"><p>{% if locale == 'en' %}Yes. Cancel before trial ends and no paid charge is applied.{% else %}Да. Отмените до завершения trial, и платного списания не будет.{% endif %}</p></div>
+      </article>
 
-<!-- Compare (accordions) -->
-<section class="p2-compare" id="p2-compare">
-  <h2>{% if locale == 'en' %}Compare features{% else %}Сравнить фичи{% endif %}</h2>
-  <p class="p2-compare-intro">{% if locale == 'en' %}Comparison table in 30 seconds.{% else %}Таблица отличий за 30 секунд.{% endif %}</p>
-  <div class="p2-compare-pro-highlights">
-    <h3>{% if locale == 'en' %}What really matters for Pro{% else %}Что реально важно для Pro{% endif %}</h3>
-    <ul>
-      <li><a href="#p2-compare" class="p2-compare-anchor">50 {% if locale == 'en' %}profiles in watchlist{% else %}профилей в watchlist{% endif %}</a></li>
-      <li><a href="#p2-compare" class="p2-compare-anchor">20 {% if locale == 'en' %}priority profiles{% else %}приоритетных{% endif %}</a></li>
-      <li><a href="#p2-compare" class="p2-compare-anchor">2 {% if locale == 'en' %}personas{% else %}персоны{% endif %}</a></li>
-      <li><a href="#p2-compare" class="p2-compare-anchor">300 {% if locale == 'en' %}generations{% else %}генераций{% endif %}</a></li>
-    </ul>
-  </div>
-  <div class="p2-compare-section is-open">
-    <div class="p2-compare-section-head">{% if locale == 'en' %}Monitoring{% else %}Мониторинг{% endif %}</div>
-    <div class="p2-compare-section-body">
-      <table class="p2-compare-table">
-        <tr><th></th><th>Starter</th><th class="col-pro">Pro</th><th>Enterprise</th></tr>
-        <tr><td>{% if locale == 'en' %}Profiles in watchlist{% else %}Профили в watchlist{% endif %}</td><td>10</td><td class="col-pro">50</td><td>100</td></tr>
-        <tr><td>{% if locale == 'en' %}Priority profiles{% else %}Приоритетные профили{% endif %}</td><td>3</td><td class="col-pro">20</td><td>50</td></tr>
-        <tr><td>{% if locale == 'en' %}New posts check for priority{% else %}Проверка новых постов у приоритетных{% endif %}</td><td>{% if locale == 'en' %}up to 5h{% else %}до 5ч{% endif %}</td><td class="col-pro">{% if locale == 'en' %}up to 3h{% else %}до 3ч{% endif %}</td><td>{% if locale == 'en' %}up to 1h{% else %}до 1ч{% endif %}</td></tr>
-      </table>
-    </div>
-  </div>
-  <div class="p2-compare-section">
-    <div class="p2-compare-section-head">{% if locale == 'en' %}Generations & Personas{% else %}Генерации и персоны{% endif %}</div>
-    <div class="p2-compare-section-body">
-      <table class="p2-compare-table">
-        <tr><th></th><th>Starter</th><th class="col-pro">Pro</th><th>Enterprise</th></tr>
-        <tr><td>{% if locale == 'en' %}Comments/month{% else %}Комментов/мес{% endif %}</td><td>30/7д</td><td class="col-pro">300/мес</td><td>1000/мес</td></tr>
-        <tr><td>{% if locale == 'en' %}Posts/month{% else %}Постов/мес{% endif %}</td><td>10/7д</td><td class="col-pro">30/мес</td><td>100/мес</td></tr>
-        <tr><td>{% if locale == 'en' %}Personas{% else %}Персоны{% endif %}</td><td>-</td><td class="col-pro">2</td><td>5</td></tr>
-      </table>
-    </div>
-  </div>
-  <div class="p2-compare-section">
-    <div class="p2-compare-section-head">{% if locale == 'en' %}Team features{% else %}Командные фичи{% endif %}</div>
-    <div class="p2-compare-section-body">
-      <table class="p2-compare-table">
-        <tr><th></th><th>Starter</th><th class="col-pro">Pro</th><th>Enterprise</th></tr>
-        <tr><td>Inbox / {% if locale == 'en' %}Training{% else %}Обучение{% endif %}</td><td>-</td><td class="col-pro">-</td><td class="yes">✓</td></tr>
-        <tr><td>{% if locale == 'en' %}Export / Import{% else %}Экспорт / Импорт{% endif %}</td><td>-</td><td class="col-pro">-</td><td class="yes">✓</td></tr>
-        <tr><td>{% if locale == 'en' %}Priority support{% else %}Приоритетная поддержка{% endif %}</td><td>-</td><td class="col-pro">-</td><td class="yes">✓</td></tr>
-      </table>
-    </div>
-  </div>
-</section>
+      <article class="faq-item">
+        <button class="faq-question" type="button" aria-expanded="false">
+          <span>{% if locale == 'en' %}Does this connect to LinkedIn account?{% else %}Это подключается к аккаунту LinkedIn?{% endif %}</span>
+          <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-answer"><p>{% if locale == 'en' %}No. No LinkedIn credentials required, and no autoposting on your behalf.{% else %}Нет. Логин/пароль LinkedIn не требуется, автопостинг за вас не выполняется.{% endif %}</p></div>
+      </article>
 
-<!-- Social proof -->
-<section class="p2-social">
-  <h2>{% if locale == 'en' %}Results{% else %}Результаты{% endif %}</h2>
-  <p class="p2-social-context">{% if locale == 'en' %}Example from beta, 2 weeks of use.{% else %}Пример из беты, 2 недели использования.{% endif %}</p>
-  <div class="p2-social-cards">
-    <div class="p2-social-card">
-      <h3>{% if locale == 'en' %}Beta user - Founder{% else %}Бета-пользователь - Фаундер{% endif %}</h3>
-      <div class="p2-social-metrics">
-        <div class="p2-social-metric"><span class="label">{% if locale == 'en' %}Comments/week{% else %}Комментов/нед{% endif %}</span><br><span class="value">12 → 28</span></div>
-        <div class="p2-social-metric"><span class="label">{% if locale == 'en' %}Reaction speed{% else %}Скорость реакции{% endif %}</span><br><span class="value">~2ч</span></div>
-      </div>
-      <p>{% if locale == 'en' %}Before: "I missed posts, commented late." Now: "I see new posts in the morning, 3 variants ready."{% else %}До: «Пропускал посты, комментировал с опозданием». После: «Вижу новые посты утром, 3 варианта готовы».{% endif %}</p>
+      <article class="faq-item">
+        <button class="faq-question" type="button" aria-expanded="false">
+          <span>{% if locale == 'en' %}Will I get a reminder before charge?{% else %}Будет ли напоминание перед списанием?{% endif %}</span>
+          <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-answer"><p>{% if locale == 'en' %}Yes. We send a reminder 24 hours before the billing event.{% else %}Да. Мы отправляем напоминание за 24 часа до списания.{% endif %}</p></div>
+      </article>
     </div>
-    <div class="p2-social-card">
-      <h3>{% if locale == 'en' %}Beta user - Sales{% else %}Бета-пользователь - Sales{% endif %}</h3>
-      <div class="p2-social-metrics">
-        <div class="p2-social-metric"><span class="label">{% if locale == 'en' %}% replies{% else %}% ответов{% endif %}</span><br><span class="value">+40%</span></div>
-        <div class="p2-social-metric"><span class="label">{% if locale == 'en' %}Comments/week{% else %}Комментов/нед{% endif %}</span><br><span class="value">5 → 18</span></div>
-      </div>
-      <p>{% if locale == 'en' %}"Different tone for founder vs sales - 2 personas solved it."{% else %}«Разный тон для фаундера и sales - 2 персоны решили».{% endif %}</p>
-    </div>
-  </div>
-</section>
+  </section>
 
-<!-- Security -->
-<div class="p2-security">
-  <h3>{% if locale == 'en' %}Security{% else %}Безопасность{% endif %}</h3>
-  <ul>
-    <li>{% if locale == 'en' %}We don't ask for LinkedIn login or password{% else %}Мы не просим логин/пароль LinkedIn{% endif %}</li>
-    <li>{% if locale == 'en' %}We don't publish for you{% else %}Мы не публикуем за вас{% endif %}</li>
-    <li>{% if locale == 'en' %}Data can be deleted on request{% else %}Данные можно удалить по запросу{% endif %}</li>
-  </ul>
-</div>
-
-<!-- FAQ -->
-<section class="p2-faq">
-  <h2>{% if locale == 'en' %}FAQ{% else %}Вопросы{% endif %}</h2>
-  <dl class="p2-faq-list">
-    <div class="p2-faq-item">
-      <dt>{% if locale == 'en' %}Is a card required for trial?{% else %}Нужна ли карта на trial?{% endif %}</dt>
-      <dd>{% if locale == 'en' %}Yes. This is a standard trial with card. No charges on the first day.{% else %}Да. Это обычный trial с картой. Списаний в первый день нет.{% endif %}</dd>
-    </div>
-    <div class="p2-faq-item">
-      <dt>{% if locale == 'en' %}When will I be charged?{% else %}Когда спишутся деньги?{% endif %}</dt>
-      <dd>{% if locale == 'en' %}7 days after trial start. Amount: $99 for Pro.{% else %}Через 7 дней после старта trial. Сумма: $99 за Pro.{% endif %}</dd>
-    </div>
-    <div class="p2-faq-item">
-      <dt>{% if locale == 'en' %}Can I cancel anytime?{% else %}Можно ли отменить в любой момент?{% endif %}</dt>
-      <dd>{% if locale == 'en' %}Yes. Cancel before the end of day 7 and no charge will be made.{% else %}Да. Отменяешь до конца 7-го дня и списания не будет.{% endif %}</dd>
-    </div>
-    <div class="p2-faq-item">
-      <dt>{% if locale == 'en' %}Are there refunds?{% else %}Есть ли возвраты?{% endif %}</dt>
-      <dd>{% if locale == 'en' %}We don't do refunds at the moment. That's why we clearly show the charge date and cancel terms.{% else %}Сейчас нет рефандов. Поэтому мы максимально прозрачно показываем дату списания и условия отмены.{% endif %}</dd>
-    </div>
-    <div class="p2-faq-item">
-      <dt>{% if locale == 'en' %}Will you remind me before charge?{% else %}Напомните перед списанием?{% endif %}</dt>
-      <dd>{% if locale == 'en' %}Yes. We'll send a reminder 24 hours before the charge.{% else %}Да. Напомним за 24 часа до списания.{% endif %}</dd>
-    </div>
-    <div class="p2-faq-item">
-      <dt>{% if locale == 'en' %}What counts as "1 generation"?{% else %}Что считается «1 генерацией»?{% endif %}</dt>
-      <dd>{% if locale == 'en' %}1 generation = 1 post + 3 comment variants at once (short/medium/long).{% else %}1 генерация = 1 пост + сразу 3 варианта комментария (short/medium/long).{% endif %}</dd>
-    </div>
-    <div class="p2-faq-item">
-      <dt>{% if locale == 'en' %}Does LinkedIn account connect?{% else %}Подключается ли LinkedIn аккаунт?{% endif %}</dt>
-      <dd>{% if locale == 'en' %}No. We don't ask for LinkedIn login/password and don't publish for you. You copy the chosen variant and paste manually.{% else %}Нет. Мы не просим логин/пароль LinkedIn и не публикуем за вас. Вы копируете выбранный вариант и вставляете вручную.{% endif %}</dd>
-    </div>
-    <div class="p2-faq-item">
-      <dt>{% if locale == 'en' %}What are priority profiles?{% else %}Что такое приоритетные профили?{% endif %}</dt>
-      <dd>{% if locale == 'en' %}Profiles whose new posts we check more often. So you see them earlier and can react in the first hours.{% else %}Это профили, новые посты которых мы проверяем чаще. Поэтому вы видите их раньше и успеваете ответить в первые часы.{% endif %}</dd>
-    </div>
-    <div class="p2-faq-item">
-      <dt>{% if locale == 'en' %}Can I change plans later?{% else %}Можно ли сменить план позже?{% endif %}</dt>
-      <dd>{% if locale == 'en' %}Yes. You can switch to another plan anytime.{% else %}Да. Можно перейти на другой план в любой момент.{% endif %}</dd>
-    </div>
-    <div class="p2-faq-item">
-      <dt>{% if locale == 'en' %}What payment methods?{% else %}Какие способы оплаты?{% endif %}</dt>
-      <dd>{% if locale == 'en' %}Card (Stripe). For Enterprise, invoice on request.{% else %}Карта (Stripe). Для Enterprise - инвойс по запросу.{% endif %}</dd>
-    </div>
-    <div class="p2-faq-item">
-      <dt>{% if locale == 'en' %}What if I run out of generations?{% else %}Что если закончились генерации?{% endif %}</dt>
-      <dd>{% if locale == 'en' %}Limit resets next period. If you need more regularly, easier to upgrade.{% else %}Лимит обновится в следующем периоде. Если нужно больше регулярно, проще перейти на план выше.{% endif %}</dd>
-    </div>
-  </dl>
-</section>
-
-<!-- Bottom CTA -->
-<div class="p2-cta">
-  <h2>{% if locale == 'en' %}Ready to start?{% else %}Готовы начать?{% endif %}</h2>
-  <p>{% if locale == 'en' %}Watch the right people's posts and write comments in your style in 30 seconds.{% else %}Следите за постами нужных людей и пишите комментарии в своем стиле за 30 секунд.{% endif %}</p>
-  <div class="p2-cta-btns">
-    <a href="/login" class="btn btn-primary">{% if locale == 'en' %}Start Pro - 7 days free{% else %}Начать Pro - 7 дней бесплатно{% endif %}</a>
-    <a href="#p2-compare" class="btn btn-secondary">{% if locale == 'en' %}Compare plans{% else %}Сравнить планы{% endif %}</a>
-  </div>
-  <p class="p2-cta-demo"><a href="mailto:sales@example.com?subject=Demo%20Request">{% if locale == 'en' %}Request demo (Enterprise){% else %}Запросить демо (Enterprise){% endif %}</a></p>
-  <div class="p2-cta-guarantees">
-    <span>{% if locale == 'en' %}$0 today. Card needed for trial. No charge if you cancel before end of 7 days.{% else %}$0 сегодня. Карта нужна для trial. Списания не будет, если отменить до конца 7 дней.{% endif %}</span>
-    <span>{% if locale == 'en' %}We'll remind 24 hours before charge.{% else %}Напомним за 24 часа до списания.{% endif %}</span>
-  </div>
+  <section class="p-panel bottom-cta">
+    <h2>{% if locale == 'en' %}Ready to start?{% else %}Готовы начать?{% endif %}</h2>
+    <p>{% if locale == 'en' %}Launch Pro, react faster to key posts, and keep your comment quality stable every day.{% else %}Запустите Pro, быстрее реагируйте на ключевые посты и удерживайте стабильное качество комментариев каждый день.{% endif %}</p>
+    <a href="/login" class="p-btn p-btn-primary">{% if locale == 'en' %}Start Pro - 7 days free{% else %}Начать Pro - 7 дней бесплатно{% endif %}</a>
+    <p class="foot">{% if locale == 'en' %}$0 today. Card required. Cancel anytime.{% else %}$0 сегодня. Нужна карта. Отмена в любой момент.{% endif %}</p>
+  </section>
 </div>
 
 <script>
-document.querySelectorAll('.p2-example-head').forEach(function(head) {
-  head.addEventListener('click', function() {
-    this.closest('.p2-example').classList.toggle('is-open');
-  });
-});
-document.querySelectorAll('.p2-faq-item dt').forEach(function(dt) {
-  dt.addEventListener('click', function() {
-    var item = this.closest('.p2-faq-item');
-    item.classList.toggle('is-open');
-  });
-});
-document.querySelectorAll('.p2-compare-section-head').forEach(function(head) {
-  head.addEventListener('click', function() {
-    this.closest('.p2-compare-section').classList.toggle('is-open');
-  });
-});
-document.querySelectorAll('.p2-card .limits-toggle').forEach(function(tog) {
-  tog.addEventListener('click', function(e) {
-    e.preventDefault();
-    var limits = this.nextElementSibling;
-    limits.classList.toggle('is-open');
-    this.textContent = limits.classList.contains('is-open') ? '{% if locale == "en" %}Hide limits{% else %}Скрыть лимиты{% endif %} ▲' : '{% if locale == "en" %}Show limits{% else %}Показать лимиты{% endif %} ▼';
-  });
-});
+  (function () {
+    var exampleAccordion = document.getElementById('example-accordion');
+    if (exampleAccordion) {
+      var exampleToggle = exampleAccordion.querySelector('.example-toggle');
+      var exampleContent = document.getElementById('example-content');
+      if (exampleToggle && exampleContent) {
+        exampleToggle.addEventListener('click', function () {
+          var isOpen = exampleAccordion.classList.toggle('is-open');
+          exampleToggle.setAttribute('aria-expanded', String(isOpen));
+          if (isOpen) {
+            exampleContent.style.maxHeight = exampleContent.scrollHeight + 'px';
+            exampleContent.style.opacity = '1';
+          } else {
+            exampleContent.style.maxHeight = '0px';
+            exampleContent.style.opacity = '0';
+          }
+        });
+      }
+    }
+
+    document.querySelectorAll('.faq-item').forEach(function (item) {
+      var button = item.querySelector('.faq-question');
+      var answer = item.querySelector('.faq-answer');
+      if (!button || !answer) {
+        return;
+      }
+      button.addEventListener('click', function () {
+        var isOpen = item.classList.toggle('is-open');
+        button.setAttribute('aria-expanded', String(isOpen));
+        if (isOpen) {
+          answer.style.maxHeight = answer.scrollHeight + 'px';
+          answer.style.opacity = '1';
+        } else {
+          answer.style.maxHeight = '0px';
+          answer.style.opacity = '0';
+        }
+      });
+    });
+
+    window.addEventListener('resize', function () {
+      var exampleContent = document.getElementById('example-content');
+      var exampleAccordion = document.getElementById('example-accordion');
+      if (exampleContent && exampleAccordion && exampleAccordion.classList.contains('is-open')) {
+        exampleContent.style.maxHeight = exampleContent.scrollHeight + 'px';
+      }
+      document.querySelectorAll('.faq-item.is-open .faq-answer').forEach(function (answer) {
+        answer.style.maxHeight = answer.scrollHeight + 'px';
+      });
+    });
+  })();
 </script>
 {% endblock %}

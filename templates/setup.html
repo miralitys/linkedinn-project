@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ tr.setup_title }} — MyVOICE's{% endblock %}
 {% block content %}
+<div class="setup-premium-shell">
 <header class="setup-page-header">
   <h1 class="setup-page-title">{{ tr.setup_title }}</h1>
   <p class="setup-page-desc">{{ tr.setup_lead }}</p>
@@ -38,7 +39,7 @@
                 <textarea name="author_history" rows="4" placeholder="{{ tr.setup_author_history_placeholder }}"></textarea>
               </div>
               <p class="form-hint" style="margin: var(--space-2) 0 var(--space-2) 0; font-size: var(--text-14); color: var(--text-muted);">{{ tr.setup_author_history_hint }}</p>
-              <p class="form-hint" style="margin: var(--space-1) 0 0 0; font-size: var(--text-12);"><a href="#" id="reset-fingerprint-link" style="display:none;">Сбросить fingerprint</a></p>
+              <p class="form-hint" style="margin: var(--space-1) 0 0 0; font-size: var(--text-12);"><a href="#" id="reset-fingerprint-link" style="display:none;">{{ tr.setup_reset_fingerprint|default('Reset fingerprint' if locale == 'en' else 'Сбросить fingerprint', true) }}</a></p>
             </div>
           </div>
           <div class="form-actions-inline">
@@ -155,6 +156,7 @@
       <p id="save-subreddits-msg" class="save-msg"></p>
     </section>
   </form>
+</div>
 </div>
 
 <!-- Author view drawer -->
@@ -495,9 +497,9 @@
   }
   .setup-view-drawer-panel {
     margin: auto;
-    max-width: 36rem;
+    max-width: min(58rem, calc(100vw - 2rem));
     width: 100%;
-    max-height: calc(100vh - 3rem);
+    max-height: calc(100vh - 2.5rem);
     display: flex;
     flex-direction: column;
     background: var(--surface);
@@ -510,12 +512,40 @@
   .setup-view-drawer-name { margin: 0; font-size: var(--text-20); font-weight: 600; color: var(--text); line-height: 1.3; flex: 1; }
   .setup-view-drawer-close { min-width: 44px; min-height: 44px; padding: 0; border: none; background: var(--bg); color: var(--text-muted); font-size: 1.5rem; line-height: 1; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background var(--motion-fast), color var(--motion-fast); flex-shrink: 0; }
   .setup-view-drawer-close:hover { background: var(--border); color: var(--text); }
-  .setup-view-drawer-body { padding: var(--space-4); overflow-y: auto; flex: 1; min-height: 0; }
-  .setup-view-drawer-dl { margin: 0 0 var(--space-4); font-size: var(--text-14); display: grid; gap: var(--space-1) var(--space-4); grid-template-columns: auto 1fr; }
-  .setup-view-drawer-dl dt { color: var(--text-muted); font-weight: 500; }
-  .setup-view-drawer-dl dd { margin: 0; color: var(--text); overflow-wrap: break-word; white-space: pre-wrap; line-height: 1.6; max-width: 100%; }
+  .setup-view-drawer-body { padding: var(--space-5); overflow-y: auto; flex: 1; min-height: 0; }
+  .setup-view-drawer-dl {
+    margin: 0 0 var(--space-4);
+    font-size: var(--text-14);
+    display: block;
+  }
+  .setup-view-drawer-dl dt {
+    margin: 0 0 var(--space-2);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: var(--text-12);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .setup-view-drawer-dl dd {
+    margin: 0 0 var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    line-height: 1.6;
+    max-width: 100%;
+  }
+  .setup-view-drawer-dl dd:last-of-type { margin-bottom: 0; }
   .setup-view-drawer-dl dd:empty::after { content: '—'; color: var(--text-muted); }
   .setup-view-drawer-actions { margin-top: var(--space-3); }
+
+  @media (max-width: 768px) {
+    .setup-view-drawer-panel { max-width: calc(100vw - 1rem); max-height: calc(100vh - 1rem); }
+    .setup-view-drawer-body { padding: var(--space-4); }
+  }
 
   .setup-section-linkedin { margin-top: var(--space-6); }
 
@@ -556,11 +586,255 @@
   }
   .linkedin-connected-badge svg { flex-shrink: 0; }
 
+  /* Premium page alignment (same system as Comments) */
+  .main-wrap { padding: 32px !important; }
+  .setup-premium-shell { max-width: 1160px; margin: 0 auto; }
+  .setup-page-header { margin-bottom: var(--space-6); }
+  .setup-page-title {
+    margin: 0 0 var(--space-2);
+    font-size: 28px;
+    line-height: 32px;
+    font-weight: 700;
+    color: #111827;
+  }
+  .setup-page-desc {
+    margin: 0;
+    font-size: 14px;
+    line-height: 20px;
+    color: #4b5563;
+    max-width: 760px;
+  }
+  .setup-grid { gap: 20px; }
+  .setup-section {
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    box-shadow: none;
+    padding: 20px 24px;
+    transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+  }
+  .setup-section:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  }
+  .setup-section-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    gap: 12px;
+  }
+  .setup-section-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: #eef2ff;
+    color: #4f46e5;
+  }
+  .setup-section-title {
+    font-size: 20px;
+    line-height: 26px;
+    font-weight: 600;
+    color: #111827;
+  }
+  .saved-section-title {
+    font-size: 11px;
+    line-height: 16px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+  }
+  .saved-empty-msg {
+    border: 1px dashed #d1d5db;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #6b7280;
+  }
+  .saved-cards { gap: 12px; }
+  .saved-author-card, .saved-product-card, .saved-icp-card {
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    padding: 12px 14px;
+    box-shadow: none;
+  }
+  .saved-author-card:hover, .saved-product-card:hover, .saved-icp-card:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  }
+  .saved-author-card.editing, .saved-product-card.editing, .saved-icp-card.editing {
+    border-color: #4f46e5;
+    background: #eef2ff;
+    box-shadow: none;
+  }
+  .saved-cards .btn-icon {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    border-radius: 12px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #6b7280;
+    box-shadow: none;
+  }
+  .saved-cards .btn-icon:hover {
+    background: #f9fafb;
+    border-color: #cbd5e1;
+    color: #374151;
+  }
+  .saved-cards .kebab-menu {
+    top: auto;
+    bottom: calc(100% + 8px);
+    border-radius: 12px;
+    border-color: #e5e7eb;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    z-index: 40;
+  }
+  .saved-cards .kebab-item {
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 10px;
+  }
+  .setup-subreddit-input {
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid #d1d5db;
+    margin-right: 8px;
+    margin-bottom: 0;
+  }
+  .setup-premium-shell input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  .setup-premium-shell select,
+  .setup-form-wrap input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  .setup-form-wrap select,
+  .setup-section-linkedin input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+  .setup-section-linkedin select {
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #111827;
+    box-shadow: none;
+  }
+  .setup-premium-shell textarea,
+  .setup-form-wrap textarea,
+  .setup-section-linkedin textarea {
+    border-radius: 12px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #111827;
+    box-shadow: none;
+  }
+  .setup-premium-shell input:focus,
+  .setup-premium-shell textarea:focus,
+  .setup-premium-shell select:focus,
+  .setup-form-wrap input:focus,
+  .setup-form-wrap textarea:focus,
+  .setup-form-wrap select:focus,
+  .setup-section-linkedin input:focus,
+  .setup-section-linkedin textarea:focus,
+  .setup-section-linkedin select:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
+  }
+  .setup-premium-shell .btn,
+  .setup-form-wrap .btn,
+  .setup-view-drawer .btn,
+  .setup-section-linkedin .btn {
+    height: 40px;
+    border-radius: 12px;
+    padding: 0 16px;
+    margin: 0;
+    line-height: 38px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: none;
+    transition: background 200ms ease-out, border-color 200ms ease-out, transform 120ms ease-out;
+  }
+  .setup-premium-shell .btn:active,
+  .setup-form-wrap .btn:active,
+  .setup-view-drawer .btn:active,
+  .setup-section-linkedin .btn:active { transform: scale(0.98); }
+  .setup-premium-shell .btn.primary,
+  .setup-form-wrap .btn.primary,
+  .setup-view-drawer .btn.primary,
+  .setup-section-linkedin .btn.primary {
+    border: 1px solid #4f46e5;
+    background: #4f46e5;
+    color: #ffffff;
+  }
+  .setup-premium-shell .btn.primary:hover,
+  .setup-form-wrap .btn.primary:hover,
+  .setup-view-drawer .btn.primary:hover,
+  .setup-section-linkedin .btn.primary:hover { background: #4338ca; border-color: #4338ca; }
+  .setup-premium-shell .btn.secondary,
+  .setup-form-wrap .btn.secondary,
+  .setup-view-drawer .btn.secondary,
+  .setup-section-linkedin .btn.secondary {
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #111827;
+  }
+  .setup-premium-shell .btn.secondary:hover,
+  .setup-form-wrap .btn.secondary:hover,
+  .setup-view-drawer .btn.secondary:hover,
+  .setup-section-linkedin .btn.secondary:hover {
+    background: #f9fafb;
+    border-color: #cbd5e1;
+  }
+  .setup-add-toolbar { margin-top: 12px; }
+  .form-actions-inline { margin-top: 16px; gap: 8px; }
+  .setup-form-wrap:not([hidden]) { padding: 24px; }
+  .setup-form-wrap:not([hidden]) .setup-form-panel {
+    max-width: 640px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18);
+    padding: 24px;
+  }
+  .setup-view-drawer-panel {
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18);
+  }
+  .setup-view-drawer-header { border-bottom: 1px solid #e5e7eb; }
+  .setup-view-drawer-dl dd {
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+  }
+  .linkedin-status-card {
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    border-left-width: 4px;
+    box-shadow: none;
+  }
+  .linkedin-connected-row {
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+  }
+
   /* Interview modals (без изменений логики) */
 
   @media (min-width: 768px) {
     .setup-grid { grid-template-columns: 1fr 1fr; }
     .setup-section-linkedin { grid-column: 1 / -1; }
+  }
+  @media (max-width: 980px) {
+    .main-wrap { padding: 24px !important; }
+    .setup-section { padding: 20px; }
+    .setup-grid { gap: 16px; }
+  }
+  @media (max-width: 768px) {
+    .main-wrap { padding: 16px !important; }
+    .setup-page-title { font-size: 24px; line-height: 30px; }
+    .setup-section { padding: 16px; }
+    .setup-add-toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
+    .setup-subreddit-input { margin-right: 0; width: 100%; }
+    .setup-premium-shell .btn,
+    .setup-form-wrap .btn,
+    .setup-view-drawer .btn,
+    .setup-section-linkedin .btn { width: 100%; }
   }
 </style>
 <script>
@@ -956,7 +1230,14 @@
   }
   function _row(label, val) {
     if (val === undefined || val === null || val === '') return '';
-    const v = Array.isArray(val) ? val.join(', ') : String(val);
+    const v = Array.isArray(val)
+      ? val
+          .map(function(item) { return item === undefined || item === null ? '' : String(item).trim(); })
+          .filter(Boolean)
+          .map(function(item) { return '• ' + item; })
+          .join('\n')
+      : String(val);
+    if (!v) return '';
     return '<dt>' + esc(label) + '</dt><dd>' + esc(v) + '</dd>';
   }
   function openProductView(i) {
@@ -1466,11 +1747,12 @@
   }
 </script>
 
+<div class="setup-premium-shell">
 <section class="setup-section setup-section-linkedin">
   <div class="setup-section-header" id="linkedin-app-header" aria-expanded="false" aria-controls="linkedin-setup-body">
     <span class="setup-section-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
-    <h2 class="setup-section-title">Настройка LinkedIn API</h2>
-    <button type="button" id="linkedin-app-toggle" class="btn secondary btn-sm" aria-expanded="false">Показать</button>
+    <h2 class="setup-section-title">{{ tr.setup_linkedin_api_title|default('LinkedIn API setup' if locale == 'en' else 'Настройка LinkedIn API', true) }}</h2>
+    <button type="button" id="linkedin-app-toggle" class="btn secondary btn-sm" aria-expanded="false">{{ tr.common_show|default('Show' if locale == 'en' else 'Показать', true) }}</button>
   </div>
   <div id="linkedin-setup-body" class="linkedin-setup-body" hidden>
     {% if request.query_params.get('linkedin') == 'config' %}
@@ -1510,18 +1792,22 @@
     </div>
   </div>
 </section>
+</div>
 <script>
   (function() {
     const header = document.getElementById('linkedin-app-header');
     const toggle = document.getElementById('linkedin-app-toggle');
     const body = document.getElementById('linkedin-setup-body');
+    const showText = {{ tr.common_show|default('Show' if locale == 'en' else 'Показать', true)|tojson|safe }};
+    const hideText = {{ tr.common_hide|default('Hide' if locale == 'en' else 'Свернуть', true)|tojson|safe }};
+    const disconnectText = {{ tr.common_disconnect|default('Disconnect' if locale == 'en' else 'Отключить', true)|tojson|safe }};
     function toggleLinkedInSection() {
       if (!body) return;
       const open = body.hidden;
       body.hidden = !open;
       if (toggle) {
         toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-        toggle.textContent = open ? 'Свернуть' : 'Показать';
+        toggle.textContent = open ? hideText : showText;
       }
       if (header) header.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
@@ -1545,7 +1831,7 @@
         if (btns) btns.style.display = 'block';
         if (reconnectWrap) reconnectWrap.style.display = 'none';
       }
-    }).catch(function() {}).finally(function() { btn.disabled = false; btn.textContent = 'Отключить'; });
+    }).catch(function() {}).finally(function() { btn.disabled = false; btn.textContent = disconnectText; });
   });
 </script>
 {% endblock %}

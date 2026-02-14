@@ -1,15 +1,16 @@
 {% extends "base.html" %}
-{% block title %}{{ (tr.admin_users_title if tr else 'Пользователи') }} — MyVOICE's{% endblock %}
+{% block title %}{{ (tr.admin_users_title if tr and tr.admin_users_title else ('Users' if locale == 'en' else 'Пользователи')) }} — MyVOICE's{% endblock %}
 {% block content %}
-<div class="admin-users-page">
-<header class="page-header">
-  <div class="page-header-text">
-    <h1>{{ (tr.admin_users_title if tr else 'Пользователи') }}</h1>
-    <p class="page-header-desc">{{ (tr.admin_users_desc if tr else 'Список всех зарегистрированных пользователей') }}</p>
+{% set is_en = locale == 'en' %}
+<div class="admin-users-premium-shell">
+<header class="admin-page-header">
+  <div class="admin-page-header-text">
+    <h1 class="admin-page-title">{{ (tr.admin_users_title if tr and tr.admin_users_title else ('Users' if is_en else 'Пользователи')) }}</h1>
+    <p class="admin-page-desc">{{ (tr.admin_users_desc if tr and tr.admin_users_desc else ('List of all registered users' if is_en else 'Список всех зарегистрированных пользователей')) }}</p>
   </div>
-  <div class="page-header-actions" style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
-    <button type="button" id="btn-add-user" class="btn primary" aria-label="{{ (tr.admin_add_user if tr else 'Добавить пользователя') }}">
-      <span style="font-size: 1.25rem; line-height: 1; margin-right: var(--space-2);" aria-hidden="true">+</span> {{ (tr.admin_add_user if tr else 'Добавить пользователя') }}
+  <div class="admin-page-header-actions">
+    <button type="button" id="btn-add-user" class="btn primary btn-add-user" aria-label="{{ (tr.admin_add_user if tr and tr.admin_add_user else ('Add user' if is_en else 'Добавить пользователя')) }}">
+      <span class="btn-add-user-icon" aria-hidden="true">+</span> {{ (tr.admin_add_user if tr and tr.admin_add_user else ('Add user' if is_en else 'Добавить пользователя')) }}
     </button>
   </div>
 </header>
@@ -50,7 +51,7 @@
           <th>{{ (tr.admin_subscription_expires if tr else 'Истекает') }}</th>
           <th>{{ (tr.admin_created_at if tr else 'Зарегистрирован') }}</th>
           <th>{{ (tr.admin_last_login if tr else 'Последний вход') }}</th>
-          <th style="width: 52px; text-align: right;"></th>
+          <th class="admin-users-actions-head"></th>
         </tr>
       </thead>
       <tbody>
@@ -59,16 +60,16 @@
           <td><strong>{{ user.email }}</strong></td>
           <td>
             {% if (user.approval_status if user is defined and user else 'approved') == 'pending' %}
-            <span class="badge" style="background: var(--warning-soft, #fef3c7); color: var(--warning, #f59e0b);">{{ (tr.admin_status_pending if tr else 'Ожидает') }}</span>
+            <span class="badge badge-status-pending">{{ (tr.admin_status_pending if tr else 'Ожидает') }}</span>
             {% elif (user.approval_status if user is defined and user else 'approved') == 'rejected' %}
             <span class="badge badge-danger">{{ (tr.admin_status_rejected if tr else 'Отклонён') }}</span>
             {% else %}
-            <span class="badge" style="background: var(--success-soft, #d1fae5); color: var(--success, #10b981);">{{ (tr.admin_status_approved if tr else 'Одобрен') }}</span>
+            <span class="badge badge-status-approved">{{ (tr.admin_status_approved if tr else 'Одобрен') }}</span>
             {% endif %}
           </td>
           <td>
             {% if user.role == 'admin' %}
-            <span class="badge" style="background: var(--primary-soft); color: var(--primary);">{{ (tr.admin_role_admin if tr else 'Админ') }}</span>
+            <span class="badge badge-role-admin">{{ (tr.admin_role_admin if tr else 'Админ') }}</span>
             {% else %}
             <span class="badge badge-muted">{{ (tr.admin_role_user if tr else 'Пользователь') }}</span>
             {% endif %}
@@ -78,9 +79,9 @@
           </td>
           <td>
             {% if user.subscription_status == 'active' %}
-            <span class="badge" style="background: var(--success-soft, #d1fae5); color: var(--success, #10b981);">{{ (tr.admin_subscription_active if tr else 'Активна') }}</span>
+            <span class="badge badge-sub-active">{{ (tr.admin_subscription_active if tr else 'Активна') }}</span>
             {% elif user.subscription_status == 'trial' %}
-            <span class="badge" style="background: var(--warning-soft, #fef3c7); color: var(--warning, #f59e0b);">{{ (tr.admin_subscription_trial if tr else 'Пробная') }}</span>
+            <span class="badge badge-sub-trial">{{ (tr.admin_subscription_trial if tr else 'Пробная') }}</span>
             {% elif user.subscription_status == 'expired' %}
             <span class="badge badge-danger">{{ (tr.admin_subscription_expired if tr else 'Истекла') }}</span>
             {% elif user.subscription_status == 'cancelled' %}
@@ -98,7 +99,7 @@
           </td>
           <td>{{ user.created_at.strftime('%d.%m.%Y %H:%M') if user.created_at else '—' }}</td>
           <td>{{ user.last_login_at.strftime('%d.%m.%Y %H:%M') if user.last_login_at else '—' }}</td>
-          <td style="text-align: right;">
+          <td class="admin-users-actions-cell">
             <div class="admin-user-menu-wrap">
               <button type="button" class="btn btn-ghost btn-sm btn-card-menu btn-icon admin-user-menu-btn" data-user-id="{{ user.id }}" aria-label="{{ (tr.admin_more_actions if tr else 'Ещё') }}" aria-haspopup="true" aria-expanded="false">
                 <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" aria-hidden="true"><circle cx="12" cy="6" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="18" r="1.5"/></svg>
@@ -117,7 +118,7 @@
         {% endfor %}
         {% if not users %}
         <tr>
-          <td colspan="9" style="text-align: center; padding: var(--space-8); color: var(--text-muted);">
+          <td colspan="9" class="admin-users-empty-cell">
             {{ (tr.admin_no_users if tr else 'Пользователей пока нет') }}
           </td>
         </tr>
@@ -131,7 +132,7 @@
 <!-- Модальное окно добавления пользователя -->
 <div id="add-user-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="add-user-modal-title" hidden>
   <div class="modal-backdrop" aria-hidden="true"></div>
-  <div class="modal-content card confirm-modal-content" style="max-width: 480px;">
+  <div class="modal-content card confirm-modal-content admin-user-modal-content">
     <h2 id="add-user-modal-title" class="confirm-modal-title">{{ (tr.admin_add_user if tr else 'Добавить пользователя') }}</h2>
     <form id="add-user-form" class="admin-user-form">
       <div style="margin-bottom: var(--space-4);">
@@ -189,7 +190,7 @@
 <!-- Модальное окно редактирования пользователя -->
 <div id="edit-user-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="edit-user-modal-title" hidden>
   <div class="modal-backdrop" aria-hidden="true"></div>
-  <div class="modal-content card confirm-modal-content" style="max-width: 480px;">
+  <div class="modal-content card confirm-modal-content admin-user-modal-content">
     <h2 id="edit-user-modal-title" class="confirm-modal-title">{{ (tr.admin_edit_user if tr else 'Редактировать пользователя') }}</h2>
     <form id="edit-user-form" class="admin-user-form">
       <input type="hidden" id="edit-user-id" name="id">
@@ -254,7 +255,7 @@
 <!-- Подтверждение удаления -->
 <div id="delete-user-modal" class="modal confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="delete-user-modal-title" hidden>
   <div class="modal-backdrop" aria-hidden="true"></div>
-  <div class="modal-content card confirm-modal-content" style="max-width: 400px;">
+  <div class="modal-content card confirm-modal-content admin-user-modal-content admin-user-delete-modal-content">
     <h2 id="delete-user-modal-title" class="confirm-modal-title">{{ (tr.admin_delete_user_confirm_title if tr else 'Удалить пользователя?') }}</h2>
     <p id="delete-user-modal-desc" class="confirm-modal-desc">{{ (tr.admin_delete_user_confirm_desc if tr else 'Это действие нельзя отменить.') }}</p>
     <div class="modal-actions">
@@ -265,129 +266,307 @@
 </div>
 
 <style>
-  .admin-users-page { max-width: 100%; overflow-x: hidden; }
+  .main-wrap { padding: 32px !important; }
+  .admin-users-premium-shell { max-width: 1160px; margin: 0 auto; width: 100%; }
+  .admin-page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .admin-page-header-text { min-width: 0; }
+  .admin-page-title {
+    margin: 0 0 8px;
+    font-size: 28px;
+    line-height: 32px;
+    font-weight: 700;
+    color: #111827;
+  }
+  .admin-page-desc {
+    margin: 0;
+    max-width: 760px;
+    font-size: 14px;
+    line-height: 20px;
+    color: #4b5563;
+  }
+  .admin-page-header-actions { display: flex; gap: 12px; flex-wrap: wrap; flex-shrink: 0; }
+  .btn-add-user {
+    height: 40px;
+    border-radius: 12px;
+    padding: 0 16px;
+    margin: 0;
+    line-height: 38px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid #4f46e5;
+    background: #4f46e5;
+    box-shadow: none;
+    transition: background 200ms ease-out, border-color 200ms ease-out, transform 120ms ease-out;
+  }
+  .btn-add-user:hover { background: #4338ca; border-color: #4338ca; }
+  .btn-add-user:active { transform: scale(0.98); }
+  .btn-add-user-icon { font-size: 18px; line-height: 1; margin-right: 8px; }
+
   .admin-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: var(--space-3);
-    margin-bottom: var(--space-5);
-  }
-  @media (min-width: 640px) {
-    .admin-stats { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-4); }
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
   }
   .admin-stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-4);
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 20px;
+    min-height: 106px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: flex-start;
-    min-height: 72px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  @media (min-width: 640px) {
-    .admin-stat-card { padding: var(--space-5); min-height: 88px; }
+    transition: border-color 200ms ease-out, box-shadow 200ms ease-out, transform 200ms ease-out;
   }
   .admin-stat-card:hover {
-    border-color: var(--primary-soft, rgba(99, 102, 241, 0.3));
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border-color: #cbd5e1;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    transform: translateY(-1px);
   }
   .admin-stat-value {
-    font-size: 1.5rem;
+    font-size: 30px;
+    line-height: 1.1;
     font-weight: 700;
-    color: var(--primary);
-    line-height: 1.2;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
+    color: #111827;
   }
-  @media (min-width: 640px) {
-    .admin-stat-value { font-size: 1.75rem; }
-  }
-  .admin-stat-value-success { color: var(--success, #10b981); }
-  .admin-stat-value-warning { color: var(--warning, #f59e0b); }
+  .admin-stat-value-success { color: #0f766e; }
+  .admin-stat-value-warning { color: #b45309; }
   .admin-stat-label {
-    font-size: var(--text-14);
-    color: var(--text-muted);
-    margin-top: var(--space-2);
-    line-height: 1.4;
-    max-width: 100%;
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 500;
+    color: #6b7280;
   }
+
   .admin-users-card {
-    overflow: visible;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: #ffffff;
     padding: 0;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-    max-width: 100%;
+    box-shadow: none;
+    overflow: hidden;
   }
-  .admin-users-card .data-table-wrap {
-    overflow: visible;
-    width: 100%;
-  }
+  .admin-users-card .data-table-wrap { width: 100%; overflow-x: auto; }
   .admin-users-card .data-table {
     width: 100%;
+    min-width: 1040px;
+    border-collapse: separate;
+    border-spacing: 0;
     table-layout: fixed;
   }
-  .admin-users-card .data-table th,
+  .admin-users-card .data-table thead th {
+    background: #f8fafc;
+    color: #6b7280;
+    font-size: 11px;
+    line-height: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 12px 16px;
+    white-space: nowrap;
+  }
   .admin-users-card .data-table td {
-    padding: var(--space-2) var(--space-3);
-    font-size: var(--text-13);
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+    border-bottom: 1px solid #eef2f7;
+    color: #111827;
+    font-size: 13px;
+    line-height: 18px;
+    padding: 14px 16px;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
   }
-  @media (min-width: 1024px) {
-    .admin-users-card .data-table th,
-    .admin-users-card .data-table td { padding: var(--space-2) var(--space-4); font-size: var(--text-14); }
+  .admin-users-card .data-table tbody tr:last-child td { border-bottom: none; }
+  .admin-users-card .data-table tbody tr:hover td { background: #fafcff; }
+  .admin-users-actions-head { width: 56px; text-align: right; }
+  .admin-users-actions-cell { text-align: right; }
+  .admin-users-empty-cell {
+    text-align: center;
+    padding: 32px !important;
+    color: #6b7280 !important;
+    background: #ffffff;
   }
-  .admin-users-card .data-table { border-radius: var(--radius-lg); }
-  .admin-users-card .data-table thead th { border-top: none; }
-  .admin-users-card .data-table td { overflow: visible; vertical-align: middle; }
-  .admin-users-card .data-table th:last-child,
-  .admin-users-card .data-table td:last-child { padding-right: var(--space-5); }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+  }
+  .badge-status-pending { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+  .badge-status-approved { background: #ecfdf5; color: #0f766e; border-color: #a7f3d0; }
+  .badge-role-admin { background: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
+  .badge-sub-active { background: #ecfdf5; color: #0f766e; border-color: #a7f3d0; }
+  .badge-sub-trial { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+  .badge-danger { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+  .badge-muted { background: #f8fafc; color: #6b7280; border-color: #e2e8f0; }
+
   .admin-user-menu-wrap { position: relative; display: inline-block; z-index: 1; }
-  .admin-user-menu-wrap.is-open { z-index: 1000; }
-  .admin-user-menu-wrap .btn-card-menu { min-width: 36px; min-height: 36px; padding: 0; border: none; background: transparent; color: var(--text-muted); border-radius: var(--radius-sm); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
-  .admin-user-menu-wrap .btn-card-menu:hover { background: var(--primary-soft); color: var(--primary); }
-  .admin-user-menu-wrap .btn-card-menu:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .admin-user-menu-wrap.is-open { z-index: 50; }
+  .admin-user-menu-wrap .btn-card-menu {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    margin: 0;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #6b7280;
+    box-shadow: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .admin-user-menu-wrap .btn-card-menu:hover {
+    background: #f9fafb;
+    border-color: #cbd5e1;
+    color: #374151;
+  }
+  .admin-user-menu-wrap .btn-card-menu:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
+  }
   .admin-user-menu-dropdown {
-    position: absolute;
-    right: 0;
-    top: 100%;
-    margin-top: 4px;
-    min-width: 160px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    padding: var(--space-2);
-    z-index: 100;
+    position: fixed;
+    top: 0;
+    left: 0;
+    min-width: 180px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    padding: 6px;
+    z-index: 1200;
     display: none;
-    list-style: none;
-    counter-reset: none;
+    transform-origin: top right;
   }
   .admin-user-menu-wrap.is-open .admin-user-menu-dropdown { display: block; }
   .admin-user-menu-item {
     display: block;
     width: 100%;
-    padding: var(--space-2) var(--space-3);
+    padding: 8px 10px;
     text-align: left;
-    font-size: var(--text-14);
-    color: var(--text);
+    font-size: 13px;
+    line-height: 18px;
+    color: #111827;
     background: none;
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: 10px;
     cursor: pointer;
     font-family: inherit;
-    white-space: nowrap;
-    list-style: none;
-    appearance: none;
   }
-  .admin-user-menu-item:hover { background: var(--bg-soft); }
-  .admin-user-menu-item.danger:hover { color: var(--danger); }
-  .confirm-modal-desc { margin: 0 0 var(--space-4); font-size: var(--text-14); color: var(--text-muted); line-height: 1.5; }
-  .btn.btn-danger { background: var(--danger); color: white; border: none; }
-  .btn.btn-danger:hover { background: #b91c1c; color: white; }
+  .admin-user-menu-item:hover { background: #f9fafb; }
+  .admin-user-menu-item.danger { color: #b91c1c; }
+  .admin-user-menu-item.danger:hover { background: #fef2f2; }
+
+  .admin-user-modal-content {
+    max-width: 520px !important;
+    width: 100%;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18);
+    padding: 24px;
+  }
+  .admin-user-delete-modal-content { max-width: 420px !important; }
+  .admin-user-form > div[style] { margin-bottom: 16px !important; }
+  .admin-user-form label[style] {
+    margin-bottom: 6px !important;
+    color: #111827 !important;
+    font-size: 13px !important;
+    line-height: 18px !important;
+    font-weight: 500 !important;
+  }
+  .admin-user-form input[style],
+  .admin-user-form select[style] {
+    width: 100% !important;
+    height: 40px !important;
+    padding: 0 12px !important;
+    margin-bottom: 0 !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+    font-size: 14px !important;
+  }
+  .admin-user-form input[style]:focus,
+  .admin-user-form select[style]:focus {
+    outline: none !important;
+    border-color: #4f46e5 !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18) !important;
+  }
+  #add-user-error,
+  #edit-user-error {
+    border: 1px solid #fecaca !important;
+    border-radius: 12px !important;
+    background: #fef2f2 !important;
+    color: #b91c1c !important;
+    font-size: 13px !important;
+    line-height: 18px !important;
+    padding: 8px 10px !important;
+  }
+  .modal-actions { margin-top: 20px; gap: 8px; }
+  .modal-actions .btn {
+    height: 40px;
+    border-radius: 12px;
+    margin: 0;
+    line-height: 38px;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 0 16px;
+    box-shadow: none;
+    transition: background 200ms ease-out, border-color 200ms ease-out, transform 120ms ease-out;
+  }
+  .modal-actions .btn:active { transform: scale(0.98); }
+  .modal-actions .btn.secondary {
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #111827;
+  }
+  .modal-actions .btn.secondary:hover { background: #f9fafb; border-color: #cbd5e1; }
+  .modal-actions .btn.primary {
+    border: 1px solid #4f46e5;
+    background: #4f46e5;
+    color: #ffffff;
+  }
+  .modal-actions .btn.primary:hover { background: #4338ca; border-color: #4338ca; }
+  .btn.btn-danger { border: 1px solid #dc2626; background: #dc2626; color: #ffffff; }
+  .btn.btn-danger:hover { background: #b91c1c; border-color: #b91c1c; }
+  .confirm-modal-desc {
+    margin: 0 0 16px;
+    font-size: 14px;
+    line-height: 20px;
+    color: #4b5563;
+  }
+
+  @media (max-width: 1180px) {
+    .admin-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 980px) {
+    .main-wrap { padding: 24px !important; }
+    .admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 768px) {
+    .main-wrap { padding: 16px !important; }
+    .admin-page-header { flex-direction: column; align-items: stretch; }
+    .admin-page-title { font-size: 24px; line-height: 30px; }
+    .admin-stats { grid-template-columns: 1fr; }
+    .btn-add-user { width: 100%; }
+    .modal-actions .btn { width: 100%; }
+  }
 </style>
 
 <script>
@@ -500,14 +679,54 @@
   }
 
   // Три точки: открытие/закрытие меню
+  function closeAllUserMenus() {
+    document.querySelectorAll('.admin-user-menu-wrap.is-open').forEach(function(w) {
+      w.classList.remove('is-open');
+      const b = w.querySelector('.admin-user-menu-btn');
+      if (b) b.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function positionUserMenu(wrap, btn) {
+    const menu = wrap && wrap.querySelector('.admin-user-menu-dropdown');
+    if (!menu || !btn) return;
+    menu.style.display = 'block';
+    menu.style.visibility = 'hidden';
+    menu.style.left = '0px';
+    menu.style.top = '0px';
+
+    const menuRect = menu.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    const gap = 8;
+    const viewportPad = 8;
+
+    let top = btnRect.top - menuRect.height - gap;
+    if (top < viewportPad) top = btnRect.bottom + gap;
+    if (top + menuRect.height > window.innerHeight - viewportPad) {
+      top = Math.max(viewportPad, window.innerHeight - menuRect.height - viewportPad);
+    }
+
+    let left = btnRect.right - menuRect.width;
+    if (left < viewportPad) left = viewportPad;
+    if (left + menuRect.width > window.innerWidth - viewportPad) {
+      left = Math.max(viewportPad, window.innerWidth - menuRect.width - viewportPad);
+    }
+
+    menu.style.left = left + 'px';
+    menu.style.top = top + 'px';
+    menu.style.visibility = '';
+    menu.style.display = '';
+  }
+
   document.querySelectorAll('.admin-user-menu-btn').forEach(function(btn) {
     btn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
       const wrap = btn.closest('.admin-user-menu-wrap');
       const isOpen = wrap && wrap.classList.contains('is-open');
-      document.querySelectorAll('.admin-user-menu-wrap.is-open').forEach(function(w) { w.classList.remove('is-open'); });
+      closeAllUserMenus();
       if (wrap && !isOpen) {
+        positionUserMenu(wrap, btn);
         wrap.classList.add('is-open');
         btn.setAttribute('aria-expanded', 'true');
       } else if (btn) {
@@ -515,13 +734,9 @@
       }
     });
   });
-  document.addEventListener('click', function() {
-    document.querySelectorAll('.admin-user-menu-wrap.is-open').forEach(function(w) {
-      w.classList.remove('is-open');
-      const b = w.querySelector('.admin-user-menu-btn');
-      if (b) b.setAttribute('aria-expanded', 'false');
-    });
-  });
+  document.addEventListener('click', closeAllUserMenus);
+  window.addEventListener('resize', closeAllUserMenus);
+  window.addEventListener('scroll', closeAllUserMenus, true);
 
   // Редактировать
   const editUserModal = document.getElementById('edit-user-modal');
@@ -558,7 +773,7 @@
     btn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      document.querySelectorAll('.admin-user-menu-wrap.is-open').forEach(function(w) { w.classList.remove('is-open'); });
+      closeAllUserMenus();
       openEditUserModal(parseInt(btn.dataset.userId, 10));
     });
   });
@@ -648,7 +863,7 @@
     btn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      document.querySelectorAll('.admin-user-menu-wrap.is-open').forEach(function(w) { w.classList.remove('is-open'); });
+      closeAllUserMenus();
       openDeleteUserModal(parseInt(btn.dataset.userId, 10));
     });
   });
@@ -671,7 +886,7 @@
     btn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      document.querySelectorAll('.admin-user-menu-wrap.is-open').forEach(function(w) { w.classList.remove('is-open'); });
+      closeAllUserMenus();
       approveOrReject(parseInt(btn.dataset.userId, 10), 'approve');
     });
   });
@@ -679,7 +894,7 @@
     btn.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      document.querySelectorAll('.admin-user-menu-wrap.is-open').forEach(function(w) { w.classList.remove('is-open'); });
+      closeAllUserMenus();
       approveOrReject(parseInt(btn.dataset.userId, 10), 'reject');
     });
   });

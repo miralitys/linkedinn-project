@@ -23,6 +23,16 @@
     if (el) el.hidden = true;
   }
 
+  function openInterviewCloseConfirmModal() {
+    var el = document.getElementById('interview-close-confirm-modal');
+    if (el) el.hidden = false;
+  }
+
+  function closeInterviewCloseConfirmModal() {
+    var el = document.getElementById('interview-close-confirm-modal');
+    if (el) el.hidden = true;
+  }
+
   function openInterviewModal() {
     var el = document.getElementById('interview-modal');
     if (el) el.hidden = false;
@@ -59,6 +69,7 @@
   }
 
   function closeInterviewModal() {
+    closeInterviewCloseConfirmModal();
     clearDraftStorage();
     answers = {};
     currentIndex = 0;
@@ -67,6 +78,11 @@
     hideHistoryBlocks();
     var el = document.getElementById('interview-modal');
     if (el) el.hidden = true;
+  }
+
+  function promptInterviewClose() {
+    saveCurrentAnswer();
+    openInterviewCloseConfirmModal();
   }
 
   function getCurrentValue(q) {
@@ -503,6 +519,7 @@
         }
       }
     }).catch(function() {});
+    closeInterviewCloseConfirmModal();
     var el = document.getElementById('interview-modal');
     if (el) el.hidden = true;
   }
@@ -650,20 +667,28 @@
     el = document.getElementById('interview-next');
     if (el) el.addEventListener('click', onNext);
 
-    el = document.getElementById('interview-save');
-    if (el) el.addEventListener('click', saveFingerprintAndClose);
-
     el = document.getElementById('interview-close');
-    if (el) el.addEventListener('click', closeInterviewModal);
+    if (el) el.addEventListener('click', promptInterviewClose);
 
     el = document.getElementById('interview-modal');
     if (el) el.addEventListener('click', function(ev) {
-      if (ev.target === el) closeInterviewModal();
+      if (ev.target === el) promptInterviewClose();
     });
 
     el = document.getElementById('interview-confirm-modal');
     if (el) el.addEventListener('click', function(ev) {
       if (ev.target === el) closeConfirmModal();
+    });
+
+    el = document.getElementById('interview-close-confirm-save');
+    if (el) el.addEventListener('click', saveFingerprintAndClose);
+
+    el = document.getElementById('interview-close-confirm-reset');
+    if (el) el.addEventListener('click', closeInterviewModal);
+
+    el = document.getElementById('interview-close-confirm-modal');
+    if (el) el.addEventListener('click', function(ev) {
+      if (ev.target === el) closeInterviewCloseConfirmModal();
     });
   }
 
