@@ -14,6 +14,8 @@ async def build_post_brief(post_text: str, llm=None) -> dict:
     if not post_text or not post_text.strip():
         return {
             "main_claim": "",
+            "context": "",
+            "topic_summary": "",
             "anchors": [],
             "tone": "neutral",
             "tags": [],
@@ -24,6 +26,8 @@ async def build_post_brief(post_text: str, llm=None) -> dict:
         # Fallback minimal
         return {
             "main_claim": post_text[:200] if len(post_text) > 200 else post_text,
+            "context": "",
+            "topic_summary": "",
             "anchors": [],
             "tone": "neutral",
             "tags": [],
@@ -33,13 +37,15 @@ async def build_post_brief(post_text: str, llm=None) -> dict:
     response = await client.chat(
         [{"role": "user", "content": user}],
         temperature=0.2,
-        max_tokens=512,
+        max_tokens=768,
     )
     try:
         data = extract_json(response)
         if isinstance(data, dict):
             return {
                 "main_claim": data.get("main_claim", "") or "",
+                "context": data.get("context", "") or "",
+                "topic_summary": data.get("topic_summary", "") or "",
                 "anchors": data.get("anchors") or [],
                 "tone": data.get("tone", "neutral") or "neutral",
                 "tags": data.get("tags") or [],
@@ -48,6 +54,8 @@ async def build_post_brief(post_text: str, llm=None) -> dict:
         pass
     return {
         "main_claim": post_text[:200] if len(post_text) > 200 else post_text,
+        "context": "",
+        "topic_summary": "",
         "anchors": [],
         "tone": "neutral",
         "tags": [],

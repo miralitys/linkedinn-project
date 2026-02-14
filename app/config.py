@@ -57,7 +57,8 @@ class Settings(BaseSettings):
         return _normalize_database_url(v) if isinstance(v, str) else v
 
     class Config:
-        env_file = ".env"
+        env_file = str(Path(__file__).resolve().parent.parent / ".env")
+        env_file_encoding = "utf-8"
         env_prefix = ""
         extra = "ignore"
 

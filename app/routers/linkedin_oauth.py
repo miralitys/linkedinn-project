@@ -5,20 +5,21 @@ LinkedIn OAuth 2.0 + Community Management API (memberCreatorPostAnalytics).
 результаты пишутся в linkedin_daily_metrics.
 """
 import logging
+import re
 import secrets
 from datetime import datetime, timedelta
 from typing import Optional
 from urllib.parse import quote, urlencode
 
 import httpx
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.db import get_session
-from app.models import LinkedInDailyMetric, LinkedInOAuth
+from app.models import LinkedInDailyMetric, LinkedInOAuth, LinkedInPostDailyMetric
 from app.services.crypto import decrypt_token, encrypt_token
 
 router = APIRouter(prefix="/linkedin", tags=["linkedin"])
@@ -76,6 +77,95 @@ def _normalize_redirect_uri(uri: Optional[str]) -> Optional[str]:
     if not uri:
         return None
     return uri.rstrip("/")
+
+
+def _extract_entity_from_post_ref(post_ref: str) -> tuple[str, str]:
+    """
+    Преобразует URL/URN поста в entity для q=entity:
+    - (share:urn:li:share:...)
+    - (ugc:urn:li:ugcPost:...)
+    """
+    ref = (post_ref or "").strip()
+    if not ref:
+        raise ValueError("post_ref is empty")
+
+    m_share = re.search(r"urn:li:share:(\d+)", ref, re.I)
+    if m_share:
+        return "share", f"urn:li:share:{m_share.group(1)}"
+
+    m_ugc = re.search(r"urn:li:ugcPost:(\d+)", ref, re.I)
+    if m_ugc:
+        return "ugc", f"urn:li:ugcPost:{m_ugc.group(1)}"
+
+    # Часто в UI/URL встречается activity-URN; для memberCreatorPostAnalytics используем share URN.
+    m_activity = re.search(r"urn:li:activity:(\d+)", ref, re.I)
+    if m_activity:
+        return "share", f"urn:li:share:{m_activity.group(1)}"
+
+    m_posts_activity = re.search(r"activity-(\d+)", ref, re.I)
+    if m_posts_activity:
+        return "share", f"urn:li:share:{m_posts_activity.group(1)}"
+
+    raise ValueError("Unsupported LinkedIn post URL/URN format")
+
+
+async def get_my_post_refs_from_linkedin_api(
+    session: AsyncSession,
+    count: int = 12,
+) -> list[str]:
+    """
+    Возвращает ссылки/URN последних постов текущего пользователя напрямую из LinkedIn API.
+    Требует доступный OAuth токен.
+    """
+    token = await _get_valid_token(session)
+    if not token:
+        raise RuntimeError("LinkedIn not connected")
+
+    version = _linkedin_version()
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Linkedin-Version": version,
+        "X-Restli-Protocol-Version": "2.0.0",
+        "Content-Type": "application/json",
+    }
+
+    # OIDC userinfo -> sub => urn:li:person:{sub}
+    async with httpx.AsyncClient() as client:
+        me_resp = await client.get("https://api.linkedin.com/v2/userinfo", headers=headers)
+    if me_resp.status_code != 200:
+        raise RuntimeError(f"LinkedIn userinfo failed: {me_resp.status_code}")
+    me = me_resp.json()
+    sub = (me.get("sub") or "").strip()
+    if not sub:
+        raise RuntimeError("LinkedIn userinfo missing sub")
+    author_urn = f"urn:li:person:{sub}"
+
+    encoded_author = quote(author_urn, safe="")
+    safe_count = max(1, min(int(count or 12), 50))
+    url = f"{LINKEDIN_API_BASE}/posts?q=author&author={encoded_author}&count={safe_count}"
+
+    async with httpx.AsyncClient() as client:
+        posts_resp = await client.get(url, headers=headers)
+    if posts_resp.status_code != 200:
+        raise RuntimeError(f"LinkedIn posts API failed: {posts_resp.status_code} {posts_resp.text[:160]}")
+
+    data = posts_resp.json()
+    elements = data.get("elements") or []
+    refs: list[str] = []
+    for el in elements:
+        # В Posts API id обычно urn:li:share:* или urn:li:ugcPost:*
+        post_id = (el.get("id") or "").strip()
+        if post_id and (post_id.startswith("urn:li:share:") or post_id.startswith("urn:li:ugcPost:")):
+            refs.append(post_id)
+    # Удаляем дубли, сохраняя порядок.
+    uniq: list[str] = []
+    seen = set()
+    for r in refs:
+        if r in seen:
+            continue
+        seen.add(r)
+        uniq.append(r)
+    return uniq
 
 
 @router.get("/oauth/setup")
@@ -203,6 +293,17 @@ async def linkedin_status(session: AsyncSession = Depends(get_session)):
     return {"connected": row is not None}
 
 
+@router.post("/disconnect")
+async def linkedin_disconnect(session: AsyncSession = Depends(get_session)):
+    """Отключить LinkedIn: удалить токен из БД."""
+    r = await session.execute(select(LinkedInOAuth))
+    rows = list(r.scalars().all())
+    for row in rows:
+        await session.delete(row)
+    await session.commit()
+    return {"connected": False}
+
+
 @router.get("/metrics")
 async def linkedin_metrics(
     days: int = 30,
@@ -221,6 +322,161 @@ async def linkedin_metrics(
         {"metric_date": m.metric_date.isoformat()[:10], "metric_type": m.metric_type, "count": m.count}
         for m in rows
     ]
+
+
+@router.get("/post-metrics")
+async def linkedin_post_metrics(
+    post_url: str,
+    days: int = 30,
+    save_history: bool = True,
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Метрики конкретного поста LinkedIn (lifetime TOTAL) через memberCreatorPostAnalytics q=entity.
+    post_url может быть LinkedIn URL или URN.
+    """
+    try:
+        return await sync_post_metrics_for_ref(session, post_url=post_url, days=days, save_history=save_history)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+async def sync_post_metrics_for_ref(
+    session: AsyncSession,
+    post_url: str,
+    days: int = 30,
+    save_history: bool = True,
+) -> dict:
+    """Синк и чтение метрик для конкретного поста (служебная функция для API/страниц)."""
+    token = await _get_valid_token(session)
+    if not token:
+        raise RuntimeError("LinkedIn not connected")
+
+    entity_type, entity_urn = _extract_entity_from_post_ref(post_url)
+    version = _linkedin_version()
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Linkedin-Version": version,
+        "X-Restli-Protocol-Version": "2.0.0",
+        "Content-Type": "application/json",
+    }
+    encoded_urn = quote(entity_urn, safe="")
+    entity_param = f"({entity_type}:{encoded_urn})"
+
+    async def _fetch_metric(metric_type: str, aggregation: str, date_range: Optional[str] = None) -> tuple[int, list, Optional[str]]:
+        url = (
+            f"{LINKEDIN_API_BASE}/memberCreatorPostAnalytics"
+            f"?q=entity&entity={entity_param}&queryType={metric_type}&aggregation={aggregation}"
+        )
+        if date_range:
+            url += f"&dateRange={date_range}"
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(url, headers=headers)
+            if resp.status_code != 200:
+                return 0, [], f"{resp.status_code}: {resp.text[:200]}"
+            data = resp.json()
+            elements = data.get("elements") or []
+            total_count = 0
+            for el in elements:
+                total_count += int(el.get("count", 0) or 0)
+            return total_count, elements, None
+        except Exception as e:
+            return 0, [], str(e)
+
+    results: dict[str, int] = {}
+    errors: dict[str, str] = {}
+    for metric_type in METRIC_TYPES:
+        total_count, _, err = await _fetch_metric(metric_type, "TOTAL")
+        if err:
+            errors[metric_type] = err
+            continue
+        results[metric_type] = total_count
+
+    saved_rows = 0
+    if save_history:
+        safe_days = max(1, min(days, 90))
+        end = datetime.utcnow()
+        start = end - timedelta(days=safe_days)
+        date_range = (
+            f"(start:(year:{start.year},month:{start.month},day:{start.day}),"
+            f"end:(year:{end.year},month:{end.month},day:{end.day}))"
+        )
+        for metric_type in METRIC_TYPES:
+            _, elements, err = await _fetch_metric(metric_type, "DAILY", date_range=date_range)
+            if err:
+                errors.setdefault(metric_type, err)
+                continue
+            for el in elements:
+                dr = el.get("dateRange") or {}
+                start_d = dr.get("start") or {}
+                y = start_d.get("year")
+                m = start_d.get("month")
+                d = start_d.get("day")
+                if not (y and m and d):
+                    continue
+                metric_date = datetime(y, m, d)
+                count = int(el.get("count", 0) or 0)
+                existing = await session.execute(
+                    select(LinkedInPostDailyMetric).where(
+                        LinkedInPostDailyMetric.post_urn == entity_urn,
+                        LinkedInPostDailyMetric.metric_date == metric_date,
+                        LinkedInPostDailyMetric.metric_type == metric_type,
+                    )
+                )
+                row = existing.scalar_one_or_none()
+                if row is None:
+                    session.add(
+                        LinkedInPostDailyMetric(
+                            post_urn=entity_urn,
+                            entity_type=entity_type,
+                            source_post_url=post_url,
+                            metric_date=metric_date,
+                            metric_type=metric_type,
+                            count=count,
+                        )
+                    )
+                    saved_rows += 1
+                else:
+                    row.count = count
+                    row.source_post_url = post_url
+                    row.entity_type = entity_type
+        await session.commit()
+
+    if not results:
+        raise RuntimeError("LinkedIn metrics fetch failed")
+
+    safe_days = max(1, min(days, 365))
+    since = datetime.utcnow() - timedelta(days=safe_days)
+    hist_q = (
+        select(LinkedInPostDailyMetric)
+        .where(
+            LinkedInPostDailyMetric.post_urn == entity_urn,
+            LinkedInPostDailyMetric.metric_date >= since,
+        )
+        .order_by(LinkedInPostDailyMetric.metric_date.asc(), LinkedInPostDailyMetric.metric_type.asc())
+    )
+    hist_r = await session.execute(hist_q)
+    history_rows = hist_r.scalars().all()
+    history_daily = [
+        {
+            "metric_date": h.metric_date.isoformat()[:10],
+            "metric_type": h.metric_type,
+            "count": h.count,
+        }
+        for h in history_rows
+    ]
+
+    return {
+        "entity_type": entity_type,
+        "entity_urn": entity_urn,
+        "metrics": results,
+        "history_daily": history_daily,
+        "saved_rows": saved_rows,
+        "errors": errors,
+    }
 
 
 async def run_linkedin_analytics_sync() -> None:

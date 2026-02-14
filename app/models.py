@@ -400,6 +400,24 @@ class LinkedInDailyMetric(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
+class LinkedInPostDailyMetric(Base):
+    """Метрики конкретного поста LinkedIn (q=entity, aggregation=DAILY)."""
+    __tablename__ = "linkedin_post_daily_metrics"
+    __table_args__ = (
+        UniqueConstraint("post_urn", "metric_date", "metric_type", name="uq_linkedin_post_daily_metric"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    post_urn: Mapped[str] = mapped_column(String(128), nullable=False)
+    entity_type: Mapped[str] = mapped_column(String(16), nullable=False)  # share | ugc
+    source_post_url: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
+    metric_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    metric_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    count: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class Usage(Base):
     """Учёт генераций (комментарии/посты) по пользователю и месяцу."""
     __tablename__ = "usage"

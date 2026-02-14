@@ -1,4 +1,4 @@
-# app/routers/admin.py — админ-панель: список пользователей
+# app/routers/admin.py — админ-панель: список пользователей, аналитика
 import bcrypt
 from datetime import datetime
 from typing import Optional

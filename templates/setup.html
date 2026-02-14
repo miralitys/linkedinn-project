@@ -522,6 +522,40 @@
   .linkedin-setup-body { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border); }
   .linkedin-setup-body[hidden] { display: none !important; }
 
+  .linkedin-status-card {
+    display: flex; align-items: flex-start; gap: var(--space-3);
+    padding: var(--space-4); margin-bottom: var(--space-4);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, rgba(99, 102, 241, 0.02) 100%);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--primary);
+  }
+  .linkedin-status-card p { margin: 0; font-size: var(--text-14); color: var(--text); line-height: 1.5; }
+  .linkedin-status-card .linkedin-status-icon {
+    width: 2rem; height: 2rem; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--primary-soft); color: var(--primary);
+    border-radius: var(--radius-sm);
+  }
+  .linkedin-status-card .linkedin-status-icon svg { width: 1.125rem; height: 1.125rem; }
+  .linkedin-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .linkedin-connected-block { padding: var(--space-3) 0; }
+  .linkedin-connected-row {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3);
+    padding: var(--space-4);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, transparent 100%);
+    border: 1px solid rgba(99, 102, 241, 0.12);
+    border-radius: var(--radius);
+  }
+  .linkedin-connected-badge {
+    display: inline-flex; align-items: center; gap: var(--space-2);
+    font-size: var(--text-14); font-weight: 500; color: var(--success, #059669);
+    padding: var(--space-1) var(--space-3);
+    background: var(--success-soft, #d1fae5);
+    border-radius: var(--radius-pill);
+  }
+  .linkedin-connected-badge svg { flex-shrink: 0; }
+
   /* Interview modals (без изменений логики) */
 
   @media (min-width: 768px) {
@@ -1433,53 +1467,46 @@
 </script>
 
 <section class="setup-section setup-section-linkedin">
-  <div class="setup-section-header linkedin-app-header" id="linkedin-app-header" role="button" tabindex="0" aria-expanded="false" aria-controls="linkedin-setup-body">
+  <div class="setup-section-header" id="linkedin-app-header" aria-expanded="false" aria-controls="linkedin-setup-body">
     <span class="setup-section-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
     <h2 class="setup-section-title">Настройка LinkedIn API</h2>
     <button type="button" id="linkedin-app-toggle" class="btn secondary btn-sm" aria-expanded="false">Показать</button>
   </div>
   <div id="linkedin-setup-body" class="linkedin-setup-body" hidden>
-    {% if request.query_params.get('linkedin') == 'connected' %}
-    <div style="border-left: 4px solid var(--accent); padding-left: 0.75rem; margin-bottom: 1rem;">
-      <p style="margin:0; color: var(--accent); font-weight: 500;">LinkedIn подключён. Метрики постов будут подтягиваться по расписанию (раз в сутки).</p>
-    </div>
-    {% elif request.query_params.get('linkedin') == 'config' %}
-    <div style="border-left: 4px solid #ca8a04; padding-left: 0.75rem; margin-bottom: 1rem;">
-      <p style="margin:0;">Укажите в .env: LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET, LINKEDIN_REDIRECT_URI.</p>
-      <p style="margin:0.75rem 0 0; font-size: 0.875rem;">В LinkedIn Developer Portal → Auth → Authorized redirect URLs добавьте <strong>точно</strong> такой же URL (как в .env), например: <code style="background: var(--bg-secondary); padding: 0.2rem 0.4rem;">http://localhost:8000/linkedin/oauth/callback</code> — без слэша в конце, с портом.</p>
+    {% if request.query_params.get('linkedin') == 'config' %}
+    <div class="linkedin-status-card" style="border-left-color: #ca8a04; background: linear-gradient(135deg, rgba(202, 138, 4, 0.06) 0%, rgba(202, 138, 4, 0.02) 100%); border-color: rgba(202, 138, 4, 0.2);">
+      <span class="linkedin-status-icon" style="background: rgba(202, 138, 4, 0.15); color: #ca8a04;"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></span>
+      <div>
+        <p style="font-weight: 500; margin-bottom: 0.5rem;">Укажите в .env: LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET, LINKEDIN_REDIRECT_URI.</p>
+        <p style="font-size: var(--text-14); color: var(--text-muted);">В LinkedIn Developer Portal → Auth → Authorized redirect URLs добавьте <strong>точно</strong> такой же URL, например: <code style="background: var(--bg-secondary); padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.8125rem;">http://localhost:8000/linkedin/oauth/callback</code></p>
+      </div>
     </div>
     {% elif request.query_params.get('linkedin') == 'denied' %}
-    <div style="border-left: 4px solid #dc2626; padding-left: 0.75rem; margin-bottom: 1rem;">
-      <p style="margin:0; font-weight: 500;">LinkedIn вернул ошибку при авторизации.</p>
-      <p style="margin:0.5rem 0 0; font-size: 0.875rem;"><strong>error:</strong> <code>{{ request.query_params.get('error', '') }}</code></p>
-      {% if request.query_params.get('error_description') %}
-      <p style="margin:0.25rem 0 0; font-size: 0.875rem;"><strong>описание:</strong> {{ request.query_params.get('error_description') }}</p>
-      {% endif %}
-      {% if request.query_params.get('error') == 'unauthorized_scope_error' %}
-      <p style="margin:0.75rem 0 0; font-size: 0.875rem; color: var(--text-secondary);">Запрошен доступ к метрикам постов, но у приложения нет такого разрешения. Сначала нажмите «Подключить LinkedIn» (только вход). После успешного входа можно нажать «Доступ к метрикам постов».</p>
-      {% endif %}
+    <div class="linkedin-status-card" style="border-left-color: var(--danger); background: linear-gradient(135deg, rgba(220, 38, 38, 0.06) 0%, rgba(220, 38, 38, 0.02) 100%); border-color: rgba(220, 38, 38, 0.2);">
+      <span class="linkedin-status-icon" style="background: var(--danger-soft); color: var(--danger);"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
+      <div>
+        <p style="font-weight: 500;">LinkedIn вернул ошибку при авторизации.</p>
+        <p style="margin-top: 0.5rem; font-size: var(--text-14);"><strong>error:</strong> <code>{{ request.query_params.get('error', '') }}</code></p>
+        {% if request.query_params.get('error_description') %}<p style="margin-top: 0.25rem; font-size: var(--text-14);"><strong>описание:</strong> {{ request.query_params.get('error_description') }}</p>{% endif %}
+        {% if request.query_params.get('error') == 'unauthorized_scope_error' %}<p style="margin-top: 0.5rem; font-size: var(--text-14); color: var(--text-muted);">Сначала нажмите «Подключить LinkedIn» (только вход), затем «Доступ к метрикам постов».</p>{% endif %}
+      </div>
     </div>
     {% endif %}
-    <p style="margin:0 0 0.75rem 0; font-size: 0.9375rem; color: var(--text-secondary);">OAuth 2.0 + Community Management API: раз в сутки вызывается memberCreatorPostAnalytics (q=me), результаты пишутся в DailyMetrics.</p>
-    <p id="linkedin-status" style="margin: 0 0 0.5rem 0; font-size: 0.875rem;">Загрузка…</p>
     <div id="linkedin-btns" style="display: none;">
-      <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem; color: var(--text-secondary);">Сначала нажмите «Подключить LinkedIn» (только вход). Если появится «Bummer» — в портале проверьте Auth → Redirect URLs. После успешного входа можно нажать «Доступ к метрикам постов».</p>
-      <a href="/linkedin/oauth/authorize" id="linkedin-connect-btn" class="btn secondary">Подключить LinkedIn</a>
-      <a href="/linkedin/oauth/authorize?metrics=1" class="btn secondary" style="margin-left: 0.5rem;">Доступ к метрикам постов</a>
+      <p style="margin: 0 0 var(--space-3); font-size: var(--text-14); color: var(--text-muted); line-height: 1.5;">Сначала нажмите «Подключить LinkedIn» (только вход). После успешного входа можно нажать «Доступ к метрикам постов».</p>
+      <div class="linkedin-actions">
+        <a href="/linkedin/oauth/authorize" id="linkedin-connect-btn" class="btn primary">Подключить LinkedIn</a>
+        <a href="/linkedin/oauth/authorize?metrics=1" class="btn secondary">Доступ к метрикам постов</a>
+      </div>
     </div>
-    <p id="linkedin-connected-msg" style="display: none; margin: 0; font-size: 0.875rem; color: var(--accent);">Аккаунт подключён. Метрики: <a href="/docs#/linkedin/linkedin_metrics_linkedin_metrics_get">GET /linkedin/metrics</a></p>
-    <div id="linkedin-setup" style="display: none; margin-top: 1rem; padding: 0.75rem; background: var(--bg-secondary); border-radius: 6px; font-size: 0.875rem;">
-      <p style="margin: 0 0 0.5rem 0; font-weight: 500;">Если «Bummer, something went wrong» — проверьте в <a href="https://www.linkedin.com/developers/apps" target="_blank" rel="noopener">LinkedIn Developer Portal</a>:</p>
-      <ol style="margin: 0.5rem 0 0 1rem; padding: 0;">
-        <li>Продукты <strong>Sign In with LinkedIn using OpenID Connect</strong> и <strong>Share on LinkedIn</strong> добавлены (Products).</li>
-        <li>В Auth → <strong>Authorized redirect URLs</strong> оставьте <strong>только один</strong> URL (удалите <code>http://localhost:8000/ui</code>, если есть):<br>
-          <code id="linkedin-redirect-uri" style="display: inline-block; margin-top: 0.25rem; padding: 0.25rem 0.5rem; background: var(--bg); border-radius: 4px; word-break: break-all;"></code>
-          <button type="button" id="linkedin-copy-uri" class="btn secondary" style="margin-left: 0.5rem; padding: 0.2rem 0.5rem; font-size: 0.8125rem;">Копировать</button>
-        </li>
-        <li>Client ID в приложении: <code id="linkedin-client-id"></code>. Убедитесь, что вы в <strong>Team members</strong> приложения.</li>
-        <li>После «Bummer» подождите 5 секунд — куда перенаправит? Если на эту страницу с красным блоком «LinkedIn вернул ошибку» — пришлите текст ошибки.</li>
-        <li><a href="/linkedin/oauth/debug-url" target="_blank">Показать точный URL запроса (JSON)</a> — скопируйте <code>authorization_url</code> и откройте в браузере для проверки.</li>
-      </ol>
+    <div id="linkedin-reconnect-wrap" class="linkedin-connected-block" style="display: none;">
+      <div class="linkedin-connected-row">
+        <span class="linkedin-connected-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Подключён</span>
+        <div class="linkedin-actions">
+          <button type="button" id="linkedin-disconnect-btn" class="btn secondary btn-sm">Отключить</button>
+          <a href="/linkedin/oauth/authorize?metrics=1" class="btn secondary btn-sm">Подключить</a>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -1498,34 +1525,27 @@
       }
       if (header) header.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
-    if (header && body) {
-      header.addEventListener('click', function(e) { e.preventDefault(); toggleLinkedInSection(); });
-      header.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleLinkedInSection(); } });
-    }
-    if (toggle) toggle.addEventListener('click', function(e) { e.stopPropagation(); toggleLinkedInSection(); });
+    if (toggle) toggle.addEventListener('click', toggleLinkedInSection);
   })();
   fetch('/linkedin/status').then(r => r.json()).then(d => {
-    const statusEl = document.getElementById('linkedin-status');
     const btns = document.getElementById('linkedin-btns');
-    const msg = document.getElementById('linkedin-connected-msg');
-    if (d.connected) { if (statusEl) statusEl.textContent = 'Статус: подключён'; if (btns) btns.style.display = 'none'; if (msg) msg.style.display = 'block'; }
-    else { if (statusEl) statusEl.textContent = 'Статус: не подключён'; if (btns) btns.style.display = 'block'; if (msg) msg.style.display = 'none'; }
-  }).catch(() => { const el = document.getElementById('linkedin-status'); if (el) el.textContent = 'Статус: ошибка запроса'; });
-  fetch('/linkedin/oauth/setup').then(r => r.json()).then(d => {
-    if (d && d.redirect_uri) {
-      const setupEl = document.getElementById('linkedin-setup');
-      const uriEl = document.getElementById('linkedin-redirect-uri');
-      const clientEl = document.getElementById('linkedin-client-id');
-      const copyBtn = document.getElementById('linkedin-copy-uri');
-      if (setupEl) setupEl.style.display = 'block';
-      if (uriEl) uriEl.textContent = d.redirect_uri;
-      if (clientEl) clientEl.textContent = d.client_id || '—';
-      if (copyBtn) copyBtn.onclick = () => {
-        navigator.clipboard.writeText(d.redirect_uri);
-        copyBtn.textContent = 'Скопировано';
-        setTimeout(() => { copyBtn.textContent = 'Копировать'; }, 2000);
-      };
-    }
+    const reconnectWrap = document.getElementById('linkedin-reconnect-wrap');
+    if (d.connected) { if (btns) btns.style.display = 'none'; if (reconnectWrap) reconnectWrap.style.display = 'block'; }
+    else { if (btns) btns.style.display = 'block'; if (reconnectWrap) reconnectWrap.style.display = 'none'; }
   }).catch(() => {});
+  document.getElementById('linkedin-disconnect-btn')?.addEventListener('click', function() {
+    const btn = this;
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.textContent = '…';
+    fetch('/linkedin/disconnect', { method: 'POST', credentials: 'include' }).then(function(r) {
+      if (r.ok) {
+        const btns = document.getElementById('linkedin-btns');
+        const reconnectWrap = document.getElementById('linkedin-reconnect-wrap');
+        if (btns) btns.style.display = 'block';
+        if (reconnectWrap) reconnectWrap.style.display = 'none';
+      }
+    }).catch(function() {}).finally(function() { btn.disabled = false; btn.textContent = 'Отключить'; });
+  });
 </script>
 {% endblock %}

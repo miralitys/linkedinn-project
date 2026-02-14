@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block title %}{{ (tr.admin_analytics_title if tr and tr.admin_analytics_title else 'Аналитика') }} — MyVOICE's{% endblock %}
+{% block content %}
+<div class="admin-analytics-page">
+<header class="page-header">
+  <div class="page-header-text">
+    <h1>{{ (tr.admin_analytics_title if tr and tr.admin_analytics_title else 'Аналитика') }}</h1>
+    <p class="page-header-desc">{{ (tr.admin_analytics_desc if tr and tr.admin_analytics_desc else 'Метрики постов LinkedIn за период') }} — {{ (tr.admin_analytics_period if tr and tr.admin_analytics_period else 'За 30 дн.')|replace('{{days}}', period_days|string) }}</p>
+  </div>
+</header>
+
+<div class="admin-analytics-stats">
+  <div class="admin-stat-card">
+    <span class="admin-stat-value">{{ impressions }}</span>
+    <span class="admin-stat-label">{{ (tr.admin_analytics_impressions if tr and tr.admin_analytics_impressions else 'Просмотры') }}</span>
+  </div>
+  <div class="admin-stat-card">
+    <span class="admin-stat-value">{{ members_reached }}</span>
+    <span class="admin-stat-label">{{ (tr.admin_analytics_reach if tr and tr.admin_analytics_reach else 'Охват') }}</span>
+  </div>
+  <div class="admin-stat-card">
+    <span class="admin-stat-value admin-stat-value-success">{{ reactions }}</span>
+    <span class="admin-stat-label">{{ (tr.admin_analytics_reactions if tr and tr.admin_analytics_reactions else 'Реакции') }}</span>
+  </div>
+  <div class="admin-stat-card">
+    <span class="admin-stat-value">{{ comments }}</span>
+    <span class="admin-stat-label">{{ (tr.admin_analytics_comments if tr and tr.admin_analytics_comments else 'Комментарии') }}</span>
+  </div>
+  <div class="admin-stat-card">
+    <span class="admin-stat-value">{{ reshares }}</span>
+    <span class="admin-stat-label">{{ (tr.admin_analytics_reshares if tr and tr.admin_analytics_reshares else 'Репосты') }}</span>
+  </div>
+</div>
+
+<section class="admin-post-analytics">
+  <div class="admin-post-analytics-head">
+    <h2 class="admin-post-analytics-title">Мои посты в LinkedIn — топ за {{ period_days }} дней</h2>
+    <span class="admin-post-analytics-count">{{ top_posts_total }} постов с метриками</span>
+  </div>
+  <p class="admin-post-source-note">Источник: {{ own_posts_source }}{% if own_post_refs_count is not none %} · найдено {{ own_post_refs_count }} постов{% endif %}</p>
+  {% if own_posts_sync_error %}
+  <p class="admin-post-source-error">{{ own_posts_sync_error }}</p>
+  {% endif %}
+  {% if top_posts and top_posts|length > 0 %}
+  <div class="admin-post-grid">
+    {% for p in top_posts %}
+    <article class="admin-post-card">
+      <div class="admin-post-card-top">
+        <div class="admin-post-rank">#{{ loop.index }}</div>
+        {% if p.post_url and p.post_url.startswith('http') %}
+        <a class="admin-post-link" href="{{ p.post_url }}" target="_blank" rel="noopener">Открыть пост ↗</a>
+        {% else %}
+        <span class="admin-post-link muted">URL не сохранён</span>
+        {% endif %}
+      </div>
+      <div class="admin-post-urn">{{ p.post_urn }}</div>
+      <div class="admin-post-metrics">
+        <span class="metric-chip"><strong>{{ p.IMPRESSION }}</strong> {{ (tr.admin_analytics_impressions if tr and tr.admin_analytics_impressions else 'Просмотры') }}</span>
+        <span class="metric-chip"><strong>{{ p.MEMBERS_REACHED }}</strong> {{ (tr.admin_analytics_reach if tr and tr.admin_analytics_reach else 'Охват') }}</span>
+        <span class="metric-chip"><strong>{{ p.REACTION }}</strong> {{ (tr.admin_analytics_reactions if tr and tr.admin_analytics_reactions else 'Реакции') }}</span>
+        <span class="metric-chip"><strong>{{ p.COMMENT }}</strong> {{ (tr.admin_analytics_comments if tr and tr.admin_analytics_comments else 'Комментарии') }}</span>
+        <span class="metric-chip"><strong>{{ p.RESHARE }}</strong> {{ (tr.admin_analytics_reshares if tr and tr.admin_analytics_reshares else 'Репосты') }}</span>
+      </div>
+      <div class="admin-post-engagement">Engagement: <strong>{{ p.ENGAGEMENT }}</strong></div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="admin-post-empty">Пока нет сохранённой аналитики по вашим опубликованным постам. Проверьте `linkedin_url` автора в Настройках и подключение RapidAPI.</div>
+  {% endif %}
+</section>
+</div>
+
+<style>
+  .admin-analytics-page { max-width: 100%; overflow-x: hidden; }
+  .admin-analytics-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+  @media (min-width: 640px) {
+    .admin-analytics-stats { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-4); }
+  }
+  .admin-analytics-stats .admin-stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 72px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  @media (min-width: 640px) {
+    .admin-analytics-stats .admin-stat-card { padding: var(--space-5); min-height: 88px; }
+  }
+  .admin-analytics-stats .admin-stat-card:hover {
+    border-color: var(--primary-soft, rgba(99, 102, 241, 0.3));
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  .admin-analytics-stats .admin-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+  @media (min-width: 640px) {
+    .admin-analytics-stats .admin-stat-value { font-size: 1.75rem; }
+  }
+  .admin-analytics-stats .admin-stat-value-success { color: var(--success, #10b981); }
+  .admin-analytics-stats .admin-stat-label {
+    font-size: var(--text-14);
+    color: var(--text-muted);
+    margin-top: var(--space-2);
+    line-height: 1.4;
+    max-width: 100%;
+  }
+  .admin-post-analytics {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    box-shadow: var(--elevation-1);
+  }
+  .admin-post-analytics-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+    flex-wrap: wrap;
+  }
+  .admin-post-analytics-title {
+    margin: 0;
+    font-size: var(--text-16);
+    font-weight: 600;
+    color: var(--text);
+  }
+  .admin-post-analytics-count {
+    font-size: var(--text-12);
+    color: var(--text-muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 4px 10px;
+  }
+  .admin-post-source-note {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-12);
+    color: var(--text-muted);
+  }
+  .admin-post-source-note a { color: var(--primary); text-decoration: none; }
+  .admin-post-source-note a:hover { text-decoration: underline; }
+  .admin-post-source-error {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-12);
+    color: var(--danger);
+    background: var(--danger-soft);
+    border: 1px solid rgba(220,38,38,0.15);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3);
+  }
+  .admin-post-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-3);
+  }
+  .admin-post-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-4);
+    background: linear-gradient(135deg, rgba(99,102,241,0.03) 0%, transparent 100%);
+  }
+  .admin-post-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+  }
+  .admin-post-rank {
+    font-size: var(--text-12);
+    color: var(--primary);
+    font-weight: 600;
+    background: var(--primary-soft);
+    border-radius: var(--radius-pill);
+    padding: 2px 8px;
+  }
+  .admin-post-link {
+    font-size: var(--text-12);
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .admin-post-link:hover { text-decoration: underline; }
+  .admin-post-link.muted {
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+  .admin-post-urn {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: var(--space-3);
+    word-break: break-all;
+  }
+  .admin-post-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+  .admin-post-metrics .metric-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 3px 9px;
+    background: var(--bg);
+  }
+  .admin-post-metrics .metric-chip strong {
+    color: var(--primary);
+    font-size: var(--text-12);
+    font-weight: 700;
+  }
+  .admin-post-engagement {
+    font-size: var(--text-12);
+    color: var(--text-muted);
+  }
+  .admin-post-engagement strong {
+    color: var(--success, #10b981);
+    font-weight: 700;
+  }
+  .admin-post-empty {
+    padding: var(--space-4);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    color: var(--text-muted);
+    font-size: var(--text-14);
+    background: var(--bg);
+  }
+</style>
+{% endblock %}

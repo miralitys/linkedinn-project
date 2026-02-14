@@ -216,8 +216,15 @@ async def set_locale(request: Request, locale: str = "ru", next: str = "/ui/post
 # Mount UI templates and static if present
 try:
     import json
-    from fastapi.templating import Jinja2Templates
+    from datetime import datetime, timedelta
 
+    from fastapi import Depends, HTTPException
+    from fastapi.templating import Jinja2Templates
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    from app.db import get_session
+    from app.models import LinkedInDailyMetric, LinkedInOAuth, LinkedInPostDailyMetric
     from app.translations import RU, get_locale_from_cookie, get_tr
 
     templates = Jinja2Templates(directory=str(settings.base_dir / "templates"))
@@ -327,6 +334,96 @@ try:
         ctx = _app_context(request)
         return templates.TemplateResponse(
             request, "pricing.html", {"request": request, **ctx}
+        )
+
+    @app.get("/analytics", response_class=HTMLResponse)
+    async def analytics_page(
+        request: Request,
+        session: AsyncSession = Depends(get_session),
+    ):
+        """Страница аналитики. Метрики LinkedIn за период (только для админов)."""
+        if request.session.get("user_role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        ctx = _app_context(request)
+        days = 30
+        since = datetime.utcnow() - timedelta(days=days)
+        r = await session.execute(
+            select(LinkedInDailyMetric).where(LinkedInDailyMetric.metric_date >= since)
+        )
+        rows = r.scalars().all()
+        totals = {"IMPRESSION": 0, "MEMBERS_REACHED": 0, "REACTION": 0, "COMMENT": 0, "RESHARE": 0}
+        for m in rows:
+            if m.metric_type in totals:
+                totals[m.metric_type] += m.count
+        r_oauth = await session.execute(select(LinkedInOAuth).limit(1))
+        linkedin_connected = r_oauth.scalar_one_or_none() is not None
+
+        # Аналитика "моих" постов: берём только посты автора напрямую из LinkedIn API.
+        own_post_refs: set[str] = set()
+        own_posts_source = "LinkedIn API /rest/posts?q=author"
+        own_posts_sync_error = None
+        if linkedin_connected:
+            try:
+                refs = await linkedin_oauth.get_my_post_refs_from_linkedin_api(session, count=12)
+                own_post_refs = set(refs)
+                for ref in refs:
+                    try:
+                        await linkedin_oauth.sync_post_metrics_for_ref(session, post_url=ref, days=30, save_history=True)
+                    except Exception:
+                        logging.exception("LinkedIn per-post sync failed for %s", ref)
+            except Exception as e:
+                logging.exception("Own posts analytics sync failed: %s", e)
+                own_posts_sync_error = str(e)
+
+        r_posts = await session.execute(
+            select(LinkedInPostDailyMetric).where(LinkedInPostDailyMetric.metric_date >= since)
+        )
+        post_rows = r_posts.scalars().all()
+        post_map: dict[str, dict] = {}
+        for m in post_rows:
+            src_ref = (m.source_post_url or "").strip()
+            if linkedin_connected and src_ref not in own_post_refs:
+                continue
+            p = post_map.get(m.post_urn)
+            if p is None:
+                p = {
+                    "post_urn": m.post_urn,
+                    "post_url": m.source_post_url or "",
+                    "IMPRESSION": 0,
+                    "MEMBERS_REACHED": 0,
+                    "REACTION": 0,
+                    "COMMENT": 0,
+                    "RESHARE": 0,
+                }
+                post_map[m.post_urn] = p
+            if m.source_post_url and not p.get("post_url"):
+                p["post_url"] = m.source_post_url
+            if m.metric_type in totals:
+                p[m.metric_type] += int(m.count or 0)
+        top_posts = list(post_map.values())
+        for p in top_posts:
+            p["ENGAGEMENT"] = p["REACTION"] + p["COMMENT"] + p["RESHARE"]
+        top_posts.sort(key=lambda x: (x["IMPRESSION"], x["ENGAGEMENT"]), reverse=True)
+        top_posts = top_posts[:12]
+        return templates.TemplateResponse(
+            request,
+            "admin_analytics.html",
+            {
+                "request": request,
+                **ctx,
+                "period_days": days,
+                "impressions": totals["IMPRESSION"],
+                "members_reached": totals["MEMBERS_REACHED"],
+                "reactions": totals["REACTION"],
+                "comments": totals["COMMENT"],
+                "reshares": totals["RESHARE"],
+                "linkedin_connected": linkedin_connected,
+                "top_posts": top_posts,
+                "top_posts_total": len(post_map),
+                "own_posts_source": own_posts_source,
+                "own_post_refs_count": len(own_post_refs),
+                "own_posts_sync_error": own_posts_sync_error,
+            },
         )
 except Exception as e:
     logging.exception("UI routes failed to load (templates/static): %s", e)

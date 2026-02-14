@@ -142,6 +142,7 @@
     </div>
     <h1 id="view-post-modal-title" class="view-post-drawer-title"></h1>
     <div id="view-post-meta-row" class="view-post-meta-row"></div>
+    <div id="view-post-linkedin-metrics" class="view-post-linkedin-metrics" style="display: none;"></div>
     <div id="view-post-content" class="view-post-body"></div>
     <div class="view-post-generate-block">
       <span class="drawer-footer-label">{{ tr.posts_generate_comment }}</span>
@@ -262,6 +263,19 @@
   .view-post-close:focus-visible { outline: none; box-shadow: var(--focus-ring); }
   .view-post-drawer-title { margin: 0 0 var(--space-2); font-size: var(--text-16); font-weight: 700; color: var(--text); line-height: 1.3; }
   .view-post-meta-row { font-size: var(--text-12); color: var(--text-muted); margin-bottom: var(--space-3); }
+  .view-post-linkedin-metrics { margin: 0 0 var(--space-3); }
+  .view-post-linkedin-metrics .metrics-title { font-size: var(--text-12); color: var(--text-muted); margin-bottom: var(--space-2); }
+  .view-post-linkedin-metrics .metrics-grid { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .view-post-linkedin-metrics .metric-chip {
+    display: inline-flex; align-items: center; gap: var(--space-1);
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius-pill); padding: 4px 10px;
+    font-size: var(--text-12); color: var(--text);
+  }
+  .view-post-linkedin-metrics .metric-chip strong { font-size: var(--text-12); font-weight: 600; color: var(--primary); }
+  .view-post-linkedin-metrics .metrics-muted { font-size: var(--text-12); color: var(--text-muted); }
+  .view-post-linkedin-metrics .metrics-subtitle { font-size: 11px; color: var(--text-muted); margin: var(--space-2) 0 var(--space-1); }
+  .view-post-linkedin-metrics .metrics-grid.metrics-grid-muted .metric-chip strong { color: var(--text); }
   .view-post-body { font-size: var(--text-14); line-height: 1.55; white-space: pre-wrap; margin-bottom: var(--space-4); color: var(--text); flex: 1; }
   .drawer-footer-label { display: block; font-size: var(--text-14); font-weight: 600; margin-bottom: var(--space-2); color: var(--text); }
   .drawer-footer-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-end; margin-bottom: var(--space-3); }
@@ -598,6 +612,7 @@
   });
 
   const viewPostLinkHeader = document.getElementById('view-post-link-header');
+  const viewPostLinkedInMetrics = document.getElementById('view-post-linkedin-metrics');
   const viewPostGenerateReply = document.getElementById('view-post-generate-reply');
   const viewPostReplyResult = document.getElementById('view-post-reply-result');
   const viewPostReplySingle = document.getElementById('view-post-reply-single');
@@ -629,6 +644,66 @@ btn.textContent = (tr.posts_copied || 'Copied');
   let currentViewPostUrl = '';
   let currentReplyVariants = null;
   let showingAllVariants = false;
+  function renderLinkedInMetrics(metrics, historyDaily) {
+    if (!viewPostLinkedInMetrics) return;
+    const order = ['IMPRESSION', 'MEMBERS_REACHED', 'REACTION', 'COMMENT', 'RESHARE'];
+    const labels = {
+      IMPRESSION: (tr.admin_analytics_impressions || 'Просмотры'),
+      MEMBERS_REACHED: (tr.admin_analytics_reach || 'Охват'),
+      REACTION: (tr.admin_analytics_reactions || 'Реакции'),
+      COMMENT: (tr.admin_analytics_comments || 'Комментарии'),
+      RESHARE: (tr.admin_analytics_reshares || 'Репосты'),
+    };
+    const chips = order
+      .filter((k) => metrics && Object.prototype.hasOwnProperty.call(metrics, k))
+      .map((k) => '<span class="metric-chip"><strong>' + escapeHtml(String(metrics[k] || 0)) + '</strong> ' + escapeHtml(labels[k] || k) + '</span>')
+      .join('');
+    if (!chips) {
+      viewPostLinkedInMetrics.style.display = 'none';
+      viewPostLinkedInMetrics.innerHTML = '';
+      return;
+    }
+    const last7Totals = {};
+    if (Array.isArray(historyDaily) && historyDaily.length) {
+      const dates = Array.from(new Set(historyDaily.map((r) => r.metric_date))).sort();
+      const last7Dates = dates.slice(-7);
+      for (let i = 0; i < historyDaily.length; i++) {
+        const row = historyDaily[i] || {};
+        if (!last7Dates.includes(row.metric_date)) continue;
+        const mt = String(row.metric_type || '');
+        const c = parseInt(row.count || 0, 10) || 0;
+        last7Totals[mt] = (last7Totals[mt] || 0) + c;
+      }
+    }
+    const trendChips = order
+      .filter((k) => Object.prototype.hasOwnProperty.call(last7Totals, k))
+      .map((k) => '<span class="metric-chip"><strong>' + escapeHtml(String(last7Totals[k] || 0)) + '</strong> ' + escapeHtml(labels[k] || k) + '</span>')
+      .join('');
+    viewPostLinkedInMetrics.innerHTML =
+      '<div class="metrics-title">LinkedIn analytics</div>' +
+      '<div class="metrics-grid">' + chips + '</div>' +
+      (trendChips ? ('<div class="metrics-subtitle">Динамика за 7 дней</div><div class="metrics-grid metrics-grid-muted">' + trendChips + '</div>') : '');
+    viewPostLinkedInMetrics.style.display = 'block';
+  }
+  async function loadLinkedInPostMetrics(postUrl) {
+    if (!viewPostLinkedInMetrics) return;
+    if (!postUrl || postUrl === '#') {
+      viewPostLinkedInMetrics.style.display = 'none';
+      viewPostLinkedInMetrics.innerHTML = '';
+      return;
+    }
+    viewPostLinkedInMetrics.style.display = 'block';
+    viewPostLinkedInMetrics.innerHTML = '<div class="metrics-muted">Загружаем метрики LinkedIn…</div>';
+    try {
+      const r = await fetch('/linkedin/post-metrics?post_url=' + encodeURIComponent(postUrl) + '&days=30&save_history=true', { credentials: 'include' });
+      if (!r.ok) throw new Error('metrics fetch failed');
+      const data = await r.json();
+      renderLinkedInMetrics(data.metrics || {}, data.history_daily || []);
+    } catch (_) {
+      viewPostLinkedInMetrics.style.display = 'none';
+      viewPostLinkedInMetrics.innerHTML = '';
+    }
+  }
   function updateGenerateReplyButtonLabel() {
     if (!viewPostGenerateReply) return;
     const hasReplies = currentReplyVariants && typeof currentReplyVariants === 'object' && (currentReplyVariants.short || currentReplyVariants.medium || currentReplyVariants.long);
@@ -770,6 +845,7 @@ btn.textContent = (tr.posts_copied || 'Copied');
       if (p.views_count != null) metaParts.push('👁 ' + p.views_count);
       metaRow.textContent = metaParts.length ? metaParts.join(' · ') : '';
       document.getElementById('view-post-content').textContent = currentViewPostContent || (tr.posts_no_text || '(no text)');
+      loadLinkedInPostMetrics(currentViewPostUrl);
       const viewPostLinkHeader = document.getElementById('view-post-link-header');
       if (viewPostLinkHeader) {
         viewPostLinkHeader.href = currentViewPostUrl;
