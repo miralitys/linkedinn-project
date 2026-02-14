@@ -44,6 +44,7 @@ async def generate_drafts(
     post_text: str,
     post_brief: dict,
     author_directive: dict,
+    author_applicability: dict,
     policy: dict,
     product_plan: Optional[dict],
     mode: str,
@@ -76,6 +77,7 @@ async def generate_drafts(
         post_text=post_text,
         post_brief_json=json.dumps(post_brief, ensure_ascii=False),
         author_directive_json=json.dumps(author_directive, ensure_ascii=False),
+        author_applicability_json=json.dumps(author_applicability or {}, ensure_ascii=False),
         product_plan_section=full_product + strict_note,
     )
 

@@ -6,12 +6,12 @@
 Правила fail (нарушение = немедленный fail):
 {policy_fail_rules}
 
-Всегда fail: no_post_anchor, fake_personal_claim, lecture_mode, toxicity
+Всегда fail: fake_personal_claim, lecture_mode, toxicity, no_personal_stance, post_copy_overlap, anchor_copy_overlap, rhetoric_reaction
 
 Черновик:
 {draft}
 
-Якоря поста (должен быть >=1):
+Якоря поста (только как контекст, без прямого цитирования):
 {anchors}
 
 Ограничения автора:
@@ -31,7 +31,7 @@ Product plan (если есть):
     "integrity": 0-100,
     "salesiness": 0-100
   }},
-  "flags": ["generic_opening", "cliche", "lecture_mode", "fake_personal_claim", "no_post_anchor", "too_long", "too_formal", "product_mention", "cta", "link", "forbidden_claim_violation", "toxicity", "salesy_tone", "product_missing", "cta_missing", "em_dash", "colon"],
+  "flags": ["generic_opening", "cliche", "lecture_mode", "fake_personal_claim", "no_post_anchor", "too_long", "too_formal", "product_mention", "cta", "link", "forbidden_claim_violation", "toxicity", "salesy_tone", "product_missing", "cta_missing", "em_dash", "colon", "no_personal_stance", "post_copy_overlap", "anchor_copy_overlap", "rhetoric_reaction"],
   "patch_plan": [
     {{"op": "remove|replace|add", "hint": "конкретное указание"}}
   ]
