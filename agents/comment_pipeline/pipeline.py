@@ -20,6 +20,7 @@ _LOG = logging.getLogger(__name__)
 MAX_FIXES = 1
 ALL_VARIANTS = ("short", "medium", "long")
 DEFAULT_FALLBACK_VARIANTS = {"medium", "long"}
+V2_PROMPT_VERSIONS = {"v2", "comments_v2", "high_engagement_2026"}
 
 
 def _final_cleanup(text: str) -> str:
@@ -32,10 +33,71 @@ def _detect_language(post_text: str) -> str:
     return "Russian" if cyrillic > latin else "English"
 
 
+def _is_v2_prompt(prompt_version: str) -> bool:
+    return (prompt_version or "").strip().lower() in V2_PROMPT_VERSIONS
+
+
+def _get_nested(data: dict, path: str, default: str = "") -> str:
+    cur = data if isinstance(data, dict) else {}
+    for part in path.split("."):
+        if not isinstance(cur, dict):
+            return default
+        cur = cur.get(part)
+    return cur if isinstance(cur, str) else default
+
+
+def extract_author_voice(author_json: dict, post_language: str) -> list[str]:
+    author_json = author_json or {}
+    if post_language == "English":
+        phrases = [
+            _get_nested(author_json, "discipline_phrase_en")
+            or _get_nested(author_json, "voice.discipline_phrase_en")
+            or "system beats speed",
+            _get_nested(author_json, "chaos_phrase_en")
+            or _get_nested(author_json, "voice.chaos_phrase_en")
+            or "chaos costs money",
+            _get_nested(author_json, "system_phrase_en")
+            or _get_nested(author_json, "voice.system_phrase_en")
+            or "discipline decides",
+        ]
+    else:
+        phrases = [
+            _get_nested(author_json, "discipline_phrase_ru")
+            or _get_nested(author_json, "voice.discipline_phrase_ru")
+            or "порядок решает",
+            _get_nested(author_json, "chaos_phrase_ru")
+            or _get_nested(author_json, "voice.chaos_phrase_ru")
+            or "хаос стоит денег",
+            _get_nested(author_json, "system_phrase_ru")
+            or _get_nested(author_json, "voice.system_phrase_ru")
+            or "система важнее скорости",
+        ]
+    out: list[str] = []
+    for phrase in phrases:
+        p = (phrase or "").strip()
+        if p and p not in out:
+            out.append(p)
+    return out
+
+
+def _extract_author_name(author: Optional[dict], author_json: dict) -> str:
+    if isinstance(author, dict):
+        for key in ("full_name", "name"):
+            value = author.get(key)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+    for path in ("full_name", "name", "identity.full_name", "identity.name"):
+        value = _get_nested(author_json or {}, path)
+        if value.strip():
+            return value.strip()
+    return "Author"
+
+
 async def _self_review_fix_loop(
     draft: str,
     variant: str,
     post_text: str,
+    author_answers_66: dict,
     post_brief: dict,
     author_directive: dict,
     author_applicability: dict,
@@ -44,12 +106,18 @@ async def _self_review_fix_loop(
     mode: str,
     post_language: str,
     products: list,
+    author_name: str,
+    author_voice_phrases: list[str],
+    drafts_bundle: Optional[Dict[str, str]] = None,
+    prompt_version: str = "default",
     allow_fallback: bool = True,
     llm=None,
 ) -> str:
     """До 2 фиксов: review -> edit -> review. Если fail — fallback regenerate с stricter constraints."""
     current = draft
     for attempt in range(MAX_FIXES + 1):
+        bundle_current = dict(drafts_bundle or {})
+        bundle_current[variant] = current
         review = await review_draft(
             current,
             variant,
@@ -61,6 +129,9 @@ async def _self_review_fix_loop(
             mode,
             products=products,
             expected_language=post_language,
+            prompt_version=prompt_version,
+            author_key_phrases=author_voice_phrases,
+            drafts_bundle=bundle_current,
             llm=llm,
         )
         if review.get("pass"):
@@ -91,6 +162,9 @@ async def _self_review_fix_loop(
                 continue
             break
         if attempt < MAX_FIXES:
+            if _is_v2_prompt(prompt_version):
+                # v2: skip edit step and go straight to fallback regenerate
+                break
             current = await edit_draft(
                 current,
                 patch_plan,
@@ -105,6 +179,7 @@ async def _self_review_fix_loop(
                 post_text,
                 post_brief,
                 author_directive,
+                author_answers_66,
                 author_applicability,
                 policy,
                 product_plan,
@@ -113,9 +188,14 @@ async def _self_review_fix_loop(
                 llm=llm,
                 strict_mode=True,
                 variant_override=variant,
+                prompt_version=prompt_version,
+                author_name=author_name,
+                author_voice_phrases=author_voice_phrases,
             )
             fallback_text = fallback_drafts.get(variant, "").strip()
             if fallback_text:
+                bundle_fallback = dict(drafts_bundle or {})
+                bundle_fallback[variant] = fallback_text
                 review = await review_draft(
                     fallback_text,
                     variant,
@@ -127,6 +207,9 @@ async def _self_review_fix_loop(
                     mode,
                     products=products,
                     expected_language=post_language,
+                    prompt_version=prompt_version,
+                    author_key_phrases=author_voice_phrases,
+                    drafts_bundle=bundle_fallback,
                     llm=llm,
                 )
                 if review.get("pass"):
@@ -139,6 +222,8 @@ async def _self_review_fix_loop(
                         author_directive.get("constraints", {}),
                         llm=llm,
                     )
+                    bundle_edited = dict(drafts_bundle or {})
+                    bundle_edited[variant] = edited_fallback
                     review2 = await review_draft(
                         edited_fallback,
                         variant,
@@ -150,6 +235,9 @@ async def _self_review_fix_loop(
                         mode,
                         products=products,
                         expected_language=post_language,
+                        prompt_version=prompt_version,
+                        author_key_phrases=author_voice_phrases,
+                        drafts_bundle=bundle_edited,
                         llm=llm,
                     )
                     if review2.get("pass"):
@@ -165,6 +253,7 @@ async def prepare_comment_pipeline(
     products: list,
     mode: str,
     author: Optional[dict] = None,
+    prompt_version: str = "default",
     llm=None,
 ) -> Dict[str, Any]:
     """
@@ -179,6 +268,8 @@ async def prepare_comment_pipeline(
         mode = MODE_NETWORK
 
     post_language = _detect_language(post_text)
+    author_voice_phrases = extract_author_voice(author_answers_66 or {}, post_language)
+    author_name = _extract_author_name(author, author_answers_66 or {})
 
     # 1) BuildPostBrief
     post_brief = await build_post_brief(post_text, llm=llm)
@@ -220,23 +311,31 @@ async def prepare_comment_pipeline(
         post_text,
         post_brief,
         author_directive,
+        author_answers_66 or {},
         author_applicability,
         policy,
         product_plan,
         mode,
         post_language,
         llm=llm,
+        prompt_version=prompt_version,
+        author_name=author_name,
+        author_voice_phrases=author_voice_phrases,
     )
 
     return {
         "post_text": post_text,
         "post_language": post_language,
+        "author_answers_66": author_answers_66 or {},
         "post_brief": post_brief,
         "author_directive": author_directive,
         "author_applicability": author_applicability,
         "policy": policy,
         "product_plan": product_plan,
         "mode": mode,
+        "prompt_version": prompt_version or "default",
+        "author_name": author_name,
+        "author_voice_phrases": author_voice_phrases,
         "products": products or [],
         "drafts": drafts or {"short": "", "medium": "", "long": ""},
     }
@@ -265,6 +364,7 @@ async def finalize_comment_variants(
             text,
             variant,
             pipeline_ctx.get("post_text", ""),
+            pipeline_ctx.get("author_answers_66") or {},
             pipeline_ctx.get("post_brief") or {},
             pipeline_ctx.get("author_directive") or {},
             pipeline_ctx.get("author_applicability") or {},
@@ -273,6 +373,10 @@ async def finalize_comment_variants(
             pipeline_ctx.get("mode", MODE_NETWORK),
             pipeline_ctx.get("post_language", "English"),
             pipeline_ctx.get("products") or [],
+            pipeline_ctx.get("author_name", "Author"),
+            pipeline_ctx.get("author_voice_phrases") or [],
+            pipeline_ctx.get("drafts") or {},
+            prompt_version=pipeline_ctx.get("prompt_version", "default"),
             allow_fallback=variant in fallback_for,
             llm=llm,
         )
@@ -298,21 +402,24 @@ async def run_comment_pipeline(
     products: list,
     mode: str,
     author: Optional[dict] = None,
+    prompt_version: str = "default",
     llm=None,
 ) -> Dict[str, Any]:
+    is_v2_prompt = _is_v2_prompt(prompt_version)
     pipeline_ctx = await prepare_comment_pipeline(
         post_text=post_text,
         author_answers_66=author_answers_66,
         products=products,
         mode=mode,
         author=author,
+        prompt_version=prompt_version,
         llm=llm,
     )
     finals = await finalize_comment_variants(
         pipeline_ctx,
         variants=list(ALL_VARIANTS),
-        review_variants={"medium", "long"},
-        fallback_variants=DEFAULT_FALLBACK_VARIANTS,
+        review_variants=set(ALL_VARIANTS) if is_v2_prompt else {"medium", "long"},
+        fallback_variants=set(ALL_VARIANTS) if is_v2_prompt else DEFAULT_FALLBACK_VARIANTS,
         llm=llm,
     )
     return finals

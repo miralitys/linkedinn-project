@@ -137,6 +137,7 @@ async def _run_comment_agent_fast(
     author = payload.get("author") if isinstance(payload.get("author"), dict) else None
     products = payload.get("products") if isinstance(payload.get("products"), list) else []
     answers_66 = payload.get("author_answers_66") or payload.get("fingerprint") or {}
+    prompt_version = (payload.get("prompt_version") or "default").strip() or "default"
     llm_provider = payload.get("llm_provider")
     llm = get_llm_client(provider=llm_provider) if llm_provider else None
 
@@ -146,6 +147,7 @@ async def _run_comment_agent_fast(
         products=products,
         mode=goal,
         author=author,
+        prompt_version=prompt_version,
         llm=llm,
     )
     short_result = await finalize_comment_variants(

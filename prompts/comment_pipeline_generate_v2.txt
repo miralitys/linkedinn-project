@@ -1,0 +1,10 @@
+{author_name}: "{phrase1}", "{phrase2}", "{phrase3}". Write in MY voice!
+
+ONLY . , ! ? | 15/28/45 words
+
+POST: {post_text}
+
+3 COMMENTS:
+short:
+medium:
+long:

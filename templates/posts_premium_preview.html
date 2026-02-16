@@ -86,6 +86,7 @@
       <div id="parse-result-text" class="parse-result-text" style="white-space: pre-wrap; font-size: var(--text-14); margin-bottom: var(--space-4); max-height: 200px; overflow-y: auto; padding: var(--space-3); background: var(--bg); border-radius: var(--radius-sm);"></div>
       <p class="form-hint" style="margin: 0 0 var(--space-2);"><strong>{{ tr.parse_screenshot_which }}</strong></p>
       <img id="parse-result-screenshot" src="" alt="{{ tr.parse_screenshot_alt }}" style="max-width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+      <p id="parse-result-screenshot-note" class="form-hint" style="display: none; margin: var(--space-2) 0 0 0;"></p>
     </div>
     <div class="modal-actions">
       <button type="button" id="parse-modal-cancel" class="btn secondary">{{ tr.parse_cancel }}</button>
@@ -154,14 +155,13 @@
         <a id="view-post-link-header" href="#" target="_blank" rel="noopener" class="view-post-open-link link-tertiary" style="display: none;" aria-label="{{ tr.posts_open_original }}">{{ tr.posts_open_original }} <span aria-hidden="true">↗</span></a>
         <button type="button" class="view-post-close" id="view-post-drawer-close" aria-label="{{ tr.posts_close }}">×</button>
       </div>
-    </div>
-    <h1 id="view-post-modal-title" class="view-post-drawer-title"></h1>
-    <div id="view-post-meta-row" class="view-post-meta-row"></div>
-    <div id="view-post-linkedin-metrics" class="view-post-linkedin-metrics" style="display: none;"></div>
-    <div id="view-post-content" class="view-post-body"></div>
-    <div class="view-post-generate-block">
-      <span class="drawer-footer-label">{{ tr.posts_generate_comment }}</span>
-      <div class="drawer-footer-row">
+	    </div>
+	    <h1 id="view-post-modal-title" class="view-post-drawer-title"></h1>
+	    <div id="view-post-meta-row" class="view-post-meta-row"></div>
+	    <div id="view-post-content" class="view-post-body"></div>
+	    <div class="view-post-generate-block">
+	      <span class="drawer-footer-label">{{ tr.posts_generate_comment }}</span>
+	      <div class="drawer-footer-row">
         <div class="drawer-field">
           <label class="form-label" for="view-post-author-select">{{ tr.reddit_as_author }}</label>
           <select id="view-post-author-select" class="form-field-full" aria-label="{{ tr.reddit_author }}"><option value="">{{ tr.reddit_loading }}</option></select>
@@ -291,27 +291,14 @@
   .view-post-header-right { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
   .view-post-open-link { font-size: var(--text-14); font-weight: 500; white-space: nowrap; }
   .view-post-close { min-width: 32px; min-height: 32px; padding: 0; border: none; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: var(--radius-sm); font-size: 1.25rem; line-height: 1; display: flex; align-items: center; justify-content: center; transition: color var(--motion-fast), background var(--motion-fast); }
-  .view-post-close:hover { background: var(--bg); color: var(--text); }
-  .view-post-close:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-  .view-post-drawer-title { margin: 0 0 var(--space-2); font-size: var(--text-16); font-weight: 700; color: var(--text); line-height: 1.3; }
-  .view-post-meta-row { font-size: var(--text-12); color: var(--text-muted); margin-bottom: var(--space-3); }
-  .view-post-linkedin-metrics { margin: 0 0 var(--space-3); }
-  .view-post-linkedin-metrics .metrics-title { font-size: var(--text-12); color: var(--text-muted); margin-bottom: var(--space-2); }
-  .view-post-linkedin-metrics .metrics-grid { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-  .view-post-linkedin-metrics .metric-chip {
-    display: inline-flex; align-items: center; gap: var(--space-1);
-    background: var(--bg); border: 1px solid var(--border);
-    border-radius: var(--radius-pill); padding: 4px 10px;
-    font-size: var(--text-12); color: var(--text);
-  }
-  .view-post-linkedin-metrics .metric-chip strong { font-size: var(--text-12); font-weight: 600; color: var(--primary); }
-  .view-post-linkedin-metrics .metrics-muted { font-size: var(--text-12); color: var(--text-muted); }
-  .view-post-linkedin-metrics .metrics-subtitle { font-size: 11px; color: var(--text-muted); margin: var(--space-2) 0 var(--space-1); }
-  .view-post-linkedin-metrics .metrics-grid.metrics-grid-muted .metric-chip strong { color: var(--text); }
-  .view-post-body { font-size: var(--text-14); line-height: 1.55; white-space: pre-wrap; margin-bottom: var(--space-4); color: var(--text); flex: 1; }
-  .drawer-footer-label { display: block; font-size: var(--text-14); font-weight: 600; margin-bottom: var(--space-2); color: var(--text); }
-  .drawer-footer-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-end; margin-bottom: var(--space-3); }
-  .drawer-field { flex: 1; min-width: 120px; }
+	  .view-post-close:hover { background: var(--bg); color: var(--text); }
+	  .view-post-close:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+	  .view-post-drawer-title { margin: 0 0 var(--space-2); font-size: var(--text-16); font-weight: 700; color: var(--text); line-height: 1.3; }
+	  .view-post-meta-row { font-size: var(--text-12); color: var(--text-muted); margin-bottom: var(--space-3); }
+	  .view-post-body { font-size: var(--text-14); line-height: 1.55; white-space: pre-wrap; margin-bottom: var(--space-4); color: var(--text); flex: 1; }
+	  .drawer-footer-label { display: block; font-size: var(--text-14); font-weight: 600; margin-bottom: var(--space-2); color: var(--text); }
+	  .drawer-footer-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-end; margin-bottom: var(--space-3); }
+	  .drawer-field { flex: 1; min-width: 120px; }
   .drawer-field select { margin-bottom: 0; }
   .view-post-generate-block .form-label { margin-bottom: var(--space-1); font-size: var(--text-12); }
   .view-post-generate-progress {
@@ -899,6 +886,19 @@
     if (value === null || value === undefined) return '';
     return '<span class="post-metric">' + metricIconSvg(type) + '<span>' + escapeHtml(String(value)) + '</span></span>';
   }
+  function normalizeLinkedInOpenUrl(rawUrl) {
+    const raw = String(rawUrl || '').trim();
+    if (!raw) return '';
+    try {
+      if (raw.toLowerCase().startsWith('urn:li:activity:')) return 'https://www.linkedin.com/feed/update/' + raw + '/';
+      if (raw.startsWith('/feed/update/') || raw.startsWith('/posts/')) return 'https://www.linkedin.com' + raw;
+      if (/^https?:\/\//i.test(raw)) return raw;
+      if (/linkedin\.com/i.test(raw)) return 'https://' + raw.replace(/^\/+/, '');
+      return '';
+    } catch (_) {
+      return '';
+    }
+  }
   function resolvePostStatus(post, hasDraft) {
     const raw = String(post.status || post.parse_status || post.sync_status || '').toLowerCase();
     if (raw.indexOf('error') !== -1 || raw.indexOf('fail') !== -1) {
@@ -949,6 +949,7 @@
     postsList.innerHTML = filteredList.map(function(p) {
       const authorName = escapeHtml(p.person_name || (tr.contact_default_name || 'Contact #{}').replace('{}', p.person_id));
       const dateStr = formatDate(p.posted_at);
+      const linkedInUrl = normalizeLinkedInOpenUrl(p.post_url);
       const hasDraft = p.reply_variants && typeof p.reply_variants === 'object' && (p.reply_variants.short || p.reply_variants.medium || p.reply_variants.long);
       const status = resolvePostStatus(p, hasDraft);
       const sourceText = (p.title || p.content || '').trim() || (tr.post_no_title || 'No title');
@@ -963,18 +964,18 @@
       const openIcon = '<span aria-hidden="true">↗</span>';
       let primaryCtaHtml = '';
       if (status.key === 'comment-sent') {
-        primaryCtaHtml = '<button type="button" class="btn secondary btn-sm btn-open-comment" data-id="' + p.id + '" data-post-url="' + (p.post_url ? escapeHtml(p.post_url) : '') + '">' + (tr.posts_view || 'View') + '</button>';
+        primaryCtaHtml = '<button type="button" class="btn secondary btn-sm btn-open-comment" data-id="' + p.id + '" data-post-url="' + (linkedInUrl ? escapeHtml(linkedInUrl) : '') + '">' + (tr.posts_view || 'View') + '</button>';
       } else if (status.key === 'draft-ready') {
         primaryCtaHtml = '<button type="button" class="btn primary btn-sm btn-open-draft" data-id="' + p.id + '">' + (tr.posts_open_draft || 'Open draft') + '</button>';
       } else if (status.key === 'error') {
         primaryCtaHtml = '<button type="button" class="btn secondary btn-sm btn-generate-post" data-id="' + p.id + '">' + (tr.posts_retry || 'Retry') + '</button>';
       } else if (status.key === 'parsing') {
-        primaryCtaHtml = '<button type="button" class="btn secondary btn-sm btn-open-comment" data-id="' + p.id + '" data-post-url="' + (p.post_url ? escapeHtml(p.post_url) : '') + '">' + (tr.posts_view || 'View') + '</button>';
+        primaryCtaHtml = '<button type="button" class="btn secondary btn-sm btn-open-comment" data-id="' + p.id + '" data-post-url="' + (linkedInUrl ? escapeHtml(linkedInUrl) : '') + '">' + (tr.posts_view || 'View') + '</button>';
       } else {
         primaryCtaHtml = '<button type="button" class="btn primary btn-sm btn-generate-post" data-id="' + p.id + '">' + (tr.posts_generate_comment || 'Generate comment') + '</button>';
       }
-      return '<article class="post-card" data-id="' + p.id + '" role="button" tabindex="0">' +
-        (p.post_url ? '<a href="' + escapeHtml(p.post_url) + '" target="_blank" rel="noopener" class="post-card-open post-card-link-corner" aria-label="' + (tr.posts_open_linkedin || 'Open in LinkedIn') + '" title="' + (tr.posts_open_linkedin || 'Open in LinkedIn') + '">' + openIcon + '</a>' : '') +
+      return '<article class="post-card" data-id="' + p.id + '" data-post-url="' + (linkedInUrl ? escapeHtml(linkedInUrl) : '') + '" role="button" tabindex="0">' +
+        (linkedInUrl ? '<a href="' + escapeHtml(linkedInUrl) + '" target="_blank" rel="noopener" class="post-card-open post-card-link-corner" aria-label="' + (tr.posts_open_linkedin || 'Open in LinkedIn') + '" title="' + (tr.posts_open_linkedin || 'Open in LinkedIn') + '">' + openIcon + '</a>' : '') +
         '<div class="post-card-header">' +
           '<div class="post-card-meta-line"><span class="post-card-meta-author">' + authorName + '</span><span class="post-card-meta-dot" aria-hidden="true">•</span><span class="post-card-meta-date">' + escapeHtml(dateStr) + '</span></div>' +
           '<span class="post-card-status status-' + status.key + '"><span class="post-card-status-dot" aria-hidden="true"></span><span>' + escapeHtml(status.label) + '</span></span>' +
@@ -1005,6 +1006,8 @@
     postsList.querySelectorAll('.post-card').forEach(function(card) {
       card.addEventListener('click', function(e) {
         if (e.target.closest('.btn-delete') || e.target.closest('.btn-regenerate-comment') || e.target.closest('.btn-generate-post') || e.target.closest('.btn-open-comment') || e.target.closest('.btn-open-draft') || e.target.closest('.post-card-open') || e.target.closest('.btn-card-menu') || e.target.closest('.post-card-menu-dropdown') || e.target.closest('.btn-expand-post')) return;
+        const url = normalizeLinkedInOpenUrl(card.getAttribute('data-post-url'));
+        if (url) { window.open(url, '_blank', 'noopener'); return; }
         var id = parseInt(card.dataset.id, 10);
         if (!isNaN(id)) openViewPostModal(id);
       });
@@ -1012,6 +1015,8 @@
         if (e.key !== 'Enter' && e.key !== ' ') return;
         if (e.target.closest('.btn-delete') || e.target.closest('.btn-regenerate-comment') || e.target.closest('.btn-generate-post') || e.target.closest('.btn-open-comment') || e.target.closest('.btn-open-draft') || e.target.closest('.post-card-open') || e.target.closest('.btn-card-menu') || e.target.closest('.post-card-menu-dropdown') || e.target.closest('.btn-expand-post')) return;
         e.preventDefault();
+        const url = normalizeLinkedInOpenUrl(card.getAttribute('data-post-url'));
+        if (url) { window.open(url, '_blank', 'noopener'); return; }
         var id = parseInt(card.dataset.id, 10);
         if (!isNaN(id)) openViewPostModal(id);
       });
@@ -1031,7 +1036,7 @@
       btn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        var url = btn.getAttribute('data-post-url');
+        var url = normalizeLinkedInOpenUrl(btn.getAttribute('data-post-url'));
         if (url) window.open(url, '_blank', 'noopener');
       });
     });
@@ -1177,12 +1182,11 @@
     if (e.target === viewPostModal) closeViewPostDrawer();
   });
 
-  const viewPostLinkHeader = document.getElementById('view-post-link-header');
-  const viewPostLinkedInMetrics = document.getElementById('view-post-linkedin-metrics');
-  const viewPostGenerateReply = document.getElementById('view-post-generate-reply');
-  const viewPostReplyResult = document.getElementById('view-post-reply-result');
-  const viewPostReplySingle = document.getElementById('view-post-reply-single');
-  const viewPostReplyAll = document.getElementById('view-post-reply-all');
+	  const viewPostLinkHeader = document.getElementById('view-post-link-header');
+	  const viewPostGenerateReply = document.getElementById('view-post-generate-reply');
+	  const viewPostReplyResult = document.getElementById('view-post-reply-result');
+	  const viewPostReplySingle = document.getElementById('view-post-reply-single');
+	  const viewPostReplyAll = document.getElementById('view-post-reply-all');
   const viewPostGenerateProgress = document.getElementById('view-post-generate-progress');
   const viewPostGenerateProgressTrack = document.getElementById('view-post-generate-progress-track');
   const viewPostGenerateProgressFill = document.getElementById('view-post-generate-progress-fill');
@@ -1507,71 +1511,11 @@ btn.textContent = (tr.posts_copied || 'Copied');
     });
     if (Object.keys(fastCommentJobs).length) ensureFastCommentPolling();
   }
-  function renderLinkedInMetrics(metrics, historyDaily) {
-    if (!viewPostLinkedInMetrics) return;
-    const order = ['IMPRESSION', 'MEMBERS_REACHED', 'REACTION', 'COMMENT', 'RESHARE'];
-    const labels = {
-      IMPRESSION: (tr.admin_analytics_impressions || 'Просмотры'),
-      MEMBERS_REACHED: (tr.admin_analytics_reach || 'Охват'),
-      REACTION: (tr.admin_analytics_reactions || 'Реакции'),
-      COMMENT: (tr.admin_analytics_comments || 'Комментарии'),
-      RESHARE: (tr.admin_analytics_reshares || 'Репосты'),
-    };
-    const chips = order
-      .filter((k) => metrics && Object.prototype.hasOwnProperty.call(metrics, k))
-      .map((k) => '<span class="metric-chip"><strong>' + escapeHtml(String(metrics[k] || 0)) + '</strong> ' + escapeHtml(labels[k] || k) + '</span>')
-      .join('');
-    if (!chips) {
-      viewPostLinkedInMetrics.style.display = 'none';
-      viewPostLinkedInMetrics.innerHTML = '';
-      return;
-    }
-    const last7Totals = {};
-    if (Array.isArray(historyDaily) && historyDaily.length) {
-      const dates = Array.from(new Set(historyDaily.map((r) => r.metric_date))).sort();
-      const last7Dates = dates.slice(-7);
-      for (let i = 0; i < historyDaily.length; i++) {
-        const row = historyDaily[i] || {};
-        if (!last7Dates.includes(row.metric_date)) continue;
-        const mt = String(row.metric_type || '');
-        const c = parseInt(row.count || 0, 10) || 0;
-        last7Totals[mt] = (last7Totals[mt] || 0) + c;
-      }
-    }
-    const trendChips = order
-      .filter((k) => Object.prototype.hasOwnProperty.call(last7Totals, k))
-      .map((k) => '<span class="metric-chip"><strong>' + escapeHtml(String(last7Totals[k] || 0)) + '</strong> ' + escapeHtml(labels[k] || k) + '</span>')
-      .join('');
-    viewPostLinkedInMetrics.innerHTML =
-      '<div class="metrics-title">LinkedIn analytics</div>' +
-      '<div class="metrics-grid">' + chips + '</div>' +
-      (trendChips ? ('<div class="metrics-subtitle">Динамика за 7 дней</div><div class="metrics-grid metrics-grid-muted">' + trendChips + '</div>') : '');
-    viewPostLinkedInMetrics.style.display = 'block';
-  }
-  async function loadLinkedInPostMetrics(postUrl) {
-    if (!viewPostLinkedInMetrics) return;
-    if (!postUrl || postUrl === '#') {
-      viewPostLinkedInMetrics.style.display = 'none';
-      viewPostLinkedInMetrics.innerHTML = '';
-      return;
-    }
-    viewPostLinkedInMetrics.style.display = 'block';
-    viewPostLinkedInMetrics.innerHTML = '<div class="metrics-muted">Загружаем метрики LinkedIn…</div>';
-    try {
-      const r = await fetch('/linkedin/post-metrics?post_url=' + encodeURIComponent(postUrl) + '&days=30&save_history=true', { credentials: 'include' });
-      if (!r.ok) throw new Error('metrics fetch failed');
-      const data = await r.json();
-      renderLinkedInMetrics(data.metrics || {}, data.history_daily || []);
-    } catch (_) {
-      viewPostLinkedInMetrics.style.display = 'none';
-      viewPostLinkedInMetrics.innerHTML = '';
-    }
-  }
-  function updateGenerateReplyButtonLabel() {
-    if (!viewPostGenerateReply) return;
-    const hasReplies = currentReplyVariants && typeof currentReplyVariants === 'object' && (currentReplyVariants.short || currentReplyVariants.medium || currentReplyVariants.long);
-    viewPostGenerateReply.textContent = hasReplies ? (tr.posts_regenerate_comments || 'Regenerate comments') : (tr.posts_generate_comment || 'Generate comment');
-  }
+	  function updateGenerateReplyButtonLabel() {
+	    if (!viewPostGenerateReply) return;
+	    const hasReplies = currentReplyVariants && typeof currentReplyVariants === 'object' && (currentReplyVariants.short || currentReplyVariants.medium || currentReplyVariants.long);
+	    viewPostGenerateReply.textContent = hasReplies ? (tr.posts_regenerate_comments || 'Regenerate comments') : (tr.posts_generate_comment || 'Generate comment');
+	  }
   function formatProgressElapsed(ms) {
     const total = Math.max(0, Math.floor(ms / 1000));
     const min = Math.floor(total / 60);
@@ -1791,7 +1735,8 @@ btn.textContent = (tr.posts_copied || 'Copied');
     clearBackgroundGenerationNote();
     fetch('/posts/' + id).then(r => r.json()).then(p => {
       currentViewPostContent = p.content || '';
-      currentViewPostUrl = p.post_url || '#';
+      const normalizedViewPostUrl = normalizeLinkedInOpenUrl(p.post_url);
+      currentViewPostUrl = normalizedViewPostUrl || '#';
       document.getElementById('view-post-modal-title').textContent = p.title || (tr.posts_post_default || 'Post');
       document.getElementById('view-post-author').textContent = (p.person_name || (tr.contact_default_name || 'Contact #{}').replace('{}', p.person_id));
       document.getElementById('view-post-date').textContent = ' · ' + formatDate(p.posted_at);
@@ -1799,15 +1744,14 @@ btn.textContent = (tr.posts_copied || 'Copied');
       const metaParts = [];
       if (p.likes_count != null) metaParts.push('👍 ' + p.likes_count);
       if (p.comments_count != null) metaParts.push('💬 ' + p.comments_count);
-      if (p.views_count != null) metaParts.push('👁 ' + p.views_count);
-      metaRow.textContent = metaParts.length ? metaParts.join(' · ') : '';
-      document.getElementById('view-post-content').textContent = currentViewPostContent || (tr.posts_no_text || '(no text)');
-      loadLinkedInPostMetrics(currentViewPostUrl);
-      const viewPostLinkHeader = document.getElementById('view-post-link-header');
-      if (viewPostLinkHeader) {
-        viewPostLinkHeader.href = currentViewPostUrl;
-        viewPostLinkHeader.style.display = (currentViewPostUrl !== '#' ? 'inline-flex' : 'none');
-      }
+	      if (p.views_count != null) metaParts.push('👁 ' + p.views_count);
+	      metaRow.textContent = metaParts.length ? metaParts.join(' · ') : '';
+	      document.getElementById('view-post-content').textContent = currentViewPostContent || (tr.posts_no_text || '(no text)');
+	      const viewPostLinkHeader = document.getElementById('view-post-link-header');
+	      if (viewPostLinkHeader) {
+	        viewPostLinkHeader.href = currentViewPostUrl;
+	        viewPostLinkHeader.style.display = (currentViewPostUrl !== '#' ? 'inline-flex' : 'none');
+	      }
       const savedReplies = p.reply_variants && typeof p.reply_variants === 'object';
       if (savedReplies) {
         currentReplyVariants = p.reply_variants;
@@ -2100,6 +2044,16 @@ btn.textContent = (tr.posts_copied || 'Copied');
     parsePersonDropdown.hidden = true;
     const preview = document.getElementById('parse-result-preview');
     if (preview) { preview.style.display = 'none'; }
+    const resultImg = document.getElementById('parse-result-screenshot');
+    if (resultImg) {
+      resultImg.removeAttribute('src');
+      resultImg.style.display = 'none';
+    }
+    const resultNote = document.getElementById('parse-result-screenshot-note');
+    if (resultNote) {
+      resultNote.style.display = 'none';
+      resultNote.textContent = '';
+    }
     document.getElementById('parse-modal-cancel').textContent = tr.parse_cancel || 'Cancel';
     validateParseForm();
     parseModal.removeAttribute('hidden');
@@ -2128,7 +2082,23 @@ btn.textContent = (tr.posts_copied || 'Copied');
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: url, person_id: personId })
-    }).then(r => r.json()).then(data => {
+    }).then(async (r) => {
+      const contentType = (r.headers.get('content-type') || '').toLowerCase();
+      if (!contentType.includes('application/json')) {
+        const redirectedToLogin = r.redirected && /\/login(?:\?|$)/.test(r.url || '');
+        if (redirectedToLogin) {
+          throw new Error(tr.parse_error_auth || 'Session expired. Refresh the page and sign in again.');
+        }
+        const bodyText = await r.text();
+        const shortBody = (bodyText || '').replace(/\s+/g, ' ').slice(0, 140);
+        throw new Error((tr.parse_error_non_json || 'Server returned an invalid response format.') + ` HTTP ${r.status}` + (shortBody ? `: ${shortBody}` : ''));
+      }
+      const data = await r.json();
+      if (!r.ok && !data.error) {
+        throw new Error(data.detail || `HTTP ${r.status}`);
+      }
+      return data;
+    }).then(data => {
       if (data.error) {
         parseStatus.textContent = data.error + ' ' + (tr.parse_retry_after_check || 'Retry: click the button again after checking.');
         parseStatus.style.color = 'var(--danger)';
@@ -2138,13 +2108,23 @@ btn.textContent = (tr.posts_copied || 'Copied');
         const preview = document.getElementById('parse-result-preview');
         const resultText = document.getElementById('parse-result-text');
         const resultImg = document.getElementById('parse-result-screenshot');
+        const resultNote = document.getElementById('parse-result-screenshot-note');
         const text = (data.parsed && data.parsed.text) ? data.parsed.text : (data.post && data.post.content) ? data.post.content : (tr.posts_no_text || '(no text)');
         resultText.textContent = text;
         if (data.screenshot_base64) {
           resultImg.src = 'data:image/png;base64,' + data.screenshot_base64;
           resultImg.style.display = 'block';
+          if (resultNote) {
+            resultNote.style.display = 'none';
+            resultNote.textContent = '';
+          }
         } else {
+          resultImg.removeAttribute('src');
           resultImg.style.display = 'none';
+          if (resultNote) {
+            resultNote.textContent = tr.parse_screenshot_unavailable || 'Screenshot is unavailable for this result.';
+            resultNote.style.display = 'block';
+          }
         }
         preview.style.display = 'block';
         document.getElementById('parse-modal-cancel').textContent = tr.posts_close || tr.parse_cancel || 'Close';

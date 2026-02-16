@@ -830,6 +830,10 @@
   const refreshTextEl = refreshBtn ? refreshBtn.querySelector('.refresh-text') : null;
   const refreshDefaultText = refreshTextEl ? refreshTextEl.textContent : uiText(tr.reddit_refresh, 'Refresh', 'Обновить');
   let isRefreshInFlight = false;
+  const redditQueryParams = new URLSearchParams(window.location.search || '');
+  const composeRedditIdRaw = redditQueryParams.get('compose_reddit_id') || redditQueryParams.get('open_reddit_id') || '';
+  let composeRedditId = parseInt(composeRedditIdRaw, 10);
+  let composeRedditAutoOpened = false;
   redditLoading.style.display = 'block';
 
   const REDDIT_STATUS_LABELS = {
@@ -845,6 +849,20 @@
     if (refreshTextEl) refreshTextEl.textContent = isLoading
       ? uiText(tr.reddit_updating, 'Updating…', 'Обновление…')
       : refreshDefaultText;
+  }
+
+  function clearComposeRedditQuery() {
+    if (!history.replaceState) return;
+    var cleanUrl = window.location.pathname + (window.location.hash || '');
+    history.replaceState({}, document.title, cleanUrl);
+  }
+
+  function tryOpenComposeRedditFromQuery() {
+    if (composeRedditAutoOpened) return;
+    if (!composeRedditId || composeRedditId <= 0) return;
+    composeRedditAutoOpened = true;
+    openViewRedditModal(composeRedditId, { focusGenerate: true });
+    clearComposeRedditQuery();
   }
 
   let savedSubredditNames = [];
@@ -1117,6 +1135,7 @@
       redditList.querySelectorAll('.btn-generate-post').forEach(btn => {
         btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openViewRedditModal(parseInt(btn.dataset.id, 10), { focusGenerate: true }); });
       });
+      tryOpenComposeRedditFromQuery();
     }).catch((err) => {
       redditLoading.style.display = 'none';
       redditEmpty.style.display = 'none';

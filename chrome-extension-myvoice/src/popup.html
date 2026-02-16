@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MyVOICE's Saver</title>
+    <link rel="stylesheet" href="./popup.css">
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="hero">
+        <img class="logo-dot" src="../icons/icon48.png" alt="MyVOICE's">
+        <div>
+          <h1>MyVOICE's Saver</h1>
+          <p class="subtitle">Проверяем новые посты ваших контактов в LinkedIn и добавляем их в систему.</p>
+        </div>
+      </header>
+
+      <section class="panel controls">
+        <div class="row">
+          <button id="scan-btn" type="button" class="secondary">Проверить новые посты</button>
+          <button id="reload-people-btn" type="button" class="secondary">Обновить контакты</button>
+        </div>
+        <p id="scan-summary" class="summary">Контакты еще не загружены.</p>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Новые посты (нет в базе)</h2>
+        <div id="new-posts-list" class="posts-list"></div>
+      </section>
+
+      <div class="actions">
+        <button id="add-btn" type="button" class="primary" disabled>Добавить</button>
+        <button id="login-btn" type="button" class="ghost hidden">Войти в MyVOICE</button>
+      </div>
+
+      <p id="status" class="status">Готово к проверке.</p>
+      <p class="help">
+        Нужно изменить настройки? Откройте <a href="#" id="open-options-link">extension options</a>.
+      </p>
+    </main>
+
+    <script type="module" src="./popup.js"></script>
+  </body>
+</html>

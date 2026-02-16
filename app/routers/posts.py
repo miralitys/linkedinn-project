@@ -1,8 +1,10 @@
 # app/routers/posts.py
 import asyncio
 import random
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from urllib.parse import urlsplit, urlunsplit
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -27,11 +29,76 @@ from app.schemas import (
     PostParseFromUrlResponse,
 )
 from app.config import settings
-from app.services.post_parser import parse_post_from_url
+from app.services.post_parser import capture_post_screenshot_base64, parse_post_from_url
 from app.services.rapidapi_linkedin import fetch_post_via_rapidapi, fetch_profile_posts, _parse_posted_at
 
 
 router = APIRouter(prefix="/posts", tags=["posts"])
+
+
+def _extract_linkedin_post_key(url: Optional[str]) -> Optional[str]:
+    """Возвращает стабильный ключ поста LinkedIn (activity/ugcPost id), если удалось извлечь."""
+    s = str(url or "").strip()
+    if not s:
+        return None
+    m = re.search(r"(?:urn:li:activity:|activity-|ugcPost-)(\d+)", s, re.I)
+    return m.group(1) if m else None
+
+
+def _canonical_post_url(url: Optional[str]) -> str:
+    """Нормализует URL поста для сравнения дублей (без query/fragment, без хвостового слеша)."""
+    s = str(url or "").strip()
+    if not s:
+        return ""
+    try:
+        p = urlsplit(s)
+        scheme = (p.scheme or "https").lower()
+        netloc = p.netloc.lower()
+        path = (p.path or "").rstrip("/")
+        return urlunsplit((scheme, netloc, path, "", ""))
+    except Exception:
+        return s.rstrip("/")
+
+
+async def _find_existing_post_for_user(
+    session: AsyncSession,
+    user_id: int,
+    post_url: Optional[str],
+) -> Optional[ContactPost]:
+    """Ищет уже существующий пост пользователя по ключу LinkedIn post id или каноническому URL."""
+    raw = str(post_url or "").strip()
+    if not raw:
+        return None
+
+    post_key = _extract_linkedin_post_key(raw)
+    canonical = _canonical_post_url(raw)
+
+    q = (
+        select(ContactPost)
+        .options(selectinload(ContactPost.person))
+        .join(Person, Person.id == ContactPost.person_id)
+        .where(Person.user_id == user_id)
+        .where(ContactPost.post_url.isnot(None))
+    )
+    if post_key:
+        q = q.where(ContactPost.post_url.like(f"%{post_key}%"))
+    elif canonical:
+        q = q.where(ContactPost.post_url.like(f"%{canonical}%"))
+    q = q.limit(200)
+
+    r = await session.execute(q)
+    candidates = list(r.scalars().all())
+    for post in candidates:
+        existing_url = str(post.post_url or "").strip()
+        if not existing_url:
+            continue
+        if post_key:
+            if _extract_linkedin_post_key(existing_url) == post_key:
+                return post
+            continue
+        if _canonical_post_url(existing_url) == canonical:
+            return post
+    return None
 
 
 def _posted_at_to_utc(dt: datetime, tz_name: str) -> datetime:
@@ -345,6 +412,14 @@ async def parse_post_from_url_route(
     if "error" in result:
         return PostParseFromUrlResponse(error=result["error"])
 
+    # RapidAPI-ветка не возвращает скриншот: добираем его отдельно для превью в модалке.
+    if not result.get("_screenshot_base64"):
+        screenshot_b64, _screenshot_error = await capture_post_screenshot_base64(
+            url, user_data_dir=settings.playwright_user_data_dir
+        )
+        if screenshot_b64:
+            result["_screenshot_base64"] = screenshot_b64
+
     # Маппинг полей из распознанного JSON в ContactPost
     def _int(v):
         if v is None:
@@ -418,6 +493,13 @@ async def create_post(
     session: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_id),
 ):
+    existing = await _find_existing_post_for_user(session, user_id, body.post_url)
+    if existing:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Такой пост уже есть в системе (Post ID: {existing.id}).",
+        )
+
     person = await session.get(Person, body.person_id)
     if not person:
         raise HTTPException(404, "Contact not found")

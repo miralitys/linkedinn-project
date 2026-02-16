@@ -31,11 +31,12 @@
       --text-16: 1rem;
       --text-20: 1.25rem;
       /* Semantic colors */
-      --bg: #f1f5f9;
+      --bg: #f8f9fc;
       --surface: #ffffff;
       --text: #0f172a;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
+      --text-secondary: #6b7280;
+      --text-muted: #9ca3af;
+      --border: #e5e7eb;
       --primary: #6366f1;
       --primary-hover: #4f46e5;
       --primary-soft: rgba(99, 102, 241, 0.12);
@@ -49,13 +50,12 @@
       --elevation-2: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
       --elevation-modal: 0 25px 50px -12px rgba(0,0,0,0.25);
       /* Motion */
-      --motion-fast: 0.15s ease;
+      --motion-fast: 0.18s ease-out;
       --motion-normal: 0.25s ease;
       /* Legacy aliases (no API/logic change) */
       --bg-secondary: var(--border);
-      --bg-sidebar: var(--surface);
+      --bg-sidebar: #f8f9fc;
       --card: var(--surface);
-      --text-secondary: var(--text-muted);
       --accent: var(--primary);
       --accent-hover: var(--primary-hover);
       --accent-soft: var(--primary-soft);
@@ -71,17 +71,17 @@
       background: var(--bg);
       color: var(--text);
       margin: 0;
-      line-height: 1.55;
+      line-height: 1.5;
       min-height: 100vh;
       display: flex;
       justify-content: center;
-      font-size: 13px;
+      font-size: 14px;
       -webkit-font-smoothing: antialiased;
     }
     .app-layout {
       display: flex;
       width: 100%;
-      max-width: 1440px;
+      max-width: 1680px;
       min-height: 100vh;
       background: var(--bg);
       box-shadow: 0 0 0 1px var(--border);
@@ -89,21 +89,22 @@
     a { color: var(--accent); text-decoration: none; }
     a:hover { color: var(--accent-hover); text-decoration: underline; }
 
-    .layout-sidebar {
-      width: 260px;
-      flex-shrink: 0;
-      align-self: flex-start;
-      position: sticky;
-      top: 0;
-      max-height: 100vh;
-      overflow-y: auto;
-      background: var(--bg-sidebar);
-      border-right: 1px solid var(--border);
-      padding: 1rem 0.75rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
+	    .layout-sidebar {
+	      width: 260px;
+	      flex-shrink: 0;
+	      align-self: flex-start;
+	      position: sticky;
+	      top: 0;
+	      height: 100vh;
+	      max-height: 100vh;
+	      overflow: hidden;
+	      background: #ffffff;
+	      border-right: 1px solid #e6e8ef;
+	      padding: 1rem 0.75rem;
+	      display: flex;
+	      flex-direction: column;
+	      gap: 0.25rem;
+	    }
     .logo {
       padding: 0 0.5rem 0.75rem;
       font-weight: 700;
@@ -111,7 +112,7 @@
       color: var(--text);
       display: flex;
       align-items: center;
-      gap: 0.7rem;
+      gap: var(--space-3);
       text-decoration: none;
       color: inherit;
     }
@@ -132,75 +133,112 @@
     .sidebar-nav {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 10px; /* between sections */
+      flex: 1 1 auto;
       min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: var(--space-1);
+      scrollbar-gutter: stable;
     }
     .nav-section {
       display: flex;
       flex-direction: column;
-      gap: 1px;
+      gap: 6px; /* inside section */
     }
     .nav-section-title {
-      margin: 0 0.625rem 0.15rem;
-      font-size: 0.6875rem;
+      margin: 0 var(--space-3);
+      font-size: 10px;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #94a3b8;
+      letter-spacing: 0.08em;
+      color: #9aa6bd;
       line-height: 1.2;
     }
     .nav-link {
       display: flex;
       align-items: center;
-      gap: 0.65rem;
-      padding: 0.52rem 0.75rem;
-      color: #4b5563;
-      font-size: 13px;
-      font-weight: 500;
+      gap: var(--space-3);
+      padding: var(--space-2) var(--space-3);
+      color: #6b7280;
+      font-size: 12px;
+      font-weight: 700;
       border: 1px solid transparent;
-      border-left-width: 2px;
+      border-left-width: 4px;
       margin: 0;
-      border-radius: 10px;
+      border-radius: 16px;
       transition: background var(--motion-fast), color var(--motion-fast), border-color var(--motion-fast);
     }
     .nav-link:hover {
       color: #111827;
-      background: #f8fafc;
-      border-color: #e6ebf3;
+      background: rgba(99, 102, 241, 0.06);
+      border-color: transparent;
       text-decoration: none;
     }
     .nav-link.active {
-      color: #0f172a;
-      background: #eef2ff;
+      padding: var(--space-2) var(--space-3);
+      color: #111827;
+      background: #f4f6ff;
       border-color: #c7d2fe;
-      border-left-color: #4f46e5;
-      box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.08);
+      border-left-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.12);
+      font-size: 14px;
+      font-weight: 700;
       text-decoration: none;
     }
     .nav-link svg {
-      width: 19px;
-      height: 19px;
+      width: 18px;
+      height: 18px;
       flex-shrink: 0;
-      opacity: 0.82;
+      color: #6b7280;
+      stroke-width: 1.5;
     }
-    .nav-link.active svg { opacity: 1; }
+    .nav-link svg * {
+      stroke-width: 1.5 !important;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+	    .nav-link.active svg { color: #111827; }
+	    .nav-link:hover svg { color: #111827; }
+    .nav-admin-badge {
+      margin-left: auto;
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 1px solid #c7d2fe;
+      background: #eef2ff;
+      color: #4338ca;
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
 
     .main-wrap {
       flex: 1;
       min-width: 0;
-      padding: var(--space-page) var(--space-10) var(--space-8);
+      padding: 48px 40px 40px;
       max-width: 100%;
       overflow-x: hidden;
+    }
+    main {
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
     }
     main h1 {
       font-size: 1.25rem;
       font-weight: 700;
-      margin: 0 0 0.35rem 0;
+      margin: 0 0 var(--space-2) 0;
       color: var(--text);
       letter-spacing: -0.02em;
+      line-height: 1.2;
     }
     main > p:first-of-type {
-      margin: 0 0 1.5rem 0;
+      margin: 0 0 var(--space-6) 0;
       color: var(--text-secondary);
       font-size: var(--text-14);
       line-height: 1.5;
@@ -208,20 +246,21 @@
     main h2 {
       font-size: 1rem;
       font-weight: 600;
-      margin: 0 0 0.75rem 0;
+      margin: 0 0 var(--space-3) 0;
       color: var(--text);
+      line-height: 1.2;
     }
-    main h3 { font-size: 0.9375rem; font-weight: 600; margin: 0 0 0.5rem 0; }
+    main h3 { font-size: 0.9375rem; font-weight: 600; margin: 0 0 var(--space-2) 0; line-height: 1.2; }
 
-    .page-hero { margin-bottom: 1.75rem; }
-    .page-hero h1 { margin-bottom: 0.35rem; }
-    .page-hero .lead { margin: 0; color: var(--text-secondary); font-size: var(--text-14); line-height: 1.55; max-width: 42rem; }
+    .page-hero { margin-bottom: var(--space-8); }
+    .page-hero h1 { margin-bottom: var(--space-2); }
+    .page-hero .lead { margin: 0; color: var(--text-secondary); font-size: var(--text-14); line-height: 1.5; max-width: 42rem; }
 
     .card {
       background: var(--card);
       border-radius: var(--radius);
       box-shadow: var(--shadow-card);
-      padding: var(--space-card) 1.75rem;
+      padding: var(--space-6);
       margin-bottom: var(--space-section);
       border: 1px solid var(--border);
       max-width: 100%;
@@ -231,9 +270,9 @@
     .card h2 { margin-top: 0; }
     .section-title { margin: 0 0 var(--space-3); font-size: var(--text-16); font-weight: 600; color: var(--text); }
     .hero-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
-    .card p { margin: 0 0 0.5rem 0; color: var(--text-secondary); font-size: var(--text-14); }
-    .card ul { margin: 0.5rem 0 0 0; padding-left: 1.25rem; color: var(--text-secondary); font-size: var(--text-14); }
-    .card li { margin-bottom: 0.35rem; }
+    .card p { margin: 0 0 var(--space-2) 0; color: var(--text-secondary); font-size: var(--text-14); }
+    .card ul { margin: var(--space-2) 0 0 0; padding-left: var(--space-6); color: var(--text-secondary); font-size: var(--text-14); }
+    .card li { margin-bottom: var(--space-1); }
     .card li a { font-weight: 500; }
 
     .modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: var(--space-4); }
@@ -241,9 +280,9 @@
     .modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: -1; }
     .modal-content { position: relative; z-index: 1; max-width: 90vw; max-height: 90vh; overflow-y: auto; }
     .loading-state { color: var(--text-secondary); font-size: var(--text-14); margin: 0; }
-    .empty-state { color: var(--text-secondary); font-size: var(--text-14); margin: 0.5rem 0 0 0; }
-    .form-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
-    .modal-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1.25rem; justify-content: flex-end; }
+    .empty-state { color: var(--text-secondary); font-size: var(--text-14); margin: var(--space-2) 0 0 0; }
+    .form-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-4); }
+    .modal-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-5); justify-content: flex-end; }
     .form-label { font-size: var(--text-14); margin-bottom: 0.35rem; display: block; font-weight: 500; color: var(--text); }
     .form-hint { font-size: var(--text-14); margin: 0.5rem 0 0; color: var(--text-secondary); }
 
@@ -750,13 +789,13 @@
       .app-layout { max-width: none; flex-direction: column; }
       .layout-sidebar { width: 100%; position: static; max-height: none; padding: 0.75rem; gap: 0.5rem; }
       .logo { padding: 0 0.25rem 0.35rem; }
-      .sidebar-nav { flex-direction: row; flex-wrap: wrap; gap: 0.35rem; }
+      .sidebar-nav { flex-direction: row; flex-wrap: wrap; gap: 0.35rem; flex: 0 0 auto; overflow: visible; padding-right: 0; }
       .nav-section { display: contents; }
       .nav-section-title { display: none; }
       .nav-link { padding: 0.5rem 0.75rem; border-radius: var(--radius-sm); }
       .nav-link.active { box-shadow: none; }
       .nav-locale-wrap { width: 100%; justify-content: flex-start; padding: 0; border-top: none; margin-top: 0.25rem; }
-      .main-wrap { padding: 1.25rem; }
+      .main-wrap { padding: 24px 16px 24px; }
     }
   </style>
 </head>
@@ -781,22 +820,37 @@
   </script>
   <div class="app-layout">
   <aside class="layout-sidebar">
-    <a href="/ui/posts" class="logo">
-      <span class="logo-icon">V</span>
-      <span>MyVOICE's</span>
-    </a>
     {% if request %}
       {% set user_role = request.session.get('user_role') if request.session else None %}
     {% else %}
       {% set user_role = None %}
     {% endif %}
+    <a href="{{ '/ui/dashboard' if user_role == 'admin' else '/ui/posts' }}" class="logo">
+      <span class="logo-icon">V</span>
+      <span>MyVOICE's</span>
+    </a>
+    {% set admin_only_label = 'a' %}
     <nav class="sidebar-nav" aria-label="{{ tr.nav_primary|default('Навигация') }}">
       <div class="nav-section">
         <p class="nav-section-title">{{ tr.nav_group_content|default('Контент') }}</p>
+        {% if user_role == 'admin' %}
+        <a href="/ui/dashboard" class="nav-link {% if request and request.url.path == '/ui/dashboard' %}active{% endif %}" aria-current="{% if request and request.url.path == '/ui/dashboard' %}page{% else %}false{% endif %}">
+          <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h5v-6h4v6h5a1 1 0 001-1V10"/></svg>
+          {{ tr.nav_dashboard|default('Dashboard' if locale is defined and locale == 'en' else 'Дашборд') }}
+          <span class="nav-admin-badge" title="{{ 'Restricted access' if locale is defined and locale == 'en' else 'Ограниченный доступ' }}" aria-label="{{ 'Restricted access' if locale is defined and locale == 'en' else 'Ограниченный доступ' }}">{{ admin_only_label }}</span>
+        </a>
+        {% endif %}
         <a href="/ui/posts" class="nav-link {% if request and request.url.path == '/ui/posts' %}active{% endif %}" aria-current="{% if request and request.url.path == '/ui/posts' %}page{% else %}false{% endif %}">
           <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
           {{ tr.nav_comments }}
         </a>
+        {% if user_role == 'admin' %}
+        <a href="/ui/posts-v2" class="nav-link {% if request and request.url.path == '/ui/posts-v2' %}active{% endif %}" aria-current="{% if request and request.url.path == '/ui/posts-v2' %}page{% else %}false{% endif %}">
+          <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          {{ 'Comments v2' if locale is defined and locale == 'en' else 'Комментарии v2' }}
+          <span class="nav-admin-badge" title="{{ 'Restricted access' if locale is defined and locale == 'en' else 'Ограниченный доступ' }}" aria-label="{{ 'Restricted access' if locale is defined and locale == 'en' else 'Ограниченный доступ' }}">{{ admin_only_label }}</span>
+        </a>
+        {% endif %}
         <a href="/ui/reddit" class="nav-link {% if request and request.url.path == '/ui/reddit' %}active{% endif %}" aria-current="{% if request and request.url.path == '/ui/reddit' %}page{% else %}false{% endif %}">
           <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/></svg>
           {{ tr.nav_reddit }}
@@ -830,13 +884,10 @@
           {{ tr.nav_settings }}
         </a>
         {% if user_role == 'admin' %}
-        <a href="/analytics" class="nav-link {% if request and request.url.path == '/analytics' %}active{% endif %}" aria-current="{% if request and request.url.path == '/analytics' %}page{% else %}false{% endif %}">
-          <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-          {{ (tr.nav_analytics if tr else 'Аналитика') }}
-        </a>
         <a href="/admin/users" class="nav-link {% if request and request.url.path == '/admin/users' %}active{% endif %}" aria-current="{% if request and request.url.path == '/admin/users' %}page{% else %}false{% endif %}">
           <svg aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
           {{ (tr.nav_users if tr else 'Пользователи') }}
+          <span class="nav-admin-badge" title="{{ 'Restricted access' if locale is defined and locale == 'en' else 'Ограниченный доступ' }}" aria-label="{{ 'Restricted access' if locale is defined and locale == 'en' else 'Ограниченный доступ' }}">{{ admin_only_label }}</span>
         </a>
         {% endif %}
         <a href="/ui/onboarding" class="nav-link {% if request and request.url.path == '/ui/onboarding' %}active{% endif %}" aria-current="{% if request and request.url.path == '/ui/onboarding' %}page{% else %}false{% endif %}" style="display:none;">
@@ -857,14 +908,15 @@
         </a>
       </div>
     </nav>
+    {% set locale_fallback_path = '/ui/dashboard' if user_role == 'admin' else '/ui/posts' %}
     <div class="nav-locale-wrap" role="group" aria-label="Language">
       <div class="nav-locale-pill">
         {% if locale is defined and locale == 'en' %}
-          <a href="/set-locale?locale=ru&next={{ request.url.path if request and request.url.path else '/ui/posts' }}">RU</a>
+          <a href="/set-locale?locale=ru&next={{ request.url.path if request and request.url.path else locale_fallback_path }}">RU</a>
           <span class="nav-lang-active" aria-current="true">EN</span>
         {% else %}
           <span class="nav-lang-active" aria-current="true">RU</span>
-          <a href="/set-locale?locale=en&next={{ request.url.path if request and request.url.path else '/ui/posts' }}">EN</a>
+          <a href="/set-locale?locale=en&next={{ request.url.path if request and request.url.path else locale_fallback_path }}">EN</a>
         {% endif %}
       </div>
     </div>

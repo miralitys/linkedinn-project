@@ -54,6 +54,27 @@ VISION_PROMPT = """По скриншоту карточки поста в соц
 Результат — дословная копия, как при OCR."""
 
 
+def _user_facing_openai_error(exc: Exception) -> str:
+    """
+    Возвращает безопасный текст ошибки для UI без внутренних деталей API/trace.
+    Полный текст исключения пишется только в серверные логи.
+    """
+    msg = str(exc or "").lower()
+    if "invalid_api_key" in msg or "incorrect api key" in msg:
+        return "OPENAI_API_KEY некорректный. Проверьте ключ в .env и перезапустите сервер."
+    if "insufficient_quota" in msg or "quota" in msg or "billing" in msg:
+        return "У OpenAI закончился лимит/биллинг. Проверьте квоту и оплату аккаунта."
+    if "rate limit" in msg or "too many requests" in msg:
+        return "OpenAI временно ограничил запросы. Подождите немного и повторите."
+    if "timed out" in msg or "timeout" in msg:
+        return "OpenAI не ответил вовремя. Повторите попытку."
+    if "model" in msg and "not found" in msg:
+        return "Указанная модель OpenAI недоступна. Проверьте OPENAI_MODEL."
+    if "unsupported parameter" in msg:
+        return "Текущая модель OpenAI не поддерживает параметры запроса. Обновите настройки модели."
+    return "Ошибка распознавания через OpenAI. Повторите попытку позже."
+
+
 async def _screenshot_post_card(url: str, user_data_dir: Optional[str] = None) -> tuple[Optional[bytes], Optional[str]]:
     """Открывает url в Chromium, снимает скриншот карточки поста (или страницы). Возвращает (PNG bytes, None) или (None, error_message)."""
     try:
@@ -64,12 +85,27 @@ async def _screenshot_post_card(url: str, user_data_dir: Optional[str] = None) -
     try:
         async with async_playwright() as p:
             if user_data_dir:
-                context = await p.chromium.launch_persistent_context(
-                    user_data_dir,
-                    headless=True,
-                    viewport={"width": 1200, "height": 1400},
-                    timeout=15000,
-                )
+                profile_directory = (settings.playwright_profile_directory or "Default").strip() or "Default"
+                persistent_args = [f"--profile-directory={profile_directory}"]
+                try:
+                    context = await p.chromium.launch_persistent_context(
+                        user_data_dir,
+                        channel="chrome",
+                        headless=True,
+                        viewport={"width": 1200, "height": 1400},
+                        timeout=15000,
+                        args=persistent_args,
+                        ignore_default_args=["--use-mock-keychain"],
+                    )
+                except Exception:
+                    # Fallback: bundled Chromium без channel/args.
+                    context = await p.chromium.launch_persistent_context(
+                        user_data_dir,
+                        headless=True,
+                        viewport={"width": 1200, "height": 1400},
+                        timeout=15000,
+                        ignore_default_args=["--use-mock-keychain"],
+                    )
                 page = context.pages[0] if context.pages else await context.new_page()
             else:
                 browser = await p.chromium.launch(headless=True)
@@ -182,6 +218,17 @@ async def _screenshot_post_card(url: str, user_data_dir: Optional[str] = None) -
         return None, str(e)
 
 
+async def capture_post_screenshot_base64(url: str, user_data_dir: Optional[str] = None) -> tuple[Optional[str], Optional[str]]:
+    """
+    Делает скриншот карточки поста и возвращает (base64_png, None) или (None, error_message).
+    Нужен как лёгкий fallback для UI, когда данные поста пришли не из OCR.
+    """
+    screenshot_bytes, screenshot_error = await _screenshot_post_card(url, user_data_dir=user_data_dir)
+    if not screenshot_bytes:
+        return None, screenshot_error or "Не удалось сделать скриншот страницы."
+    return base64.standard_b64encode(screenshot_bytes).decode("ascii"), None
+
+
 def _parse_vision_json(raw: str) -> Optional[dict[str, Any]]:
     """Извлекает JSON из ответа модели (может быть обёрнут в ```json ... ```)."""
     raw = (raw or "").strip()
@@ -224,12 +271,35 @@ async def parse_post_from_url(
         {"type": "text", "text": VISION_PROMPT},
         {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}},
     ]
-    resp = await client.chat.completions.create(
-        model=openai_model,
-        messages=[{"role": "user", "content": content}],
-        max_tokens=8192,
-        temperature=0,
-    )
+    resp = None
+    vision_error: Optional[Exception] = None
+    request_kwargs = {
+        "model": openai_model,
+        "messages": [{"role": "user", "content": content}],
+        "temperature": 0,
+    }
+    # У разных моделей OpenAI разный параметр лимита токенов:
+    # сначала пробуем современный max_completion_tokens, затем fallback на max_tokens.
+    for token_param in ("max_completion_tokens", "max_tokens"):
+        try:
+            resp = await client.chat.completions.create(
+                **request_kwargs,
+                **{token_param: 8192},
+            )
+            vision_error = None
+            break
+        except Exception as e:
+            vision_error = e
+            msg = str(e or "").lower()
+            if "unsupported parameter" in msg and token_param in msg:
+                continue
+            break
+
+    if resp is None:
+        e = vision_error or Exception("unknown_openai_error")
+        logging.exception("post_parser vision failed: %s", e)
+        return {"error": _user_facing_openai_error(e)}
+
     raw = (resp.choices[0].message.content or "").strip() if resp.choices else ""
     parsed = _parse_vision_json(raw)
     if not parsed:

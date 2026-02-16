@@ -1,7 +1,6 @@
 # agents/registry.py
 from typing import Any
 
-from agents.analytics_agent import AnalyticsAgent
 from agents.comment_agent import CommentAgent
 from agents.content_agent import ContentAgent
 from agents.news_post_agent import NewsPostAgent
@@ -24,7 +23,6 @@ AGENTS = {
     "outreach_sequencer": OutreachSequencerAgent,
     "qa_guard": QAGuardAgent,
     "lead_magnet_builder": LeadMagnetBuilderAgent,
-    "analytics_agent": AnalyticsAgent,
     "kol_curator": KOLCuratorAgent,
     "scoring_agent": ScoringAgent,
 }

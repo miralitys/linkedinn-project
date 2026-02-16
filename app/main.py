@@ -17,7 +17,6 @@ from app.routers import (
     auth,
     companies,
     people,
-    linkedin_oauth,
     news,
     plans,
     posts,
@@ -52,13 +51,6 @@ async def lifespan(app: FastAPI):
             "interval",
             hours=6,
             id="posts_auto_sync",
-            replace_existing=True,
-        )
-        scheduler.add_job(
-            linkedin_oauth.run_linkedin_analytics_sync,
-            "interval",
-            hours=24,
-            id="linkedin_analytics_sync",
             replace_existing=True,
         )
         # Новости и Reddit: раз в час подгружаем новые в БД
@@ -151,7 +143,6 @@ app.include_router(posts.router)
 app.include_router(reddit.router)
 app.include_router(plans.router)
 app.include_router(news.router)
-app.include_router(linkedin_oauth.router)
 
 # Главная страница (лендинг) — всегда регистрируем, без зависимости от try ниже
 from fastapi.templating import Jinja2Templates as _Jinja2Templates
@@ -210,10 +201,10 @@ async def pricing2_en_redirect(request: Request):
 
 
 @app.get("/set-locale")
-async def set_locale(request: Request, locale: str = "ru", next: str = "/ui/posts"):
+async def set_locale(request: Request, locale: str = "ru", next: str = "/ui/dashboard"):
     """Set locale cookie and redirect to next (for in-app language switch)."""
     loc = "en" if (locale and str(locale).strip().lower() == "en") else "ru"
-    safe_next = next if next.startswith("/") and "//" not in next else "/ui/posts"
+    safe_next = next if next.startswith("/") and "//" not in next else "/ui/dashboard"
     r = RedirectResponse(url=safe_next, status_code=302)
     r.set_cookie("locale", loc, max_age=365 * 24 * 3600, samesite="lax")
     return r
@@ -226,11 +217,17 @@ try:
 
     from fastapi import Depends, HTTPException
     from fastapi.templating import Jinja2Templates
-    from sqlalchemy import select
+    from sqlalchemy import and_, func, or_, select
     from sqlalchemy.ext.asyncio import AsyncSession
 
     from app.db import get_session
-    from app.models import LinkedInDailyMetric, LinkedInOAuth, LinkedInPostDailyMetric
+    from app.models import (
+        ContactPost,
+        NewsItem,
+        Person,
+        RedditPost,
+        UserRole,
+    )
     from app.translations import RU, get_locale_from_cookie, get_tr
 
     templates = Jinja2Templates(directory=str(settings.base_dir / "templates"))
@@ -246,11 +243,23 @@ try:
         except Exception:
             return {"locale": "ru", "tr": RU}
 
+    def _short_text(value, limit: int = 180) -> str:
+        text = " ".join(str(value or "").split())
+        if len(text) <= limit:
+            return text
+        return text[: max(0, limit - 1)].rstrip() + "…"
+
+    def _fmt_dt(value) -> str:
+        if not value:
+            return "-"
+        try:
+            return value.strftime("%Y-%m-%d %H:%M")
+        except Exception:
+            return "-"
+
     @app.get("/ui", response_class=HTMLResponse)
     async def ui_landing(request: Request):
-        ctx = {"request": request, **_app_context(request)}
-        template = "index_en.html" if ctx.get("locale") == "en" else "index.html"
-        return templates.TemplateResponse(request, template, ctx)
+        return RedirectResponse(url="/ui/dashboard", status_code=302)
 
     @app.get("/ui/setup", response_class=HTMLResponse)
     async def ui_setup(request: Request):
@@ -288,6 +297,122 @@ try:
     async def ui_kol_redirect():
         return RedirectResponse(url="/ui/people", status_code=302)
 
+    @app.get("/ui/dashboard", response_class=HTMLResponse)
+    async def ui_dashboard(
+        request: Request,
+        session: AsyncSession = Depends(get_session),
+    ):
+        ctx = _app_context(request)
+        user_id = request.session.get("user_id")
+        since_24h = datetime.utcnow() - timedelta(days=1)
+
+        news_items = []
+        reddit_items = []
+        comment_drafts = []
+        comment_todo = []
+        comment_drafts_total = 0
+        comment_todo_total = 0
+
+        # Новости: только за 24 часа, сортировка по максимальному скору (relevance_score) по убыванию.
+        r_news = await session.execute(
+            select(NewsItem)
+            .where(
+                or_(
+                    NewsItem.published >= since_24h,
+                    and_(NewsItem.published.is_(None), NewsItem.created_at >= since_24h),
+                )
+            )
+            .order_by(
+                func.coalesce(NewsItem.relevance_score, -1).desc(),
+                func.coalesce(NewsItem.published, NewsItem.created_at).desc(),
+            )
+            .limit(3)
+        )
+        for item in r_news.scalars().all():
+            published_dt = item.published or item.created_at
+            news_items.append(
+                {
+                    "id": item.id,
+                    "title": item.title,
+                    "summary": _short_text(item.summary or item.content, 200),
+                    "source": item.source or "",
+                    "url": item.link,
+                    "score": item.relevance_score,
+                    "published_label": _fmt_dt(published_dt),
+                }
+            )
+
+        if user_id:
+            # Reddit: только за 24 часа, сортировка по max score по убыванию.
+            r_reddit = await session.execute(
+                select(RedditPost)
+                .where(RedditPost.user_id == user_id)
+                .where(RedditPost.posted_at >= since_24h)
+                .order_by(
+                    func.coalesce(RedditPost.score, -1).desc(),
+                    RedditPost.posted_at.desc(),
+                )
+                .limit(3)
+            )
+            for post in r_reddit.scalars().all():
+                reddit_items.append(
+                    {
+                        "id": post.id,
+                        "title": post.title,
+                        "content": _short_text(post.content, 200),
+                        "subreddit": post.subreddit,
+                        "url": post.post_url,
+                        "score": post.score,
+                        "posted_label": _fmt_dt(post.posted_at),
+                    }
+                )
+
+            # LinkedIn-комментарии: отделяем "черновики" от "новых к генерации".
+            r_posts = await session.execute(
+                select(ContactPost, Person.full_name)
+                .join(Person, Person.id == ContactPost.person_id)
+                .where(Person.user_id == user_id)
+                .where(ContactPost.archived.is_(False))
+                .where(ContactPost.comment_written.is_(False))
+                .order_by(ContactPost.posted_at.desc())
+                .limit(250)
+            )
+            for post, person_name in r_posts.all():
+                variants = post.reply_variants if isinstance(post.reply_variants, dict) else {}
+                has_variants = any(str(variants.get(k, "")).strip() for k in ("short", "medium", "long"))
+                if not has_variants and post.reply_variants and not isinstance(post.reply_variants, dict):
+                    has_variants = bool(str(post.reply_variants).strip())
+                row = {
+                    "id": post.id,
+                    "person_name": person_name or "-",
+                    "title": _short_text(post.title or post.content, 140),
+                    "url": post.post_url,
+                    "posted_label": _fmt_dt(post.posted_at),
+                }
+                if has_variants:
+                    comment_drafts_total += 1
+                    if len(comment_drafts) < 6:
+                        comment_drafts.append(row)
+                else:
+                    comment_todo_total += 1
+                    if len(comment_todo) < 6:
+                        comment_todo.append(row)
+
+        return templates.TemplateResponse(
+            request,
+            "dashboard.html",
+            {
+                "request": request,
+                **ctx,
+                "news_items": news_items,
+                "reddit_items": reddit_items,
+                "comment_drafts": comment_drafts,
+                "comment_todo": comment_todo,
+                "comment_drafts_total": comment_drafts_total,
+                "comment_todo_total": comment_todo_total,
+            },
+        )
+
     @app.get("/ui/posts", response_class=HTMLResponse)
     async def ui_posts(request: Request):
         try:
@@ -310,6 +435,40 @@ try:
             return HTMLResponse(
                 "<html><body style=\"font-family:sans-serif;padding:2rem;max-width:900px;margin:0 auto;\">"
                 "<h1>" + load_err + "</h1><p>Не удалось открыть страницу. Попробуйте <a href=\"/logout\">выйти</a> и <a href=\"/login\">войти</a> снова, или вернуться на <a href=\"/\">главную</a>.</p>"
+                "<p style=\"color:#666;font-size:0.9rem;\">Подробности (уберите после отладки):</p><pre style=\"background:#f1f5f9;padding:1rem;overflow:auto;font-size:12px;white-space:pre-wrap;\">" + tb + "</pre></body></html>",
+                status_code=500,
+            )
+
+    @app.get("/ui/posts-v2", response_class=HTMLResponse)
+    async def ui_posts_v2(request: Request):
+        if request.session.get("user_role") != UserRole.ADMIN.value:
+            raise HTTPException(status_code=403, detail="Admin access required")
+        try:
+            tz = getattr(settings, "display_timezone", None) or "UTC"
+            ctx = _app_context(request)
+            return templates.TemplateResponse(
+                request,
+                "posts.html",
+                {
+                    "request": request,
+                    **ctx,
+                    "display_timezone": tz,
+                    "comments_prompt_version": "high_engagement_2026",
+                    "comments_page_variant_label": "Prompt v2",
+                },
+            )
+        except Exception as e:
+            import traceback
+            logging.exception("Error rendering /ui/posts-v2: %s", e)
+            try:
+                ctx = _app_context(request)
+                load_err = ctx["tr"].get("load_error", "Ошибка загрузки")
+            except Exception:
+                load_err = "Ошибка загрузки"
+            tb = traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")
+            return HTMLResponse(
+                "<html><body style=\"font-family:sans-serif;padding:2rem;max-width:900px;margin:0 auto;\">"
+                "<h1>" + load_err + "</h1><p>Не удалось открыть страницу v2. Попробуйте <a href=\"/logout\">выйти</a> и <a href=\"/login\">войти</a> снова, или вернуться на <a href=\"/\">главную</a>.</p>"
                 "<p style=\"color:#666;font-size:0.9rem;\">Подробности (уберите после отладки):</p><pre style=\"background:#f1f5f9;padding:1rem;overflow:auto;font-size:12px;white-space:pre-wrap;\">" + tb + "</pre></body></html>",
                 status_code=500,
             )
@@ -363,94 +522,5 @@ try:
             request, "pricing.html", {"request": request, **ctx}
         )
 
-    @app.get("/analytics", response_class=HTMLResponse)
-    async def analytics_page(
-        request: Request,
-        session: AsyncSession = Depends(get_session),
-    ):
-        """Страница аналитики. Метрики LinkedIn за период (только для админов)."""
-        if request.session.get("user_role") != "admin":
-            raise HTTPException(status_code=403, detail="Admin access required")
-        ctx = _app_context(request)
-        days = 30
-        since = datetime.utcnow() - timedelta(days=days)
-        r = await session.execute(
-            select(LinkedInDailyMetric).where(LinkedInDailyMetric.metric_date >= since)
-        )
-        rows = r.scalars().all()
-        totals = {"IMPRESSION": 0, "MEMBERS_REACHED": 0, "REACTION": 0, "COMMENT": 0, "RESHARE": 0}
-        for m in rows:
-            if m.metric_type in totals:
-                totals[m.metric_type] += m.count
-        r_oauth = await session.execute(select(LinkedInOAuth).limit(1))
-        linkedin_connected = r_oauth.scalar_one_or_none() is not None
-
-        # Аналитика "моих" постов: берём только посты автора напрямую из LinkedIn API.
-        own_post_refs: set[str] = set()
-        own_posts_source = "LinkedIn API /rest/posts?q=author"
-        own_posts_sync_error = None
-        if linkedin_connected:
-            try:
-                refs = await linkedin_oauth.get_my_post_refs_from_linkedin_api(session, count=12)
-                own_post_refs = set(refs)
-                for ref in refs:
-                    try:
-                        await linkedin_oauth.sync_post_metrics_for_ref(session, post_url=ref, days=30, save_history=True)
-                    except Exception:
-                        logging.exception("LinkedIn per-post sync failed for %s", ref)
-            except Exception as e:
-                logging.exception("Own posts analytics sync failed: %s", e)
-                own_posts_sync_error = str(e)
-
-        r_posts = await session.execute(
-            select(LinkedInPostDailyMetric).where(LinkedInPostDailyMetric.metric_date >= since)
-        )
-        post_rows = r_posts.scalars().all()
-        post_map: dict[str, dict] = {}
-        for m in post_rows:
-            src_ref = (m.source_post_url or "").strip()
-            if linkedin_connected and src_ref not in own_post_refs:
-                continue
-            p = post_map.get(m.post_urn)
-            if p is None:
-                p = {
-                    "post_urn": m.post_urn,
-                    "post_url": m.source_post_url or "",
-                    "IMPRESSION": 0,
-                    "MEMBERS_REACHED": 0,
-                    "REACTION": 0,
-                    "COMMENT": 0,
-                    "RESHARE": 0,
-                }
-                post_map[m.post_urn] = p
-            if m.source_post_url and not p.get("post_url"):
-                p["post_url"] = m.source_post_url
-            if m.metric_type in totals:
-                p[m.metric_type] += int(m.count or 0)
-        top_posts = list(post_map.values())
-        for p in top_posts:
-            p["ENGAGEMENT"] = p["REACTION"] + p["COMMENT"] + p["RESHARE"]
-        top_posts.sort(key=lambda x: (x["IMPRESSION"], x["ENGAGEMENT"]), reverse=True)
-        top_posts = top_posts[:12]
-        return templates.TemplateResponse(
-            request,
-            "admin_analytics.html",
-            {
-                "request": request,
-                **ctx,
-                "period_days": days,
-                "impressions": totals["IMPRESSION"],
-                "members_reached": totals["MEMBERS_REACHED"],
-                "reactions": totals["REACTION"],
-                "comments": totals["COMMENT"],
-                "reshares": totals["RESHARE"],
-                "linkedin_connected": linkedin_connected,
-                "top_posts": top_posts,
-                "top_posts_total": len(post_map),
-                "own_posts_source": own_posts_source,
-                "own_post_refs_count": len(own_post_refs),
-                "own_posts_sync_error": own_posts_sync_error,
-            },
-        )
 except Exception as e:
     logging.exception("UI routes failed to load (templates/static): %s", e)

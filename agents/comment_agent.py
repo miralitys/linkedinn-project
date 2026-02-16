@@ -14,6 +14,7 @@ class CommentAgent(AgentBase):
         author = payload.get("author") or {}
         products_raw = payload.get("products") or []
         author_answers_66 = payload.get("author_answers_66") or payload.get("fingerprint") or {}
+        prompt_version = (payload.get("prompt_version") or "default").strip() or "default"
 
         if not post_text or not post_text.strip():
             return {"comments": {"short": "", "medium": "", "long": ""}, "raw": ""}
@@ -25,6 +26,7 @@ class CommentAgent(AgentBase):
                 products=products_raw,
                 mode=goal,
                 author=author,
+                prompt_version=prompt_version,
                 llm=self._llm,
             )
             return {"comments": finals, "raw": str(finals)}

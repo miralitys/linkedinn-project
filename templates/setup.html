@@ -240,34 +240,31 @@
     transition: box-shadow var(--motion-fast), border-color var(--motion-fast);
   }
   .setup-section:hover { border-color: rgba(99, 102, 241, 0.2); }
-  .setup-section-header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    margin-bottom: var(--space-4);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--border);
-  }
-  .setup-section-header.linkedin-app-header { cursor: pointer; margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-  .setup-section-header.linkedin-app-header:hover { opacity: 0.9; }
-  .setup-section-icon {
-    width: 2.25rem;
-    height: 2.25rem;
-    display: inline-flex;
-    align-items: center;
+	  .setup-section-header {
+	    display: flex;
+	    align-items: center;
+	    gap: var(--space-3);
+	    margin-bottom: var(--space-4);
+	    padding-bottom: var(--space-3);
+	    border-bottom: 1px solid var(--border);
+	  }
+	  .setup-section-icon {
+	    width: 2.25rem;
+	    height: 2.25rem;
+	    display: inline-flex;
+	    align-items: center;
     justify-content: center;
     background: var(--primary-soft);
     color: var(--primary);
     border-radius: var(--radius-sm);
   }
-  .setup-section-icon svg {
-    width: 1.25rem;
-    height: 1.25rem;
-    flex-shrink: 0;
-  }
-  .setup-section-title { margin: 0; font-size: var(--text-16); font-weight: 600; color: var(--text); }
-  .linkedin-app-header .setup-section-title { flex: 1; }
-  .btn-sm { padding: var(--space-1) var(--space-3); font-size: var(--text-12); }
+	  .setup-section-icon svg {
+	    width: 1.25rem;
+	    height: 1.25rem;
+	    flex-shrink: 0;
+	  }
+	  .setup-section-title { margin: 0; font-size: var(--text-16); font-weight: 600; color: var(--text); }
+	  .btn-sm { padding: var(--space-1) var(--space-3); font-size: var(--text-12); }
 
   .setup-list-block { margin-bottom: var(--space-3); }
   .saved-section-title { margin: 0 0 var(--space-2); font-size: var(--text-12); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); }
@@ -547,50 +544,11 @@
     .setup-view-drawer-body { padding: var(--space-4); }
   }
 
-  .setup-section-linkedin { margin-top: var(--space-6); }
-
-  .linkedin-setup-body { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border); }
-  .linkedin-setup-body[hidden] { display: none !important; }
-
-  .linkedin-status-card {
-    display: flex; align-items: flex-start; gap: var(--space-3);
-    padding: var(--space-4); margin-bottom: var(--space-4);
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, rgba(99, 102, 241, 0.02) 100%);
-    border: 1px solid rgba(99, 102, 241, 0.15);
-    border-radius: var(--radius);
-    border-left: 4px solid var(--primary);
-  }
-  .linkedin-status-card p { margin: 0; font-size: var(--text-14); color: var(--text); line-height: 1.5; }
-  .linkedin-status-card .linkedin-status-icon {
-    width: 2rem; height: 2rem; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--primary-soft); color: var(--primary);
-    border-radius: var(--radius-sm);
-  }
-  .linkedin-status-card .linkedin-status-icon svg { width: 1.125rem; height: 1.125rem; }
-  .linkedin-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
-  .linkedin-connected-block { padding: var(--space-3) 0; }
-  .linkedin-connected-row {
-    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3);
-    padding: var(--space-4);
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.04) 0%, transparent 100%);
-    border: 1px solid rgba(99, 102, 241, 0.12);
-    border-radius: var(--radius);
-  }
-  .linkedin-connected-badge {
-    display: inline-flex; align-items: center; gap: var(--space-2);
-    font-size: var(--text-14); font-weight: 500; color: var(--success, #059669);
-    padding: var(--space-1) var(--space-3);
-    background: var(--success-soft, #d1fae5);
-    border-radius: var(--radius-pill);
-  }
-  .linkedin-connected-badge svg { flex-shrink: 0; }
-
-  /* Premium page alignment (same system as Comments) */
-  .main-wrap { padding: 32px !important; }
-  .setup-premium-shell { max-width: 1160px; margin: 0 auto; }
-  .setup-page-header { margin-bottom: var(--space-6); }
-  .setup-page-title {
+	  /* Premium page alignment (same system as Comments) */
+	  .main-wrap { padding: 32px !important; }
+	  .setup-premium-shell { max-width: 1160px; margin: 0 auto; }
+	  .setup-page-header { margin-bottom: var(--space-6); }
+	  .setup-page-title {
     margin: 0 0 var(--space-2);
     font-size: 28px;
     line-height: 32px;
@@ -703,85 +661,73 @@
     margin-right: 8px;
     margin-bottom: 0;
   }
-  .setup-premium-shell input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
-  .setup-premium-shell select,
-  .setup-form-wrap input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
-  .setup-form-wrap select,
-  .setup-section-linkedin input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
-  .setup-section-linkedin select {
-    height: 40px;
-    border-radius: 12px;
-    border: 1px solid #d1d5db;
-    background: #ffffff;
-    color: #111827;
+	  .setup-premium-shell input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+	  .setup-premium-shell select,
+	  .setup-form-wrap input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+	  .setup-form-wrap select {
+	    height: 40px;
+	    border-radius: 12px;
+	    border: 1px solid #d1d5db;
+	    background: #ffffff;
+	    color: #111827;
     box-shadow: none;
-  }
-  .setup-premium-shell textarea,
-  .setup-form-wrap textarea,
-  .setup-section-linkedin textarea {
-    border-radius: 12px;
-    border: 1px solid #d1d5db;
-    background: #ffffff;
-    color: #111827;
+	  }
+	  .setup-premium-shell textarea,
+	  .setup-form-wrap textarea {
+	    border-radius: 12px;
+	    border: 1px solid #d1d5db;
+	    background: #ffffff;
+	    color: #111827;
     box-shadow: none;
   }
   .setup-premium-shell input:focus,
   .setup-premium-shell textarea:focus,
-  .setup-premium-shell select:focus,
-  .setup-form-wrap input:focus,
-  .setup-form-wrap textarea:focus,
-  .setup-form-wrap select:focus,
-  .setup-section-linkedin input:focus,
-  .setup-section-linkedin textarea:focus,
-  .setup-section-linkedin select:focus {
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
-  }
-  .setup-premium-shell .btn,
-  .setup-form-wrap .btn,
-  .setup-view-drawer .btn,
-  .setup-section-linkedin .btn {
-    height: 40px;
-    border-radius: 12px;
-    padding: 0 16px;
-    margin: 0;
+	  .setup-premium-shell select:focus,
+	  .setup-form-wrap input:focus,
+	  .setup-form-wrap textarea:focus,
+	  .setup-form-wrap select:focus {
+	    border-color: #4f46e5;
+	    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18);
+	  }
+	  .setup-premium-shell .btn,
+	  .setup-form-wrap .btn,
+	  .setup-view-drawer .btn {
+	    height: 40px;
+	    border-radius: 12px;
+	    padding: 0 16px;
+	    margin: 0;
     line-height: 38px;
     font-size: 14px;
     font-weight: 600;
     box-shadow: none;
     transition: background 200ms ease-out, border-color 200ms ease-out, transform 120ms ease-out;
-  }
-  .setup-premium-shell .btn:active,
-  .setup-form-wrap .btn:active,
-  .setup-view-drawer .btn:active,
-  .setup-section-linkedin .btn:active { transform: scale(0.98); }
-  .setup-premium-shell .btn.primary,
-  .setup-form-wrap .btn.primary,
-  .setup-view-drawer .btn.primary,
-  .setup-section-linkedin .btn.primary {
-    border: 1px solid #4f46e5;
-    background: #4f46e5;
-    color: #ffffff;
-  }
-  .setup-premium-shell .btn.primary:hover,
-  .setup-form-wrap .btn.primary:hover,
-  .setup-view-drawer .btn.primary:hover,
-  .setup-section-linkedin .btn.primary:hover { background: #4338ca; border-color: #4338ca; }
-  .setup-premium-shell .btn.secondary,
-  .setup-form-wrap .btn.secondary,
-  .setup-view-drawer .btn.secondary,
-  .setup-section-linkedin .btn.secondary {
-    border: 1px solid #d1d5db;
-    background: #ffffff;
-    color: #111827;
-  }
-  .setup-premium-shell .btn.secondary:hover,
-  .setup-form-wrap .btn.secondary:hover,
-  .setup-view-drawer .btn.secondary:hover,
-  .setup-section-linkedin .btn.secondary:hover {
-    background: #f9fafb;
-    border-color: #cbd5e1;
-  }
+	  }
+	  .setup-premium-shell .btn:active,
+	  .setup-form-wrap .btn:active,
+	  .setup-view-drawer .btn:active { transform: scale(0.98); }
+	  .setup-premium-shell .btn.primary,
+	  .setup-form-wrap .btn.primary,
+	  .setup-view-drawer .btn.primary {
+	    border: 1px solid #4f46e5;
+	    background: #4f46e5;
+	    color: #ffffff;
+	  }
+	  .setup-premium-shell .btn.primary:hover,
+	  .setup-form-wrap .btn.primary:hover,
+	  .setup-view-drawer .btn.primary:hover { background: #4338ca; border-color: #4338ca; }
+	  .setup-premium-shell .btn.secondary,
+	  .setup-form-wrap .btn.secondary,
+	  .setup-view-drawer .btn.secondary {
+	    border: 1px solid #d1d5db;
+	    background: #ffffff;
+	    color: #111827;
+	  }
+	  .setup-premium-shell .btn.secondary:hover,
+	  .setup-form-wrap .btn.secondary:hover,
+	  .setup-view-drawer .btn.secondary:hover {
+	    background: #f9fafb;
+	    border-color: #cbd5e1;
+	  }
   .setup-add-toolbar { margin-top: 12px; }
   .form-actions-inline { margin-top: 16px; gap: 8px; }
   .setup-form-wrap:not([hidden]) { padding: 24px; }
@@ -803,23 +749,11 @@
     border: 1px solid #e5e7eb;
     background: #f8fafc;
   }
-  .linkedin-status-card {
-    border-radius: 14px;
-    border: 1px solid #e5e7eb;
-    border-left-width: 4px;
-    box-shadow: none;
-  }
-  .linkedin-connected-row {
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
-  }
+	  /* Interview modals (без изменений логики) */
 
-  /* Interview modals (без изменений логики) */
-
-  @media (min-width: 768px) {
-    .setup-grid { grid-template-columns: 1fr 1fr; }
-    .setup-section-linkedin { grid-column: 1 / -1; }
-  }
+	  @media (min-width: 768px) {
+	    .setup-grid { grid-template-columns: 1fr 1fr; }
+	  }
   @media (max-width: 980px) {
     .main-wrap { padding: 24px !important; }
     .setup-section { padding: 20px; }
@@ -830,13 +764,12 @@
     .setup-page-title { font-size: 24px; line-height: 30px; }
     .setup-section { padding: 16px; }
     .setup-add-toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
-    .setup-subreddit-input { margin-right: 0; width: 100%; }
-    .setup-premium-shell .btn,
-    .setup-form-wrap .btn,
-    .setup-view-drawer .btn,
-    .setup-section-linkedin .btn { width: 100%; }
-  }
-</style>
+	    .setup-subreddit-input { margin-right: 0; width: 100%; }
+	    .setup-premium-shell .btn,
+	    .setup-form-wrap .btn,
+	    .setup-view-drawer .btn { width: 100%; }
+	  }
+	</style>
 <script>
   const tr = window.__tr || {};
   let savedAuthorsList = [];
@@ -1747,91 +1680,4 @@
   }
 </script>
 
-<div class="setup-premium-shell">
-<section class="setup-section setup-section-linkedin">
-  <div class="setup-section-header" id="linkedin-app-header" aria-expanded="false" aria-controls="linkedin-setup-body">
-    <span class="setup-section-icon" aria-hidden="true"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
-    <h2 class="setup-section-title">{{ tr.setup_linkedin_api_title|default('LinkedIn API setup' if locale == 'en' else 'Настройка LinkedIn API', true) }}</h2>
-    <button type="button" id="linkedin-app-toggle" class="btn secondary btn-sm" aria-expanded="false">{{ tr.common_show|default('Show' if locale == 'en' else 'Показать', true) }}</button>
-  </div>
-  <div id="linkedin-setup-body" class="linkedin-setup-body" hidden>
-    {% if request.query_params.get('linkedin') == 'config' %}
-    <div class="linkedin-status-card" style="border-left-color: #ca8a04; background: linear-gradient(135deg, rgba(202, 138, 4, 0.06) 0%, rgba(202, 138, 4, 0.02) 100%); border-color: rgba(202, 138, 4, 0.2);">
-      <span class="linkedin-status-icon" style="background: rgba(202, 138, 4, 0.15); color: #ca8a04;"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></span>
-      <div>
-        <p style="font-weight: 500; margin-bottom: 0.5rem;">Укажите в .env: LINKEDIN_CLIENT_ID, LINKEDIN_CLIENT_SECRET, LINKEDIN_REDIRECT_URI.</p>
-        <p style="font-size: var(--text-14); color: var(--text-muted);">В LinkedIn Developer Portal → Auth → Authorized redirect URLs добавьте <strong>точно</strong> такой же URL, например: <code style="background: var(--bg-secondary); padding: 0.15rem 0.35rem; border-radius: 4px; font-size: 0.8125rem;">http://localhost:8000/linkedin/oauth/callback</code></p>
-      </div>
-    </div>
-    {% elif request.query_params.get('linkedin') == 'denied' %}
-    <div class="linkedin-status-card" style="border-left-color: var(--danger); background: linear-gradient(135deg, rgba(220, 38, 38, 0.06) 0%, rgba(220, 38, 38, 0.02) 100%); border-color: rgba(220, 38, 38, 0.2);">
-      <span class="linkedin-status-icon" style="background: var(--danger-soft); color: var(--danger);"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
-      <div>
-        <p style="font-weight: 500;">LinkedIn вернул ошибку при авторизации.</p>
-        <p style="margin-top: 0.5rem; font-size: var(--text-14);"><strong>error:</strong> <code>{{ request.query_params.get('error', '') }}</code></p>
-        {% if request.query_params.get('error_description') %}<p style="margin-top: 0.25rem; font-size: var(--text-14);"><strong>описание:</strong> {{ request.query_params.get('error_description') }}</p>{% endif %}
-        {% if request.query_params.get('error') == 'unauthorized_scope_error' %}<p style="margin-top: 0.5rem; font-size: var(--text-14); color: var(--text-muted);">Сначала нажмите «Подключить LinkedIn» (только вход), затем «Доступ к метрикам постов».</p>{% endif %}
-      </div>
-    </div>
-    {% endif %}
-    <div id="linkedin-btns" style="display: none;">
-      <p style="margin: 0 0 var(--space-3); font-size: var(--text-14); color: var(--text-muted); line-height: 1.5;">Сначала нажмите «Подключить LinkedIn» (только вход). После успешного входа можно нажать «Доступ к метрикам постов».</p>
-      <div class="linkedin-actions">
-        <a href="/linkedin/oauth/authorize" id="linkedin-connect-btn" class="btn primary">Подключить LinkedIn</a>
-        <a href="/linkedin/oauth/authorize?metrics=1" class="btn secondary">Доступ к метрикам постов</a>
-      </div>
-    </div>
-    <div id="linkedin-reconnect-wrap" class="linkedin-connected-block" style="display: none;">
-      <div class="linkedin-connected-row">
-        <span class="linkedin-connected-badge"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Подключён</span>
-        <div class="linkedin-actions">
-          <button type="button" id="linkedin-disconnect-btn" class="btn secondary btn-sm">Отключить</button>
-          <a href="/linkedin/oauth/authorize?metrics=1" class="btn secondary btn-sm">Подключить</a>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-</div>
-<script>
-  (function() {
-    const header = document.getElementById('linkedin-app-header');
-    const toggle = document.getElementById('linkedin-app-toggle');
-    const body = document.getElementById('linkedin-setup-body');
-    const showText = {{ tr.common_show|default('Show' if locale == 'en' else 'Показать', true)|tojson|safe }};
-    const hideText = {{ tr.common_hide|default('Hide' if locale == 'en' else 'Свернуть', true)|tojson|safe }};
-    const disconnectText = {{ tr.common_disconnect|default('Disconnect' if locale == 'en' else 'Отключить', true)|tojson|safe }};
-    function toggleLinkedInSection() {
-      if (!body) return;
-      const open = body.hidden;
-      body.hidden = !open;
-      if (toggle) {
-        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-        toggle.textContent = open ? hideText : showText;
-      }
-      if (header) header.setAttribute('aria-expanded', open ? 'true' : 'false');
-    }
-    if (toggle) toggle.addEventListener('click', toggleLinkedInSection);
-  })();
-  fetch('/linkedin/status').then(r => r.json()).then(d => {
-    const btns = document.getElementById('linkedin-btns');
-    const reconnectWrap = document.getElementById('linkedin-reconnect-wrap');
-    if (d.connected) { if (btns) btns.style.display = 'none'; if (reconnectWrap) reconnectWrap.style.display = 'block'; }
-    else { if (btns) btns.style.display = 'block'; if (reconnectWrap) reconnectWrap.style.display = 'none'; }
-  }).catch(() => {});
-  document.getElementById('linkedin-disconnect-btn')?.addEventListener('click', function() {
-    const btn = this;
-    if (btn.disabled) return;
-    btn.disabled = true;
-    btn.textContent = '…';
-    fetch('/linkedin/disconnect', { method: 'POST', credentials: 'include' }).then(function(r) {
-      if (r.ok) {
-        const btns = document.getElementById('linkedin-btns');
-        const reconnectWrap = document.getElementById('linkedin-reconnect-wrap');
-        if (btns) btns.style.display = 'block';
-        if (reconnectWrap) reconnectWrap.style.display = 'none';
-      }
-    }).catch(function() {}).finally(function() { btn.disabled = false; btn.textContent = disconnectText; });
-  });
-</script>
 {% endblock %}

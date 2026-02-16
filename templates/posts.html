@@ -4,7 +4,12 @@
 <div class="posts-premium-shell">
 <header class="posts-page-header">
   <div class="posts-header-top">
-    <h1 class="posts-page-title">{{ tr.posts_title }}</h1>
+    <div class="posts-title-wrap">
+      <h1 class="posts-page-title">{{ tr.posts_title }}</h1>
+      {% if comments_page_variant_label %}
+      <span class="posts-version-chip">{{ comments_page_variant_label }}</span>
+      {% endif %}
+    </div>
     <div class="posts-header-actions">
       <button type="button" id="btn-parse-by-url" class="btn secondary posts-parse-btn" aria-label="{{ tr.posts_parse_by_link }}">{{ tr.posts_parse_by_link }}</button>
       <button type="button" id="btn-refresh-posts" class="btn secondary btn-icon-text posts-refresh-btn" aria-label="{{ tr.posts_refresh }}" title="{{ tr.posts_refresh }}">
@@ -86,6 +91,7 @@
       <div id="parse-result-text" class="parse-result-text" style="white-space: pre-wrap; font-size: var(--text-14); margin-bottom: var(--space-4); max-height: 200px; overflow-y: auto; padding: var(--space-3); background: var(--bg); border-radius: var(--radius-sm);"></div>
       <p class="form-hint" style="margin: 0 0 var(--space-2);"><strong>{{ tr.parse_screenshot_which }}</strong></p>
       <img id="parse-result-screenshot" src="" alt="{{ tr.parse_screenshot_alt }}" style="max-width: 100%; height: auto; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+      <p id="parse-result-screenshot-note" class="form-hint" style="display: none; margin: var(--space-2) 0 0 0;"></p>
     </div>
     <div class="modal-actions">
       <button type="button" id="parse-modal-cancel" class="btn secondary">{{ tr.parse_cancel }}</button>
@@ -151,17 +157,16 @@
         <span id="view-post-date" class="view-post-header-date"></span>
       </div>
       <div class="view-post-header-right">
-        <a id="view-post-link-header" href="#" target="_blank" rel="noopener" class="view-post-open-link link-tertiary" style="display: none;" aria-label="{{ tr.posts_open_original }}">{{ tr.posts_open_original }} <span aria-hidden="true">↗</span></a>
+        <button type="button" id="view-post-link-header" class="view-post-open-link link-tertiary" style="display: none;" aria-label="{{ tr.posts_copy_link }}">{{ tr.posts_copy_link }}</button>
         <button type="button" class="view-post-close" id="view-post-drawer-close" aria-label="{{ tr.posts_close }}">×</button>
       </div>
-    </div>
-    <h1 id="view-post-modal-title" class="view-post-drawer-title"></h1>
-    <div id="view-post-meta-row" class="view-post-meta-row"></div>
-    <div id="view-post-linkedin-metrics" class="view-post-linkedin-metrics" style="display: none;"></div>
-    <div id="view-post-content" class="view-post-body"></div>
-    <div class="view-post-generate-block">
-      <span class="drawer-footer-label">{{ tr.posts_generate_comment }}</span>
-      <div class="drawer-footer-row">
+	    </div>
+	    <h1 id="view-post-modal-title" class="view-post-drawer-title"></h1>
+	    <div id="view-post-meta-row" class="view-post-meta-row"></div>
+	    <div id="view-post-content" class="view-post-body"></div>
+	    <div class="view-post-generate-block">
+	      <span class="drawer-footer-label">{{ tr.posts_generate_comment }}</span>
+	      <div class="drawer-footer-row">
         <div class="drawer-field">
           <label class="form-label" for="view-post-author-select">{{ tr.reddit_as_author }}</label>
           <select id="view-post-author-select" class="form-field-full" aria-label="{{ tr.reddit_author }}"><option value="">{{ tr.reddit_loading }}</option></select>
@@ -208,7 +213,9 @@
   /* ——— Комментарии: шапка ——— */
   .posts-page-header { margin-bottom: var(--space-6); }
   .posts-header-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-2); }
+  .posts-title-wrap { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; }
   .posts-page-title { font-size: 1.375rem; font-weight: 700; margin: 0; color: var(--text); letter-spacing: -0.02em; }
+  .posts-version-chip { display: inline-flex; align-items: center; height: 1.5rem; padding: 0 0.55rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; white-space: nowrap; }
   .posts-header-actions { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
   .posts-page-lead { margin: 0 0 var(--space-4); font-size: var(--text-14); color: var(--text-muted); line-height: 1.55; max-width: 48rem; }
   .posts-toolbar-row { display: flex; align-items: center; gap: var(--space-4); row-gap: var(--space-3); flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3) var(--space-4); }
@@ -291,27 +298,14 @@
   .view-post-header-right { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
   .view-post-open-link { font-size: var(--text-14); font-weight: 500; white-space: nowrap; }
   .view-post-close { min-width: 32px; min-height: 32px; padding: 0; border: none; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: var(--radius-sm); font-size: 1.25rem; line-height: 1; display: flex; align-items: center; justify-content: center; transition: color var(--motion-fast), background var(--motion-fast); }
-  .view-post-close:hover { background: var(--bg); color: var(--text); }
-  .view-post-close:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-  .view-post-drawer-title { margin: 0 0 var(--space-2); font-size: var(--text-16); font-weight: 700; color: var(--text); line-height: 1.3; }
-  .view-post-meta-row { font-size: var(--text-12); color: var(--text-muted); margin-bottom: var(--space-3); }
-  .view-post-linkedin-metrics { margin: 0 0 var(--space-3); }
-  .view-post-linkedin-metrics .metrics-title { font-size: var(--text-12); color: var(--text-muted); margin-bottom: var(--space-2); }
-  .view-post-linkedin-metrics .metrics-grid { display: flex; flex-wrap: wrap; gap: var(--space-2); }
-  .view-post-linkedin-metrics .metric-chip {
-    display: inline-flex; align-items: center; gap: var(--space-1);
-    background: var(--bg); border: 1px solid var(--border);
-    border-radius: var(--radius-pill); padding: 4px 10px;
-    font-size: var(--text-12); color: var(--text);
-  }
-  .view-post-linkedin-metrics .metric-chip strong { font-size: var(--text-12); font-weight: 600; color: var(--primary); }
-  .view-post-linkedin-metrics .metrics-muted { font-size: var(--text-12); color: var(--text-muted); }
-  .view-post-linkedin-metrics .metrics-subtitle { font-size: 11px; color: var(--text-muted); margin: var(--space-2) 0 var(--space-1); }
-  .view-post-linkedin-metrics .metrics-grid.metrics-grid-muted .metric-chip strong { color: var(--text); }
-  .view-post-body { font-size: var(--text-14); line-height: 1.55; white-space: pre-wrap; margin-bottom: var(--space-4); color: var(--text); flex: 1; }
-  .drawer-footer-label { display: block; font-size: var(--text-14); font-weight: 600; margin-bottom: var(--space-2); color: var(--text); }
-  .drawer-footer-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-end; margin-bottom: var(--space-3); }
-  .drawer-field { flex: 1; min-width: 120px; }
+	  .view-post-close:hover { background: var(--bg); color: var(--text); }
+	  .view-post-close:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+	  .view-post-drawer-title { margin: 0 0 var(--space-2); font-size: var(--text-16); font-weight: 700; color: var(--text); line-height: 1.3; }
+	  .view-post-meta-row { font-size: var(--text-12); color: var(--text-muted); margin-bottom: var(--space-3); }
+	  .view-post-body { font-size: var(--text-14); line-height: 1.55; white-space: pre-wrap; margin-bottom: var(--space-4); color: var(--text); flex: 1; }
+	  .drawer-footer-label { display: block; font-size: var(--text-14); font-weight: 600; margin-bottom: var(--space-2); color: var(--text); }
+	  .drawer-footer-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-end; margin-bottom: var(--space-3); }
+	  .drawer-field { flex: 1; min-width: 120px; }
   .drawer-field select { margin-bottom: 0; }
   .view-post-generate-block .form-label { margin-bottom: var(--space-1); font-size: var(--text-12); }
   .view-post-generate-progress {
@@ -820,6 +814,8 @@
 (function() {
   'use strict';
   const tr = window.__tr || {};
+  const commentsPromptVersion = "{{ comments_prompt_version|default('default', true) }}";
+  const useHdAllVariants = commentsPromptVersion && commentsPromptVersion !== 'default';
   const isEnglishUiLocale = String(window.__locale || '').toLowerCase() === 'en';
   function uiText(value, enFallback, ruFallback) {
     if (typeof value === 'string' && value.trim()) return value;
@@ -896,8 +892,29 @@
 
   const searchInput = document.getElementById('posts-search');
   let postsCache = [];
+  const postsQueryParams = new URLSearchParams(window.location.search || '');
+  const composePostIdRaw = postsQueryParams.get('compose_post_id') || postsQueryParams.get('open_post_id') || '';
+  const composePostId = parseInt(composePostIdRaw, 10);
+  const composeMode = String(postsQueryParams.get('compose_mode') || '').toLowerCase();
+  let composePostAutoOpened = false;
   function normalizeSearchText(v) {
     return String(v || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+  function clearComposePostQuery() {
+    if (!history.replaceState) return;
+    const cleanUrl = window.location.pathname + (window.location.hash || '');
+    history.replaceState({}, document.title, cleanUrl);
+  }
+  function tryOpenComposePostFromQuery() {
+    if (composePostAutoOpened) return;
+    if (!composePostId || composePostId <= 0) return;
+    if (!Array.isArray(postsCache) || !postsCache.length) return;
+    const exists = postsCache.some(function(p) { return Number(p.id) === composePostId; });
+    if (!exists) return;
+    composePostAutoOpened = true;
+    const opts = composeMode === 'draft' ? { focusDraft: true } : { focusGenerate: true };
+    openViewPostModal(composePostId, opts);
+    clearComposePostQuery();
   }
   function getReadMoreText(expanded) {
     return expanded
@@ -916,6 +933,19 @@
   function buildMetricHtml(type, value) {
     if (value === null || value === undefined) return '';
     return '<span class="post-metric">' + metricIconSvg(type) + '<span>' + escapeHtml(String(value)) + '</span></span>';
+  }
+  function normalizeLinkedInOpenUrl(rawUrl) {
+    const raw = String(rawUrl || '').trim();
+    if (!raw) return '';
+    try {
+      if (raw.toLowerCase().startsWith('urn:li:activity:')) return 'https://www.linkedin.com/feed/update/' + raw + '/';
+      if (raw.startsWith('/feed/update/') || raw.startsWith('/posts/')) return 'https://www.linkedin.com' + raw;
+      if (/^https?:\/\//i.test(raw)) return raw;
+      if (/linkedin\.com/i.test(raw)) return 'https://' + raw.replace(/^\/+/, '');
+      return '';
+    } catch (_) {
+      return '';
+    }
   }
   function resolvePostStatus(post, hasDraft) {
     const raw = String(post.status || post.parse_status || post.sync_status || '').toLowerCase();
@@ -967,6 +997,7 @@
     postsList.innerHTML = filteredList.map(function(p) {
       const authorName = escapeHtml(p.person_name || (tr.contact_default_name || 'Contact #{}').replace('{}', p.person_id));
       const dateStr = formatDate(p.posted_at);
+      const linkedInUrl = normalizeLinkedInOpenUrl(p.post_url);
       const hasDraft = p.reply_variants && typeof p.reply_variants === 'object' && (p.reply_variants.short || p.reply_variants.medium || p.reply_variants.long);
       const status = resolvePostStatus(p, hasDraft);
       const sourceText = (p.title || p.content || '').trim() || (tr.post_no_title || 'No title');
@@ -981,18 +1012,17 @@
       const openIcon = '<span aria-hidden="true">↗</span>';
       let primaryCtaHtml = '';
       if (status.key === 'comment-sent') {
-        primaryCtaHtml = '<button type="button" class="btn secondary btn-sm btn-open-comment" data-id="' + p.id + '" data-post-url="' + (p.post_url ? escapeHtml(p.post_url) : '') + '">' + uiText(tr.posts_view, 'View', 'Открыть') + '</button>';
+        primaryCtaHtml = '<button type="button" class="btn secondary btn-sm btn-open-comment" data-id="' + p.id + '" data-post-url="' + (linkedInUrl ? escapeHtml(linkedInUrl) : '') + '">' + uiText(tr.posts_view, 'View', 'Открыть') + '</button>';
       } else if (status.key === 'draft-ready') {
         primaryCtaHtml = '<button type="button" class="btn primary btn-sm btn-open-draft" data-id="' + p.id + '">' + uiText(tr.posts_open_draft, 'Open draft', 'Открыть черновик') + '</button>';
       } else if (status.key === 'error') {
         primaryCtaHtml = '<button type="button" class="btn secondary btn-sm btn-generate-post" data-id="' + p.id + '">' + uiText(tr.posts_retry, 'Retry', 'Повторить') + '</button>';
       } else if (status.key === 'parsing') {
-        primaryCtaHtml = '<button type="button" class="btn secondary btn-sm btn-open-comment" data-id="' + p.id + '" data-post-url="' + (p.post_url ? escapeHtml(p.post_url) : '') + '">' + uiText(tr.posts_view, 'View', 'Открыть') + '</button>';
+        primaryCtaHtml = '<button type="button" class="btn secondary btn-sm btn-open-comment" data-id="' + p.id + '" data-post-url="' + (linkedInUrl ? escapeHtml(linkedInUrl) : '') + '">' + uiText(tr.posts_view, 'View', 'Открыть') + '</button>';
       } else {
         primaryCtaHtml = '<button type="button" class="btn primary btn-sm btn-generate-post" data-id="' + p.id + '">' + uiText(tr.posts_generate_comment, 'Generate comment', 'Сгенерировать комментарий') + '</button>';
       }
-      return '<article class="post-card" data-id="' + p.id + '" role="button" tabindex="0">' +
-        (p.post_url ? '<a href="' + escapeHtml(p.post_url) + '" target="_blank" rel="noopener" class="post-card-open post-card-link-corner" aria-label="' + (tr.posts_open_linkedin || 'Open in LinkedIn') + '" title="' + (tr.posts_open_linkedin || 'Open in LinkedIn') + '">' + openIcon + '</a>' : '') +
+      return '<article class="post-card" data-id="' + p.id + '" data-post-url="' + (linkedInUrl ? escapeHtml(linkedInUrl) : '') + '" role="button" tabindex="0">' +
         '<div class="post-card-header">' +
           '<div class="post-card-meta-line"><span class="post-card-meta-author">' + authorName + '</span><span class="post-card-meta-dot" aria-hidden="true">•</span><span class="post-card-meta-date">' + escapeHtml(dateStr) + '</span></div>' +
           '<span class="post-card-status status-' + status.key + '"><span class="post-card-status-dot" aria-hidden="true"></span><span>' + escapeHtml(status.label) + '</span></span>' +
@@ -1049,8 +1079,7 @@
       btn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        var url = btn.getAttribute('data-post-url');
-        if (url) window.open(url, '_blank', 'noopener');
+        openViewPostModal(parseInt(btn.dataset.id, 10));
       });
     });
     postsList.querySelectorAll('.btn-open-draft').forEach(function(btn) {
@@ -1106,6 +1135,7 @@
       postsLoading.style.display = 'none';
       postsCache = posts || [];
       renderPostsList(postsCache);
+      tryOpenComposePostFromQuery();
     }).catch((err) => {
       postsLoading.style.display = 'none';
       postsEmpty.style.display = 'none';
@@ -1195,18 +1225,30 @@
     if (e.target === viewPostModal) closeViewPostDrawer();
   });
 
-  const viewPostLinkHeader = document.getElementById('view-post-link-header');
-  const viewPostLinkedInMetrics = document.getElementById('view-post-linkedin-metrics');
-  const viewPostGenerateReply = document.getElementById('view-post-generate-reply');
-  const viewPostReplyResult = document.getElementById('view-post-reply-result');
-  const viewPostReplySingle = document.getElementById('view-post-reply-single');
-  const viewPostReplyAll = document.getElementById('view-post-reply-all');
+	  const viewPostLinkHeader = document.getElementById('view-post-link-header');
+	  const viewPostGenerateReply = document.getElementById('view-post-generate-reply');
+	  const viewPostReplyResult = document.getElementById('view-post-reply-result');
+	  const viewPostReplySingle = document.getElementById('view-post-reply-single');
+	  const viewPostReplyAll = document.getElementById('view-post-reply-all');
   const viewPostGenerateProgress = document.getElementById('view-post-generate-progress');
   const viewPostGenerateProgressTrack = document.getElementById('view-post-generate-progress-track');
   const viewPostGenerateProgressFill = document.getElementById('view-post-generate-progress-fill');
   const viewPostGenerateProgressTime = document.getElementById('view-post-generate-progress-time');
   const viewPostGenerateProgressSteps = document.getElementById('view-post-generate-progress-steps');
   const viewPostGenerateProgressNote = document.getElementById('view-post-generate-progress-note');
+  if (viewPostLinkHeader) {
+    viewPostLinkHeader.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const url = String(viewPostLinkHeader.dataset.url || currentViewPostUrl || '').trim();
+      if (!url || url === '#') return;
+      copyTextToClipboard(url).then(() => {
+        if (typeof window.toast === 'function') window.toast(tr.posts_copied || 'Copied', 'success');
+      }).catch(() => {
+        if (typeof window.toast === 'function') window.toast(tr.posts_copy_failed || 'Failed to copy', 'error');
+      });
+    });
+  }
   if (viewPostReplyResult) {
     viewPostReplyResult.addEventListener('click', (e) => {
       const btn = e.target.closest('.btn-copy-reply');
@@ -1241,7 +1283,7 @@ btn.textContent = (tr.posts_copied || 'Copied');
   let currentViewPostUrl = '';
   let currentReplyVariants = null;
   let showingAllVariants = false;
-  const generationProgressStages = [
+  const generationProgressStagesDefault = [
     trWithLocaleFallback('posts_gen_stage_prepare_context', 'Preparing post context', 'Собираем контекст поста'),
     trWithLocaleFallback('posts_gen_stage_prepare_author', 'Loading author voice', 'Подгружаем голос автора'),
     trWithLocaleFallback('posts_gen_stage_draft_short', 'Generating short variant', 'Генерируем короткий вариант'),
@@ -1249,7 +1291,7 @@ btn.textContent = (tr.posts_copied || 'Copied');
     trWithLocaleFallback('posts_gen_stage_draft_long', 'Generating long variant', 'Генерируем длинный вариант'),
     trWithLocaleFallback('posts_gen_stage_review', 'Final review and formatting', 'Финальная проверка и форматирование')
   ];
-  const generationProgressDetails = [
+  const generationProgressDetailsDefault = [
     trWithLocaleFallback('posts_gen_detail_prepare_context', 'Analyzing topic, tone, and key message.', 'Анализируем тему, тональность и ключевой посыл.'),
     trWithLocaleFallback('posts_gen_detail_prepare_author', 'Applying the selected author\'s style and vocabulary.', 'Применяем стиль и словарь выбранного автора.'),
     trWithLocaleFallback('posts_gen_detail_short', 'Creating a concise version for quick replies.', 'Создаём лаконичную версию для быстрых ответов.'),
@@ -1257,7 +1299,25 @@ btn.textContent = (tr.posts_copied || 'Copied');
     trWithLocaleFallback('posts_gen_detail_long', 'Building a detailed version with a complete thought.', 'Собираем развёрнутый вариант с завершённой мыслью.'),
     trWithLocaleFallback('posts_gen_detail_review', 'Checking readability, logic, and tone consistency.', 'Проверяем читабельность, логику и соответствие тону.')
   ];
-  const generationProgressStageOffsetsMs = [0, 1400, 3600, 7800, 13000, 19500];
+  const generationProgressStagesV2 = [
+    uiText(null, 'Reading post and selecting response angle', 'Читаем пост и выбираем вектор ответа'),
+    uiText(null, 'Applying author profile, all 66 parameters', 'Применяем профиль автора, все 66 параметров'),
+    uiText(null, 'Generating short variant, 15 words', 'Генерируем короткий вариант, 15 слов'),
+    uiText(null, 'Generating medium variant, 28 words', 'Генерируем средний вариант, 28 слов'),
+    uiText(null, 'Generating long variant, 45 words', 'Генерируем длинный вариант, 45 слов'),
+    uiText(null, 'Validating rules and punctuation', 'Проверяем запреты и пунктуацию')
+  ];
+  const generationProgressDetailsV2 = [
+    uiText(null, 'Parsing intent and framing without direct retelling.', 'Разбираем намерение и формулируем ответ без прямого пересказа.'),
+    uiText(null, 'Matching tone, energy, humor, and other profile constraints.', 'Сверяем тон, энергию, юмор и остальные ограничения профиля.'),
+    uiText(null, 'Building a compact variant with number and personal signal.', 'Собираем компактный вариант с цифрой и личным опытом.'),
+    uiText(null, 'Expanding argument while keeping engagement and author voice.', 'Расширяем аргумент и сохраняем вовлекающий голос автора.'),
+    uiText(null, 'Finalizing detailed variant with clear ending question.', 'Собираем развернутый вариант с четким вопросом в конце.'),
+    uiText(null, 'Checking banned symbols and exact length constraints.', 'Проверяем запрещенные символы и точные ограничения по длине.')
+  ];
+  const generationProgressStages = useHdAllVariants ? generationProgressStagesV2 : generationProgressStagesDefault;
+  const generationProgressDetails = useHdAllVariants ? generationProgressDetailsV2 : generationProgressDetailsDefault;
+  const generationProgressStageOffsetsMs = useHdAllVariants ? [0, 1800, 4500, 9000, 15000, 22000] : [0, 1400, 3600, 7800, 13000, 19500];
   let generationProgressTimer = null;
   let generationProgressHideTimer = null;
   let generationProgressStartedAt = 0;
@@ -1525,71 +1585,11 @@ btn.textContent = (tr.posts_copied || 'Copied');
     });
     if (Object.keys(fastCommentJobs).length) ensureFastCommentPolling();
   }
-  function renderLinkedInMetrics(metrics, historyDaily) {
-    if (!viewPostLinkedInMetrics) return;
-    const order = ['IMPRESSION', 'MEMBERS_REACHED', 'REACTION', 'COMMENT', 'RESHARE'];
-    const labels = {
-      IMPRESSION: (tr.admin_analytics_impressions || 'Просмотры'),
-      MEMBERS_REACHED: (tr.admin_analytics_reach || 'Охват'),
-      REACTION: (tr.admin_analytics_reactions || 'Реакции'),
-      COMMENT: (tr.admin_analytics_comments || 'Комментарии'),
-      RESHARE: (tr.admin_analytics_reshares || 'Репосты'),
-    };
-    const chips = order
-      .filter((k) => metrics && Object.prototype.hasOwnProperty.call(metrics, k))
-      .map((k) => '<span class="metric-chip"><strong>' + escapeHtml(String(metrics[k] || 0)) + '</strong> ' + escapeHtml(labels[k] || k) + '</span>')
-      .join('');
-    if (!chips) {
-      viewPostLinkedInMetrics.style.display = 'none';
-      viewPostLinkedInMetrics.innerHTML = '';
-      return;
-    }
-    const last7Totals = {};
-    if (Array.isArray(historyDaily) && historyDaily.length) {
-      const dates = Array.from(new Set(historyDaily.map((r) => r.metric_date))).sort();
-      const last7Dates = dates.slice(-7);
-      for (let i = 0; i < historyDaily.length; i++) {
-        const row = historyDaily[i] || {};
-        if (!last7Dates.includes(row.metric_date)) continue;
-        const mt = String(row.metric_type || '');
-        const c = parseInt(row.count || 0, 10) || 0;
-        last7Totals[mt] = (last7Totals[mt] || 0) + c;
-      }
-    }
-    const trendChips = order
-      .filter((k) => Object.prototype.hasOwnProperty.call(last7Totals, k))
-      .map((k) => '<span class="metric-chip"><strong>' + escapeHtml(String(last7Totals[k] || 0)) + '</strong> ' + escapeHtml(labels[k] || k) + '</span>')
-      .join('');
-    viewPostLinkedInMetrics.innerHTML =
-      '<div class="metrics-title">LinkedIn analytics</div>' +
-      '<div class="metrics-grid">' + chips + '</div>' +
-      (trendChips ? ('<div class="metrics-subtitle">Динамика за 7 дней</div><div class="metrics-grid metrics-grid-muted">' + trendChips + '</div>') : '');
-    viewPostLinkedInMetrics.style.display = 'block';
-  }
-  async function loadLinkedInPostMetrics(postUrl) {
-    if (!viewPostLinkedInMetrics) return;
-    if (!postUrl || postUrl === '#') {
-      viewPostLinkedInMetrics.style.display = 'none';
-      viewPostLinkedInMetrics.innerHTML = '';
-      return;
-    }
-    viewPostLinkedInMetrics.style.display = 'block';
-    viewPostLinkedInMetrics.innerHTML = '<div class="metrics-muted">Загружаем метрики LinkedIn…</div>';
-    try {
-      const r = await fetch('/linkedin/post-metrics?post_url=' + encodeURIComponent(postUrl) + '&days=30&save_history=true', { credentials: 'include' });
-      if (!r.ok) throw new Error('metrics fetch failed');
-      const data = await r.json();
-      renderLinkedInMetrics(data.metrics || {}, data.history_daily || []);
-    } catch (_) {
-      viewPostLinkedInMetrics.style.display = 'none';
-      viewPostLinkedInMetrics.innerHTML = '';
-    }
-  }
-  function updateGenerateReplyButtonLabel() {
-    if (!viewPostGenerateReply) return;
-    const hasReplies = currentReplyVariants && typeof currentReplyVariants === 'object' && (currentReplyVariants.short || currentReplyVariants.medium || currentReplyVariants.long);
-    viewPostGenerateReply.textContent = hasReplies ? (tr.posts_regenerate_comments || 'Regenerate comments') : (tr.posts_generate_comment || 'Generate comment');
-  }
+	  function updateGenerateReplyButtonLabel() {
+	    if (!viewPostGenerateReply) return;
+	    const hasReplies = currentReplyVariants && typeof currentReplyVariants === 'object' && (currentReplyVariants.short || currentReplyVariants.medium || currentReplyVariants.long);
+	    viewPostGenerateReply.textContent = hasReplies ? (tr.posts_regenerate_comments || 'Regenerate comments') : (tr.posts_generate_comment || 'Generate comment');
+	  }
   function formatProgressElapsed(ms) {
     const total = Math.max(0, Math.floor(ms / 1000));
     const min = Math.floor(total / 60);
@@ -1687,18 +1687,16 @@ btn.textContent = (tr.posts_copied || 'Copied');
   }
   function renderOneReplyVariant(key, comments) {
     if (!comments || !comments[key]) return '';
-    const id = 'view-reply-' + key;
-    const text = (comments[key] || '').trim();
-    const label = replyVariantLabels[key] || key;
-    const openIconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
-    const openLabel = currentViewPostUrl && currentViewPostUrl !== '#' ? '<a href="' + escapeHtml(currentViewPostUrl) + '" target="_blank" rel="noopener" class="view-post-open-link" title="' + (tr.posts_open_linkedin || 'Open in LinkedIn') + '" aria-label="' + (tr.posts_open_linkedin || 'Open in LinkedIn') + '">' + openIconSvg + '</a>' : '';
-    return '<div class="view-post-reply-variant">' +
-      '<div class="view-post-reply-variant-header">' +
-        '<span class="view-post-reply-variant-title">' + escapeHtml(label) + '</span>' +
-        '<div class="view-post-reply-variant-actions">' +
-          '<button type="button" class="btn-copy-reply secondary" data-copy-id="' + id + '" title="' + (tr.posts_copy_title || 'Copy to clipboard') + '" aria-label="' + (tr.posts_copy || 'Copy') + '">' + (tr.posts_copy || 'Copy') + '</button>' + (openLabel ? openLabel : '') +
-        '</div>' +
-      '</div>' +
+	    const id = 'view-reply-' + key;
+	    const text = (comments[key] || '').trim();
+	    const label = replyVariantLabels[key] || key;
+	    return '<div class="view-post-reply-variant">' +
+	      '<div class="view-post-reply-variant-header">' +
+	        '<span class="view-post-reply-variant-title">' + escapeHtml(label) + '</span>' +
+	        '<div class="view-post-reply-variant-actions">' +
+	          '<button type="button" class="btn-copy-reply secondary" data-copy-id="' + id + '" title="' + (tr.posts_copy_title || 'Copy to clipboard') + '" aria-label="' + (tr.posts_copy || 'Copy') + '">' + (tr.posts_copy || 'Copy') + '</button>' +
+	        '</div>' +
+	      '</div>' +
       '<p class="view-post-reply-variant-text" id="' + id + '">' + escapeHtml(text) + '</p>' +
       '</div>';
   }
@@ -1809,7 +1807,8 @@ btn.textContent = (tr.posts_copied || 'Copied');
     clearBackgroundGenerationNote();
     fetch('/posts/' + id).then(r => r.json()).then(p => {
       currentViewPostContent = p.content || '';
-      currentViewPostUrl = p.post_url || '#';
+      const normalizedViewPostUrl = normalizeLinkedInOpenUrl(p.post_url);
+      currentViewPostUrl = normalizedViewPostUrl || '#';
       document.getElementById('view-post-modal-title').textContent = p.title || (tr.posts_post_default || 'Post');
       document.getElementById('view-post-author').textContent = (p.person_name || (tr.contact_default_name || 'Contact #{}').replace('{}', p.person_id));
       document.getElementById('view-post-date').textContent = ' · ' + formatDate(p.posted_at);
@@ -1817,16 +1816,15 @@ btn.textContent = (tr.posts_copied || 'Copied');
       const metaParts = [];
       if (p.likes_count != null) metaParts.push('👍 ' + p.likes_count);
       if (p.comments_count != null) metaParts.push('💬 ' + p.comments_count);
-      if (p.views_count != null) metaParts.push('👁 ' + p.views_count);
-      metaRow.textContent = metaParts.length ? metaParts.join(' · ') : '';
-      document.getElementById('view-post-content').textContent = currentViewPostContent || uiText(tr.posts_no_text, '(no text)', '(нет текста)');
-      loadLinkedInPostMetrics(currentViewPostUrl);
-      const viewPostLinkHeader = document.getElementById('view-post-link-header');
-      if (viewPostLinkHeader) {
-        viewPostLinkHeader.href = currentViewPostUrl;
-        viewPostLinkHeader.style.display = (currentViewPostUrl !== '#' ? 'inline-flex' : 'none');
-      }
-      const savedReplies = p.reply_variants && typeof p.reply_variants === 'object';
+	      if (p.views_count != null) metaParts.push('👁 ' + p.views_count);
+	      metaRow.textContent = metaParts.length ? metaParts.join(' · ') : '';
+	      document.getElementById('view-post-content').textContent = currentViewPostContent || uiText(tr.posts_no_text, '(no text)', '(нет текста)');
+		      const viewPostLinkHeader = document.getElementById('view-post-link-header');
+		      if (viewPostLinkHeader) {
+		        viewPostLinkHeader.dataset.url = currentViewPostUrl;
+		        viewPostLinkHeader.style.display = (currentViewPostUrl !== '#' ? 'inline-flex' : 'none');
+		      }
+	      const savedReplies = p.reply_variants && typeof p.reply_variants === 'object';
       if (savedReplies) {
         currentReplyVariants = p.reply_variants;
         showingAllVariants = false;
@@ -1882,7 +1880,14 @@ btn.textContent = (tr.posts_copied || 'Copied');
     const goal = document.getElementById('view-post-goal').value;
     const authorIndex = document.getElementById('view-post-author-select').value;
     const author = (authorIndex !== '' && viewPostAuthorsList.length) ? viewPostAuthorsList[parseInt(authorIndex, 10)] : null;
-    const payload = { post_text: postText, goal, post_id: currentViewPostId, fast_mode: true };
+    const payload = {
+      post_text: postText,
+      goal,
+      post_id: currentViewPostId,
+      // v2: full-quality generation for all 3 variants in one request
+      fast_mode: !useHdAllVariants
+    };
+    if (commentsPromptVersion && commentsPromptVersion !== 'default') payload.prompt_version = commentsPromptVersion;
     if (author) payload.author = { full_name: author.full_name, role: author.role || '', history: author.history || '', linkedin_url: author.linkedin_url || '' };
     if (viewPostSetupDraft.products && viewPostSetupDraft.products.length) payload.products = viewPostSetupDraft.products;
     viewPostGenerateReply.disabled = true;
@@ -2122,6 +2127,16 @@ btn.textContent = (tr.posts_copied || 'Copied');
     parsePersonDropdown.hidden = true;
     const preview = document.getElementById('parse-result-preview');
     if (preview) { preview.style.display = 'none'; }
+    const resultImg = document.getElementById('parse-result-screenshot');
+    if (resultImg) {
+      resultImg.removeAttribute('src');
+      resultImg.style.display = 'none';
+    }
+    const resultNote = document.getElementById('parse-result-screenshot-note');
+    if (resultNote) {
+      resultNote.style.display = 'none';
+      resultNote.textContent = '';
+    }
     document.getElementById('parse-modal-cancel').textContent = tr.parse_cancel || 'Cancel';
     validateParseForm();
     parseModal.removeAttribute('hidden');
@@ -2150,7 +2165,23 @@ btn.textContent = (tr.posts_copied || 'Copied');
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: url, person_id: personId })
-    }).then(r => r.json()).then(data => {
+    }).then(async (r) => {
+      const contentType = (r.headers.get('content-type') || '').toLowerCase();
+      if (!contentType.includes('application/json')) {
+        const redirectedToLogin = r.redirected && /\/login(?:\?|$)/.test(r.url || '');
+        if (redirectedToLogin) {
+          throw new Error(tr.parse_error_auth || 'Сессия истекла. Обновите страницу и войдите снова.');
+        }
+        const bodyText = await r.text();
+        const shortBody = (bodyText || '').replace(/\s+/g, ' ').slice(0, 140);
+        throw new Error((tr.parse_error_non_json || 'Сервер вернул ответ в неверном формате.') + ` HTTP ${r.status}` + (shortBody ? `: ${shortBody}` : ''));
+      }
+      const data = await r.json();
+      if (!r.ok && !data.error) {
+        throw new Error(data.detail || `HTTP ${r.status}`);
+      }
+      return data;
+    }).then(data => {
       if (data.error) {
         parseStatus.textContent = data.error + ' ' + (tr.parse_retry_after_check || 'Retry: click the button again after checking.');
         parseStatus.style.color = 'var(--danger)';
@@ -2160,13 +2191,23 @@ btn.textContent = (tr.posts_copied || 'Copied');
         const preview = document.getElementById('parse-result-preview');
         const resultText = document.getElementById('parse-result-text');
         const resultImg = document.getElementById('parse-result-screenshot');
+        const resultNote = document.getElementById('parse-result-screenshot-note');
         const text = (data.parsed && data.parsed.text) ? data.parsed.text : (data.post && data.post.content) ? data.post.content : uiText(tr.posts_no_text, '(no text)', '(нет текста)');
         resultText.textContent = text;
         if (data.screenshot_base64) {
           resultImg.src = 'data:image/png;base64,' + data.screenshot_base64;
           resultImg.style.display = 'block';
+          if (resultNote) {
+            resultNote.style.display = 'none';
+            resultNote.textContent = '';
+          }
         } else {
+          resultImg.removeAttribute('src');
           resultImg.style.display = 'none';
+          if (resultNote) {
+            resultNote.textContent = tr.parse_screenshot_unavailable || 'Скриншот недоступен для этого результата.';
+            resultNote.style.display = 'block';
+          }
         }
         preview.style.display = 'block';
         document.getElementById('parse-modal-cancel').textContent = tr.posts_close || tr.parse_cancel || 'Close';

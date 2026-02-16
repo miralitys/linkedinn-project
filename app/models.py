@@ -375,49 +375,6 @@ class Draft(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
-class LinkedInOAuth(Base):
-    """Один подключённый аккаунт LinkedIn (OAuth + refresh token)."""
-    __tablename__ = "linkedin_oauth"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    access_token: Mapped[str] = mapped_column(Text, nullable=False)
-    refresh_token: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    refresh_token_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
-    scope: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-
-class LinkedInDailyMetric(Base):
-    """Метрики постов из memberCreatorPostAnalytics (q=me, aggregation=DAILY)."""
-    __tablename__ = "linkedin_daily_metrics"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    metric_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    metric_type: Mapped[str] = mapped_column(String(32), nullable=False)
-    count: Mapped[int] = mapped_column(Integer, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-
-
-class LinkedInPostDailyMetric(Base):
-    """Метрики конкретного поста LinkedIn (q=entity, aggregation=DAILY)."""
-    __tablename__ = "linkedin_post_daily_metrics"
-    __table_args__ = (
-        UniqueConstraint("post_urn", "metric_date", "metric_type", name="uq_linkedin_post_daily_metric"),
-    )
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    post_urn: Mapped[str] = mapped_column(String(128), nullable=False)
-    entity_type: Mapped[str] = mapped_column(String(16), nullable=False)  # share | ugc
-    source_post_url: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
-    metric_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    metric_type: Mapped[str] = mapped_column(String(32), nullable=False)
-    count: Mapped[int] = mapped_column(Integer, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-
 class Usage(Base):
     """Учёт генераций (комментарии/посты) по пользователю и месяцу."""
     __tablename__ = "usage"

@@ -1,6 +1,7 @@
 # agents/comment_pipeline/review.py — Review(draft)
 
 import json
+import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -30,15 +31,37 @@ from agents.comment_pipeline.config import (
 )
 
 
+V2_PROMPT_VERSIONS = {"v2", "comments_v2", "high_engagement_2026"}
+
+
+def _is_v2_prompt(prompt_version: str) -> bool:
+    return (prompt_version or "").strip().lower() in V2_PROMPT_VERSIONS
+
+
+def _contains_author_key_phrase(text: str, phrases: List[str]) -> bool:
+    source = re.sub(r"\s+", " ", (text or "").strip().lower())
+    if not source:
+        return False
+    for raw in phrases or []:
+        phrase = re.sub(r"\s+", " ", str(raw or "").strip().lower())
+        if phrase and phrase in source:
+            return True
+    return False
+
+
 def rule_compliance_check(
     draft: str,
     policy: dict,
     product_plan: Optional[dict],
     products: List[dict],
     mode: str,
+    variant: Optional[str] = None,
     expected_language: Optional[str] = None,
     post_text: Optional[str] = None,
     anchors: Optional[List[str]] = None,
+    prompt_version: str = "default",
+    author_key_phrases: Optional[List[str]] = None,
+    drafts_bundle: Optional[Dict[str, str]] = None,
 ) -> List[str]:
     """
     Rule-based compliance check. Returns list of fail flags.
@@ -62,6 +85,12 @@ def rule_compliance_check(
         flags.append("anchor_copy_overlap")
     if detect_post_rhetoric_reaction(draft):
         flags.append("rhetoric_reaction")
+
+    if _is_v2_prompt(prompt_version):
+        if author_key_phrases and not _contains_author_key_phrase(draft, author_key_phrases):
+            flags.append("contains_author_voice_phrases")
+        if has_em_dash(draft) or has_colon(draft):
+            flags.append("no_em_dash_or_colon")
 
     if mode == MODE_NETWORK:
         if detect_cta(draft):
@@ -114,6 +143,9 @@ async def review_draft(
     product_plan: Optional[dict],
     mode: str,
     products: Optional[List[dict]] = None,
+    prompt_version: str = "default",
+    author_key_phrases: Optional[List[str]] = None,
+    drafts_bundle: Optional[Dict[str, str]] = None,
     expected_language: Optional[str] = None,
     llm=None,
 ) -> Dict[str, Any]:
@@ -125,9 +157,13 @@ async def review_draft(
         product_plan,
         products,
         mode,
+        variant=variant,
         expected_language=expected_language,
         post_text=post_text,
         anchors=post_brief.get("anchors") if isinstance(post_brief, dict) else [],
+        prompt_version=prompt_version,
+        author_key_phrases=author_key_phrases,
+        drafts_bundle=drafts_bundle,
     )
 
     thresholds = REVIEW_THRESHOLDS.get(variant, REVIEW_THRESHOLDS["medium"])
@@ -143,6 +179,9 @@ async def review_draft(
             product_plan,
             products,
             mode,
+            prompt_version=prompt_version,
+            author_key_phrases=author_key_phrases,
+            drafts_bundle=drafts_bundle,
             expected_language=expected_language,
             post_text=post_text,
             anchors=post_brief.get("anchors") if isinstance(post_brief, dict) else [],
@@ -171,6 +210,11 @@ async def review_draft(
             flags = list(dict.fromkeys((data.get("flags") or []) + rule_flags))
             fail_flags = {"fake_personal_claim", "lecture_mode", "toxicity", "em_dash", "colon", "language_mismatch"}
             fail_flags |= {"no_personal_stance", "post_copy_overlap", "anchor_copy_overlap", "rhetoric_reaction"}
+            if _is_v2_prompt(prompt_version):
+                fail_flags |= {
+                    "contains_author_voice_phrases",
+                    "no_em_dash_or_colon",
+                }
             if mode == MODE_NETWORK:
                 fail_flags |= {"product_mention", "cta", "link"}
             if mode == MODE_NATIVE_AD:
@@ -179,6 +223,15 @@ async def review_draft(
                 fail_flags |= {"forbidden_claim_violation", "product_missing", "cta_missing"}
 
             has_fail = any(f in flags for f in fail_flags)
+            if _is_v2_prompt(prompt_version) and has_fail and not (data.get("patch_plan") or []):
+                hints: List[str] = []
+                if "contains_author_voice_phrases" in flags and author_key_phrases:
+                    joined = ", ".join(author_key_phrases[:3])
+                    hints.append(f"Use at least one key phrase from: {joined}.")
+                if "no_em_dash_or_colon" in flags:
+                    hints.append("Remove em dash and colon.")
+                if hints:
+                    data["patch_plan"] = [{"op": "replace", "hint": " ".join(hints)}]
             data["pass"] = not has_fail and data.get("pass", True)
             data["flags"] = flags
             return data
@@ -191,6 +244,9 @@ async def review_draft(
         product_plan,
         products,
         mode,
+        prompt_version=prompt_version,
+        author_key_phrases=author_key_phrases,
+        drafts_bundle=drafts_bundle,
         expected_language=expected_language,
         post_text=post_text,
         anchors=post_brief.get("anchors") if isinstance(post_brief, dict) else [],
@@ -204,13 +260,16 @@ def _quick_review(
     product_plan: Optional[dict],
     products: List[dict],
     mode: str,
+    prompt_version: str = "default",
+    author_key_phrases: Optional[List[str]] = None,
+    drafts_bundle: Optional[Dict[str, str]] = None,
     expected_language: Optional[str] = None,
     post_text: Optional[str] = None,
     anchors: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """Rule-based fallback review (без LLM)."""
     flags: List[str] = []
-    if not draft or len(draft.strip()) < 50:
+    if not _is_v2_prompt(prompt_version) and (not draft or len(draft.strip()) < 50):
         flags.append("too_short")
     flags.extend(
         rule_compliance_check(
@@ -219,9 +278,13 @@ def _quick_review(
             product_plan,
             products or [],
             mode,
+            variant=variant,
             expected_language=expected_language,
             post_text=post_text,
             anchors=anchors,
+            prompt_version=prompt_version,
+            author_key_phrases=author_key_phrases,
+            drafts_bundle=drafts_bundle,
         )
     )
     patch_plan = []
@@ -233,6 +296,22 @@ def _quick_review(
                 "hint": f"Rewrite the comment fully in {target_lang}, keep the same meaning and tone.",
             }
         )
+    if _is_v2_prompt(prompt_version):
+        if "contains_author_voice_phrases" in flags and author_key_phrases:
+            joined = ", ".join(author_key_phrases[:3])
+            patch_plan.append(
+                {
+                    "op": "replace",
+                    "hint": f"Use at least one key phrase from: {joined}.",
+                }
+            )
+        if "no_em_dash_or_colon" in flags:
+            patch_plan.append(
+                {
+                    "op": "replace",
+                    "hint": "Remove em dash and colon.",
+                }
+            )
     return {
         "pass": len(flags) == 0,
         "scores": {"persona_fit": 70, "ai_smell": 20, "post_anchor": 70, "clarity": 75, "integrity": 95, "salesiness": 10},

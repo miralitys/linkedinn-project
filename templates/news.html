@@ -1108,6 +1108,31 @@
   var lastNewsItems = [];
   var currentNewsItem = null;
   var isRefreshInFlight = false;
+  var newsQueryParams = new URLSearchParams(window.location.search || '');
+  var composeNewsIdRaw = newsQueryParams.get('compose_news_id') || newsQueryParams.get('open_news_id') || '';
+  var composeNewsId = parseInt(composeNewsIdRaw, 10);
+  var composeNewsAutoOpened = false;
+
+  function clearComposeNewsQuery() {
+    if (!history.replaceState) return;
+    var cleanUrl = window.location.pathname + (window.location.hash || '');
+    history.replaceState({}, document.title, cleanUrl);
+  }
+
+  function tryOpenComposeNewsFromQuery() {
+    if (composeNewsAutoOpened) return;
+    if (!composeNewsId || composeNewsId <= 0) return;
+    if (!Array.isArray(lastNewsItems) || !lastNewsItems.length) return;
+    var idx = lastNewsItems.findIndex(function(item) { return Number(item.id) === composeNewsId; });
+    if (idx < 0) return;
+    composeNewsAutoOpened = true;
+    openNewsView(idx);
+    setTimeout(function() {
+      var rewriteBtn = document.getElementById('news-rewrite-btn');
+      if (rewriteBtn) rewriteBtn.focus();
+    }, 120);
+    clearComposeNewsQuery();
+  }
 
   function setRefreshLoading(isLoading) {
     if (!refreshBtn) return;
@@ -1464,6 +1489,7 @@
           return;
         }
         renderNewsList();
+        tryOpenComposeNewsFromQuery();
         // Запускаем скорринг для всех новостей без score
         scoreNewsItems();
         if (forceRefresh && typeof window.toast === 'function') window.toast(uiText(tr.news_updated_toast, 'News updated', 'Новости обновлены'));

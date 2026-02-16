@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     lfas_llm_provider: str = "openrouter"
     lfas_llm_model: str = "anthropic/claude-sonnet-4.5"
     lfas_first_month_strict: int = 1
-    lfas_enable_scheduler: bool = True  # фоновые задачи (RSS/Reddit/analytics) при старте приложения
+    lfas_enable_scheduler: bool = True  # фоновые задачи (RSS/Reddit) при старте приложения
     lfas_host: str = "0.0.0.0"
     lfas_port: int = 8000
     linkedin_client_id: Optional[str] = None
@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     google_client_secret: Optional[str] = None
     google_redirect_uri: Optional[str] = None  # если пусто — строится из запроса (хост + /auth/google/callback)
     playwright_user_data_dir: Optional[str] = None  # путь к профилю Chromium с залогиненным LinkedIn
+    playwright_profile_directory: str = "Default"  # подпрофиль внутри Chrome user data dir (Default, Profile 1, ...)
 
     # RapidAPI — Fresh LinkedIn Profile Data
     rapidapi_key: Optional[str] = None

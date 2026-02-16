@@ -74,7 +74,7 @@ def _auth_required() -> bool:
 async def login_page(request: Request):
     try:
         if request.session.get("authenticated"):
-            return RedirectResponse(url=request.query_params.get("next", "/ui/posts"), status_code=302)
+            return RedirectResponse(url=request.query_params.get("next", "/ui/dashboard"), status_code=302)
     except Exception:
         pass
     try:
@@ -97,7 +97,7 @@ async def login_submit(
     session: AsyncSession = Depends(get_session),
 ):
     if not _auth_required():
-        return RedirectResponse(url="/ui/posts", status_code=302)
+        return RedirectResponse(url="/ui/dashboard", status_code=302)
     
     # Сначала пробуем БД
     user, cred_error = await _check_credentials_db(email, password, session)
@@ -142,9 +142,9 @@ async def login_submit(
             request.session["user_role"] = UserRole.ADMIN.value
         else:
             request.session["user_role"] = user.role
-        next_url = request.query_params.get("next", "/ui/posts")
+        next_url = request.query_params.get("next", "/ui/dashboard")
         if not next_url.startswith("/"):
-            next_url = "/ui/posts"
+            next_url = "/ui/dashboard"
         return RedirectResponse(url=next_url, status_code=302)
     
     # Fallback на .env для обратной совместимости
@@ -168,9 +168,9 @@ async def login_submit(
             await session.commit()
             await session.refresh(env_user)
         request.session["user_id"] = env_user.id
-        next_url = request.query_params.get("next", "/ui/posts")
+        next_url = request.query_params.get("next", "/ui/dashboard")
         if not next_url.startswith("/"):
-            next_url = "/ui/posts"
+            next_url = "/ui/dashboard"
         return RedirectResponse(url=next_url, status_code=302)
     
     try:
@@ -193,7 +193,7 @@ async def login_submit(
 async def register_page(request: Request):
     try:
         if request.session.get("authenticated"):
-            return RedirectResponse(url="/ui/posts", status_code=302)
+            return RedirectResponse(url="/ui/dashboard", status_code=302)
     except Exception:
         pass
     try:
@@ -232,7 +232,7 @@ async def register_submit(
     session: AsyncSession = Depends(get_session),
 ):
     if not _auth_required():
-        return RedirectResponse(url="/ui/posts", status_code=302)
+        return RedirectResponse(url="/ui/dashboard", status_code=302)
     
     try:
         locale = get_locale_from_cookie(getattr(request, "cookies", None))
