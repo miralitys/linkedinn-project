@@ -13,10 +13,10 @@ from agents.comment_pipeline.config import MODE_HARD_AD, MODE_NATIVE_AD, MODE_NE
 
 _LOG = logging.getLogger(__name__)
 _VARIANT_LABEL_RE = re.compile(
-    r"(?im)^\s*(?:[-*•]\s*|\d+[.)]\s*)?[\"']?(short|medium|long)[\"']?\s*[:=\-]\s*(.*)$"
+    r"(?im)^\s*(?:[-*•]\s*|\d+[.)]\s*)?[\"']?(short|medium|long)[\"']?(?:\s*\([^)]+\))?\s*[:=\-]\s*(.*)$"
 )
 _VARIANT_HEADING_RE = re.compile(
-    r"(?im)^\s*(?:[-*•]\s*|\d+[.)]\s*)?[\"']?(short|medium|long)[\"']?\s*$"
+    r"(?im)^\s*(?:[-*•]\s*|\d+[.)]\s*)?[\"']?(short|medium|long)[\"']?(?:\s*\([^)]+\))?\s*$"
 )
 _V2_PROMPT_VERSIONS = {"v2", "comments_v2", "high_engagement_2026"}
 _META_ERROR_RE = re.compile(

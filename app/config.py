@@ -14,6 +14,7 @@ def _normalize_database_url(url: str) -> str:
 
 
 class Settings(BaseSettings):
+    env: str = "dev"  # dev | stage | prod
     database_url: str = "sqlite+aiosqlite:///./lfas.db"
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None

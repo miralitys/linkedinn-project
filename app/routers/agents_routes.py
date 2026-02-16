@@ -4,6 +4,7 @@ import json
 import logging
 import asyncio
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -20,13 +21,15 @@ from app.services.comment_jobs import (
     mark_comment_job_error,
 )
 from app.routers.setup import _kb_key
-from app.schemas import AgentRunPayload, AgentRunResponse
+from app.schemas import AgentRunPayload, AgentRunResponse, CommentAgentPayload
 from agents.llm_client import get_llm_client
 from agents.comment_pipeline.pipeline import prepare_comment_pipeline, finalize_comment_variants
 from agents.registry import AGENTS, run_agent
 
 router = APIRouter(prefix="/agents", tags=["agents"])
 _LOG = logging.getLogger(__name__)
+_LEGACY_COMMENT_GOALS = {"network", "native_ads", "native_ad", "full_ads", "hard_ad"}
+_LEGACY_COMMENT_PROMPTS = {"default", "v1", "high_engagement_2026", "v2", "comments_v2"}
 
 
 def _avatar_to_str(avatar) -> str:
@@ -52,6 +55,55 @@ def _merge_reply_variants(existing: object, patch: dict[str, str]) -> dict[str, 
         "long": (patch.get("long") if patch.get("long") is not None else base.get("long", "")) or "",
     }
     return merged
+
+
+def _normalize_comment_goal(value: object) -> str:
+    raw = str(value or "").strip().lower()
+    if raw in {"high_engagement", "full_ads", "hard_ad"}:
+        return "high_engagement"
+    return "engage"
+
+
+def _normalize_comment_prompt_version(value: object) -> str:
+    raw = str(value or "").strip().lower()
+    if raw in {"high_engagement_2026", "v2", "comments_v2"}:
+        return "high_engagement_2026"
+    return "v1"
+
+
+def _coerce_goal_for_pipeline(value: object, normalized_goal: str) -> str:
+    raw = str(value or "").strip().lower()
+    if raw in _LEGACY_COMMENT_GOALS:
+        return raw
+    return "full_ads" if normalized_goal == "high_engagement" else "network"
+
+
+def _coerce_prompt_for_pipeline(value: object, normalized_prompt_version: str) -> str:
+    raw = str(value or "").strip().lower()
+    if raw in _LEGACY_COMMENT_PROMPTS:
+        return raw
+    return normalized_prompt_version
+
+
+def _sanitize_comment_agent_payload(payload: dict) -> dict:
+    raw = dict(payload or {})
+    normalized = dict(raw)
+    normalized["goal"] = _normalize_comment_goal(raw.get("goal"))
+    normalized["prompt_version"] = _normalize_comment_prompt_version(raw.get("prompt_version"))
+
+    try:
+        parsed = CommentAgentPayload.model_validate(normalized)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    safe = dict(raw)
+    safe["post_text"] = parsed.post_text or ""
+    safe["fast_mode"] = bool(parsed.fast_mode)
+    safe["goal"] = _coerce_goal_for_pipeline(raw.get("goal"), parsed.goal)
+    safe["prompt_version"] = _coerce_prompt_for_pipeline(raw.get("prompt_version"), parsed.prompt_version)
+    if parsed.post_id is not None:
+        safe["post_id"] = parsed.post_id
+    return safe
 
 
 async def _complete_comment_fast_job(
@@ -229,6 +281,8 @@ async def _run_agent_impl(
     if agent_name not in AGENTS:
         raise HTTPException(404, f"Unknown agent: {agent_name}")
     payload = body.payload or {}
+    if agent_name == "comment_agent":
+        payload = _sanitize_comment_agent_payload(payload)
 
     # Проверка лимита генераций для content-агентов
     if agent_name in GENERATION_AGENTS:

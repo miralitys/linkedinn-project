@@ -1,8 +1,8 @@
 # app/schemas.py
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # --------------- Setup ---------------
@@ -371,6 +371,21 @@ class LeadMagnetRead(BaseModel):
 
 
 # --------------- Agents ---------------
+class CommentAgentPayload(BaseModel):
+    post_text: str = Field(default="", max_length=5000)
+    goal: Literal["engage", "high_engagement"] = "engage"
+    fast_mode: bool = False
+    prompt_version: Literal["v1", "high_engagement_2026"] = "v1"
+    post_id: Optional[int] = None
+    author: Optional[Dict[str, Any]] = None
+    products: Optional[List[Any]] = None
+    author_answers_66: Optional[Dict[str, Any]] = None
+    fingerprint: Optional[Dict[str, Any]] = None
+    llm_provider: Optional[str] = None
+
+    model_config = ConfigDict(extra="ignore")
+
+
 class AgentRunPayload(BaseModel):
     payload: Dict[str, Any] = Field(default_factory=dict)
 

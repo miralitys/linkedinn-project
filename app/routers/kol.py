@@ -4,10 +4,15 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
+from app.deps import get_current_user_id
 from app.models import KOL
 from app.schemas import KOLCreate, KOLRead, KOLUpdate
 
-router = APIRouter(prefix="/kol", tags=["kol"])
+router = APIRouter(
+    prefix="/kol",
+    tags=["kol"],
+    dependencies=[Depends(get_current_user_id)],
+)
 
 
 @router.get("", response_model=list[KOLRead])

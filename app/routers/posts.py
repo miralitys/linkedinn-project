@@ -34,6 +34,7 @@ from app.services.rapidapi_linkedin import fetch_post_via_rapidapi, fetch_profil
 
 
 router = APIRouter(prefix="/posts", tags=["posts"])
+PARSE_ALLOWED_DOMAINS = ("linkedin.com", "x.com")
 
 
 def _extract_linkedin_post_key(url: Optional[str]) -> Optional[str]:
@@ -58,6 +59,18 @@ def _canonical_post_url(url: Optional[str]) -> str:
         return urlunsplit((scheme, netloc, path, "", ""))
     except Exception:
         return s.rstrip("/")
+
+
+def _is_allowed_parse_url(url: str) -> bool:
+    try:
+        host = (urlsplit(str(url or "").strip()).hostname or "").strip().lower().rstrip(".")
+    except Exception:
+        return False
+    if not host:
+        return False
+    if host in {"localhost", "127.0.0.1", "::1"}:
+        return False
+    return any(host == d or host.endswith(f".{d}") for d in PARSE_ALLOWED_DOMAINS)
 
 
 async def _find_existing_post_for_user(
@@ -403,6 +416,8 @@ async def parse_post_from_url_route(
     url = (body.url or "").strip()
     if not url or not url.startswith("http"):
         return PostParseFromUrlResponse(error="Укажите корректный URL поста (http/https).")
+    if not _is_allowed_parse_url(url):
+        raise HTTPException(status_code=400, detail="Разрешены только linkedin.com и x.com URL.")
 
     result = None
     if settings.rapidapi_key and "linkedin.com" in url.lower():

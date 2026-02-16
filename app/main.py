@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, Request
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -16,6 +16,7 @@ from app.routers import (
     agents_routes,
     auth,
     companies,
+    kol,
     people,
     news,
     plans,
@@ -27,10 +28,18 @@ from app.routers import (
 from app.routers import onboarding as onboarding_router
 
 scheduler = AsyncIOScheduler()
+_DEFAULT_SESSION_SECRET = "lfas-change-me-in-production"
+
+
+def _is_prod_env() -> bool:
+    return (getattr(settings, "env", "") or "").strip().lower() == "prod"
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    session_secret = settings.session_secret or _DEFAULT_SESSION_SECRET
+    if _is_prod_env() and session_secret == _DEFAULT_SESSION_SECRET:
+        raise RuntimeError("SESSION_SECRET must be set in production")
     # Retry init_db — Render cold start + Supabase могут давать TimeoutError
     for attempt in range(3):
         try:
@@ -101,6 +110,8 @@ async def global_exception_handler(request: Request, exc: Exception):
     """Ловим любую необработанную ошибку и показываем traceback для отладки."""
     import traceback
     logging.exception("Unhandled error for %s: %s", request.url.path, exc)
+    if _is_prod_env():
+        return JSONResponse({"error": "Internal server error"}, status_code=500)
     tb = traceback.format_exc().replace("<", "&lt;").replace(">", "&gt;")
     return HTMLResponse(
         '<html><body style="font-family:sans-serif;padding:2rem;max-width:900px;margin:0 auto;">'
@@ -124,7 +135,7 @@ app.add_middleware(NormalizePathMiddleware)
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 app.add_middleware(
     SessionMiddleware,
-    secret_key=settings.session_secret or "lfas-change-me-in-production",
+    secret_key=settings.session_secret or _DEFAULT_SESSION_SECRET,
     max_age=30 * 24 * 3600,
     same_site="lax",
     https_only=getattr(settings, "session_https_only", False),
@@ -139,6 +150,7 @@ app.include_router(companies.router)
 app.include_router(people.router)
 app.include_router(touches.router)
 app.include_router(agents_routes.router)
+app.include_router(kol.router)
 app.include_router(posts.router)
 app.include_router(reddit.router)
 app.include_router(plans.router)

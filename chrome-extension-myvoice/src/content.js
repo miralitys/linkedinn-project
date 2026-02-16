@@ -635,6 +635,7 @@ const PROFILE_PANEL_TAB_NEW = "new";
 const PROFILE_PANEL_PERSON_CACHE_TTL_MS = 60 * 1000;
 const COMMENT_ASSIST_STYLE_ID = "myvoice-comment-assist-style";
 const COMMENT_ASSIST_ROOT_ID = "myvoice-comment-assist";
+const COMMENT_ASSIST_BACKDROP_ID = "myvoice-comment-assist-backdrop";
 const COMMENT_ASSIST_REFRESH_DELAY_MS = 260;
 const COMMENT_ASSIST_STICKY_WINDOW_MS = 6500;
 const MYVOICE_LOGO_PATH = "icons/icon48.png";
@@ -673,6 +674,12 @@ let commentAssistStickyUntil = 0;
 let commentAssistTransientObserver = null;
 let commentAssistTransientObserverTimer = null;
 let commentAssistTransientObserverDebounce = null;
+let commentAssistFeedModalOpen = false;
+let commentAssistInsertRetryTimer = null;
+let commentAssistPendingInsertKey = "";
+let commentAssistPendingInsertText = "";
+let commentAssistInsertRetryDeadline = 0;
+let commentAssistInsertRetryLastOpenAt = 0;
 let commentAssistState = {
   postKey: "",
   generating: false,
@@ -2045,6 +2052,20 @@ function isLinkedInPostPage(url = window.location.href) {
   return Boolean(normalized);
 }
 
+function isLinkedInFeedPage(url = window.location.href) {
+  const raw = String(url || "");
+  if (!raw) return false;
+  try {
+    const parsed = new URL(raw, window.location.origin);
+    if (!isLinkedInHost(parsed.hostname)) return false;
+    const path = String(parsed.pathname || "").toLowerCase();
+    if (!path.includes("/feed")) return false;
+    return !isLinkedInPostPage(raw);
+  } catch {
+    return false;
+  }
+}
+
 function isElementVisible(el) {
   if (!(el instanceof Element)) return false;
   if (!el.isConnected) return false;
@@ -2056,6 +2077,7 @@ function isElementVisible(el) {
 }
 
 function resetCommentAssistState(nextPostKey = "") {
+  clearCommentAssistInsertRetry();
   if (commentAssistStatusTicker) {
     window.clearInterval(commentAssistStatusTicker);
     commentAssistStatusTicker = null;
@@ -2350,9 +2372,13 @@ function commentAssistPostKeyFromEditor(editor) {
 function ensureCommentAssistStateForEditor(editor) {
   const key = commentAssistPostKeyFromEditor(editor);
   if (!key) return;
-  if (commentAssistState.postKey !== key) {
-    resetCommentAssistState(key);
+  if (commentAssistState.postKey === key) return;
+  if (!commentAssistState.postKey || commentAssistState.generating) {
+    // Initialize or heal post key without cancelling the current generation flow.
+    commentAssistState.postKey = key;
+    return;
   }
+  resetCommentAssistState(key);
 }
 
 function setCommentAssistTargetFromNode(node) {
@@ -2385,8 +2411,16 @@ function isCommentActionButton(node) {
   if (!(node instanceof Element)) return false;
   const btn = node.closest("button, a, [role='button']");
   if (!btn) return false;
-  const control = cleanText(btn.getAttribute("data-control-name")).toLowerCase();
-  if (control === "comment") return true;
+  const control = cleanText(
+    btn.getAttribute("data-control-name") ||
+    btn.getAttribute("data-tracking-control-name") ||
+    btn.getAttribute("data-li-track-action")
+  ).toLowerCase();
+  if (control === "comment" || control.includes("comment")) return true;
+  const testId = cleanText(btn.getAttribute("data-test-id")).toLowerCase();
+  if (testId.includes("comment")) return true;
+  const cls = cleanText(btn.className).toLowerCase();
+  if (cls.includes("social") && cls.includes("comment")) return true;
   const label = cleanText(btn.getAttribute("aria-label") || btn.textContent).toLowerCase();
   if (!label) return false;
   if (label === "comment") return true;
@@ -2405,12 +2439,16 @@ function bindCommentAssistFeedTriggers() {
     if (!(target instanceof Element)) return;
     const profilePanel = document.getElementById(PROFILE_PANEL_ID);
     if (profilePanel && profilePanel.contains(target)) return;
+    const assistRoot = document.getElementById(COMMENT_ASSIST_ROOT_ID);
+    if (assistRoot && assistRoot.contains(target)) return;
 
     if (isCommentActionButton(target)) {
       // Prefer mapping the click to a specific post container and its comment box.
       const btn = target.closest("button, a, [role='button']") || target;
       const container = findLinkedInPostContainerFromNode(btn);
       if (container) {
+        bumpCommentAssistStickyWindow();
+        startCommentAssistTransientObserver();
         commentAssistTargetArticle = container;
         commentAssistTargetCommentBox =
           container.querySelector(".comments-comment-box, [class*='comments-comment-box']") || null;
@@ -2422,12 +2460,20 @@ function bindCommentAssistFeedTriggers() {
       scheduleCommentAssistRefresh(40);
       scheduleCommentAssistRefresh(220);
       scheduleCommentAssistRefresh(900);
+      scheduleCommentAssistRefresh(1800);
+      scheduleCommentAssistRefresh(3200);
+      if (isLinkedInFeedPage(window.location.href)) {
+        openCommentAssistFeedModal();
+      }
       return;
     }
 
     // If user clicks into an existing comment composer directly.
     if (target.closest(".comments-comment-box, [class*='comments-comment-box']")) {
       setCommentAssistTargetFromNode(target);
+      if (isLinkedInFeedPage(window.location.href)) {
+        openCommentAssistFeedModal();
+      }
       scheduleCommentAssistRefresh(0);
     }
   }, true);
@@ -2437,7 +2483,12 @@ function bindCommentAssistFeedTriggers() {
     if (!(target instanceof Element)) return;
     const profilePanel = document.getElementById(PROFILE_PANEL_ID);
     if (profilePanel && profilePanel.contains(target)) return;
+    const assistRoot = document.getElementById(COMMENT_ASSIST_ROOT_ID);
+    if (assistRoot && assistRoot.contains(target)) return;
     setCommentAssistTargetFromNode(target);
+    if (target.closest(".comments-comment-box, [class*='comments-comment-box']") && isLinkedInFeedPage(window.location.href)) {
+      openCommentAssistFeedModal();
+    }
     scheduleCommentAssistRefresh(0);
   }, true);
 }
@@ -2623,6 +2674,241 @@ function findVisibleLinkedInCommentBox(scopeRoot = document) {
   return best;
 }
 
+function getCommentAssistFloatingAnchor(feedCommentBox, feedContainer) {
+  if (feedCommentBox instanceof HTMLElement && isElementVisible(feedCommentBox)) {
+    return feedCommentBox;
+  }
+  if (!(feedContainer instanceof HTMLElement)) return null;
+
+  const commentBoxInContainer = findVisibleLinkedInCommentBox(feedContainer);
+  if (commentBoxInContainer instanceof HTMLElement) return commentBoxInContainer;
+
+  const actionBar =
+    feedContainer.querySelector(".feed-shared-social-actions") ||
+    feedContainer.querySelector("[class*='feed-shared-social-actions']") ||
+    feedContainer.querySelector("[data-test-id*='social-actions']") ||
+    feedContainer.querySelector("[data-test-id*='socialAction']") ||
+    feedContainer.querySelector("[class*='social-actions']");
+  if (actionBar instanceof HTMLElement && isElementVisible(actionBar)) return actionBar;
+
+  return isElementVisible(feedContainer) ? feedContainer : null;
+}
+
+function clearCommentAssistFloatingLayout(root) {
+  if (!(root instanceof HTMLElement)) return;
+  root.classList.remove("myvoice-comment-assist--floating");
+  root.classList.remove("myvoice-comment-assist--feed-modal");
+  root.style.position = "";
+  root.style.left = "";
+  root.style.top = "";
+  root.style.width = "";
+  root.style.maxWidth = "";
+  root.style.margin = "";
+  root.style.zIndex = "";
+  root.style.visibility = "";
+}
+
+function ensureCommentAssistBackdrop() {
+  let backdrop = document.getElementById(COMMENT_ASSIST_BACKDROP_ID);
+  if (backdrop) return backdrop;
+  backdrop = document.createElement("div");
+  backdrop.id = COMMENT_ASSIST_BACKDROP_ID;
+  backdrop.addEventListener("click", (event) => {
+    if (event.target !== backdrop) return;
+    commentAssistFeedModalOpen = false;
+    backdrop.classList.remove("open");
+    scheduleCommentAssistRefresh(0);
+  });
+  (document.body || document.documentElement).appendChild(backdrop);
+  window.addEventListener("keydown", (event) => {
+    if (!commentAssistFeedModalOpen) return;
+    if (!event || event.key !== "Escape") return;
+    closeCommentAssistFeedModal();
+    scheduleCommentAssistRefresh(0);
+  });
+  return backdrop;
+}
+
+function openCommentAssistFeedModal() {
+  commentAssistFeedModalOpen = true;
+  bumpCommentAssistStickyWindow();
+  const backdrop = ensureCommentAssistBackdrop();
+  backdrop.classList.add("open");
+}
+
+function closeCommentAssistFeedModal() {
+  commentAssistFeedModalOpen = false;
+  clearCommentAssistInsertRetry();
+  const backdrop = document.getElementById(COMMENT_ASSIST_BACKDROP_ID);
+  if (backdrop) backdrop.classList.remove("open");
+}
+
+function findTargetFeedCommentEditor({ allowGlobalFallback = true } = {}) {
+  if (commentAssistTargetCommentBox && commentAssistTargetCommentBox.isConnected) {
+    const fromBox = findLinkedInCommentEditor(commentAssistTargetCommentBox);
+    if (fromBox) return fromBox;
+  }
+  if (commentAssistTargetArticle && commentAssistTargetArticle.isConnected) {
+    const fromArticle = findLinkedInCommentEditor(commentAssistTargetArticle);
+    if (fromArticle) return fromArticle;
+  }
+  if (allowGlobalFallback) {
+    return findLinkedInCommentEditor();
+  }
+  return null;
+}
+
+function getTargetFeedPostContainer() {
+  if (commentAssistTargetArticle && commentAssistTargetArticle.isConnected) {
+    return commentAssistTargetArticle;
+  }
+  if (cleanText(commentAssistTargetActivityId)) {
+    const healed = findLinkedInPostContainerForActivityId(commentAssistTargetActivityId);
+    if (healed) {
+      commentAssistTargetArticle = healed;
+      return healed;
+    }
+  }
+  if (commentAssistTargetCommentBox && commentAssistTargetCommentBox.isConnected) {
+    const mapped = findLinkedInPostContainerFromNode(commentAssistTargetCommentBox);
+    if (mapped) {
+      commentAssistTargetArticle = mapped;
+      return mapped;
+    }
+  }
+  return null;
+}
+
+function readTargetFeedPostTextForAssist() {
+  let container = getTargetFeedPostContainer();
+  if (!(container instanceof Element)) {
+    const active = document.activeElement instanceof Element ? document.activeElement : null;
+    if (active) {
+      setCommentAssistTargetFromNode(active);
+      container = getTargetFeedPostContainer();
+    }
+  }
+  if (!(container instanceof Element)) {
+    const visibleBox = findVisibleLinkedInCommentBox();
+    if (visibleBox) {
+      setCommentAssistTargetFromNode(visibleBox);
+      container = getTargetFeedPostContainer();
+    }
+  }
+  if (!(container instanceof Element)) {
+    throw new Error("Не найден целевой пост. Нажмите Comment под нужным постом и повторите.");
+  }
+
+  const extracted = extractPostFromArticle(container);
+  const postText =
+    cleanText(extracted && extracted.text) ||
+    cleanText(extractPostText(container)) ||
+    "";
+  if (postText) return postText;
+
+  throw new Error("Не удалось прочитать текст поста. Откройте полный текст и попробуйте снова.");
+}
+
+function triggerTargetFeedComposerOpen() {
+  const fireCommentAction = (el) => {
+    if (!(el instanceof HTMLElement)) return false;
+    const evtOptions = { bubbles: true, cancelable: true, view: window };
+    try {
+      el.dispatchEvent(new MouseEvent("mousedown", evtOptions));
+      el.dispatchEvent(new MouseEvent("mouseup", evtOptions));
+      el.dispatchEvent(new MouseEvent("click", evtOptions));
+    } catch {
+      // ignore synthetic event errors
+    }
+    try {
+      el.click();
+    } catch {
+      return false;
+    }
+    return true;
+  };
+
+  const pickCommentActionInScope = (scopeRoot) => {
+    if (!(scopeRoot instanceof Element)) return null;
+    const candidates = Array.from(scopeRoot.querySelectorAll("button, a, [role='button']"))
+      .filter((node) => node instanceof Element)
+      .filter((node) => isCommentActionButton(node));
+    if (!candidates.length) return null;
+
+    let visible = candidates.find((node) => isElementVisible(node));
+    if (visible) return visible;
+
+    const withParentButton = candidates
+      .map((node) => node.closest("button, a, [role='button']"))
+      .filter((node) => node instanceof HTMLElement);
+    visible = withParentButton.find((node) => isElementVisible(node));
+    if (visible) return visible;
+
+    return (withParentButton[0] || candidates[0] || null);
+  };
+
+  const container = getTargetFeedPostContainer();
+  let btn = pickCommentActionInScope(container);
+  if (!(btn instanceof HTMLElement)) {
+    const visiblePosts = Array.from(document.querySelectorAll("article, [role='article']"))
+      .filter((node) => node instanceof Element)
+      .filter((node) => isElementVisible(node))
+      .slice(0, 20);
+    for (const post of visiblePosts) {
+      btn = pickCommentActionInScope(post);
+      if (btn) break;
+    }
+  }
+  if (!(btn instanceof HTMLElement)) return false;
+
+  try {
+    const clickable = btn.closest("button, a, [role='button']") || btn;
+    if (!(clickable instanceof HTMLElement)) return false;
+    const ok = fireCommentAction(clickable);
+    if (!ok) return false;
+  } catch {
+    return false;
+  }
+  bumpCommentAssistStickyWindow();
+  scheduleCommentAssistRefresh(70);
+  scheduleCommentAssistRefresh(220);
+  scheduleCommentAssistRefresh(420);
+  scheduleCommentAssistRefresh(900);
+  return true;
+}
+
+function positionCommentAssistFloatingRoot(root, anchorEl) {
+  if (!(root instanceof HTMLElement) || !(anchorEl instanceof HTMLElement)) return false;
+  const rect = anchorEl.getBoundingClientRect();
+  if (!rect || rect.width <= 40 || rect.height <= 0) return false;
+
+  const vw = window.innerWidth || document.documentElement.clientWidth || 1280;
+  const vh = window.innerHeight || document.documentElement.clientHeight || 900;
+  const width = Math.max(300, Math.min(rect.width, vw - 16));
+  const left = Math.max(8, Math.min(rect.left, vw - width - 8));
+
+  root.classList.add("myvoice-comment-assist--floating");
+  root.style.position = "fixed";
+  root.style.left = `${Math.round(left)}px`;
+  root.style.width = `${Math.round(width)}px`;
+  root.style.maxWidth = `${Math.round(width)}px`;
+  root.style.margin = "0";
+  root.style.zIndex = "2147483646";
+  root.style.visibility = "hidden";
+  root.style.top = `${Math.round(Math.max(8, rect.top))}px`;
+
+  const rootRect = root.getBoundingClientRect();
+  const gap = 8;
+  let top = rect.top - rootRect.height - gap;
+  if (top < 8) top = rect.bottom + gap;
+  if (top + rootRect.height > vh - 8) {
+    top = Math.max(8, vh - rootRect.height - 8);
+  }
+  root.style.top = `${Math.round(top)}px`;
+  root.style.visibility = "visible";
+  return true;
+}
+
 function removeCommentAssistRoot() {
   const root = document.getElementById(COMMENT_ASSIST_ROOT_ID);
   if (root) root.remove();
@@ -2635,7 +2921,7 @@ function isCommentAssistInteractionActive(root = document.getElementById(COMMENT
   if (!root.contains(active)) return false;
 
   const tag = cleanText(active.tagName).toLowerCase();
-  if (tag === "select" || tag === "option") return true;
+  if (tag === "select" || tag === "option" || tag === "button" || tag === "input" || tag === "textarea") return true;
   if (active.id === COMMENT_ASSIST_AUTHOR_SELECT_ID) return true;
   return Boolean(active.closest(`#${COMMENT_ASSIST_AUTHOR_SELECT_ID}`));
 }
@@ -2893,6 +3179,74 @@ function upsertCommentAssistStyles() {
       color: #1d4ed8;
     }
 
+    #${COMMENT_ASSIST_ROOT_ID} .myvoice-comment-assist__preview {
+      display: grid;
+      gap: 8px;
+      border: 1px solid #d7e3f9;
+      border-radius: 12px;
+      background: #f9fbff;
+      padding: 9px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID} .myvoice-comment-assist__preview-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID} .myvoice-comment-assist__preview-label {
+      margin: 0;
+      font-size: 11px;
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: #4f6488;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID} .myvoice-comment-assist__insert {
+      height: 28px;
+      border: 1px solid #8db3ff;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #1d4ed8;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 0 12px;
+      cursor: pointer;
+      transition: border-color 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID} .myvoice-comment-assist__insert:hover:not(:disabled) {
+      border-color: #6f78ff;
+      background: #edf3ff;
+      color: #1e40af;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID} .myvoice-comment-assist__insert:disabled {
+      opacity: 0.5;
+      cursor: default;
+      border-color: #d6e2f8;
+      color: #64748b;
+      background: #f8fafc;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID} .myvoice-comment-assist__preview-text {
+      margin: 0;
+      min-height: 54px;
+      max-height: 160px;
+      overflow: auto;
+      padding: 8px 9px;
+      border-radius: 10px;
+      border: 1px solid #cfddf7;
+      background: #ffffff;
+      color: #0f172a;
+      font-size: 12px;
+      line-height: 1.35;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
     #${COMMENT_ASSIST_ROOT_ID} .myvoice-comment-assist__status {
       margin-top: 2px;
       font-size: 12px;
@@ -2922,6 +3276,145 @@ function upsertCommentAssistStyles() {
       padding: 6px 8px;
     }
 
+    #${COMMENT_ASSIST_BACKDROP_ID} {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.44);
+      backdrop-filter: blur(2px);
+      z-index: 2147483645;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.12s ease;
+    }
+
+    #${COMMENT_ASSIST_BACKDROP_ID}.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: min(360px, calc(100vw - 20px));
+      max-width: min(360px, calc(100vw - 20px));
+      max-height: calc(100vh - 28px);
+      overflow: auto;
+      margin: 0;
+      z-index: 2147483646;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__card {
+      border-radius: 14px;
+      padding: 9px 10px 8px;
+      gap: 8px;
+      box-shadow: 0 24px 64px rgba(15, 23, 42, 0.32);
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__logo {
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__title {
+      font-size: 12px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__subtitle {
+      font-size: 10px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__btn {
+      height: 34px;
+      min-width: 128px;
+      font-size: 12px;
+      padding: 0 12px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__author {
+      gap: 6px;
+      border-radius: 12px;
+      padding: 8px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__author-label {
+      font-size: 11px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__author-refresh {
+      height: 24px;
+      padding: 0 8px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__author-select {
+      height: 38px;
+      font-size: 12px;
+      padding: 0 10px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__author-hint {
+      font-size: 11px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__status {
+      font-size: 11px;
+      min-height: 18px;
+      padding: 6px 8px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__variants {
+      gap: 6px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__variant {
+      height: 30px;
+      font-size: 11px;
+      padding: 0 8px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__preview {
+      gap: 6px;
+      border-radius: 10px;
+      padding: 7px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__preview-text {
+      min-height: 46px;
+      max-height: 120px;
+      font-size: 11px;
+      padding: 7px 8px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal .myvoice-comment-assist__insert {
+      height: 24px;
+      font-size: 10px;
+      padding: 0 10px;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID} .myvoice-comment-assist__close {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      border: 1px solid #d9e4fb;
+      background: #ffffff;
+      color: #4f6488;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    #${COMMENT_ASSIST_ROOT_ID} .myvoice-comment-assist__close:hover {
+      border-color: #b9cdf6;
+      color: #1d4ed8;
+      background: #f5f9ff;
+    }
+
     @media (max-width: 760px) {
       #${COMMENT_ASSIST_ROOT_ID} .myvoice-comment-assist__top {
         flex-direction: column;
@@ -2931,6 +3424,12 @@ function upsertCommentAssistStyles() {
       #${COMMENT_ASSIST_ROOT_ID} .myvoice-comment-assist__btn {
         width: 100%;
         min-width: 0;
+      }
+
+      #${COMMENT_ASSIST_ROOT_ID}.myvoice-comment-assist--feed-modal {
+        width: calc(100vw - 16px);
+        max-width: calc(100vw - 16px);
+        max-height: calc(100vh - 16px);
       }
     }
   `;
@@ -2979,6 +3478,11 @@ function commentVariantLabel(key) {
   if (key === "medium") return "Средний";
   if (key === "long") return "Длинный";
   return key;
+}
+
+function getCommentVariantText(key) {
+  const variants = commentAssistState.variants || {};
+  return stripCommentVariantLabel(variants[key]);
 }
 
 function readPreferredCommentAuthorKey() {
@@ -3213,34 +3717,109 @@ function fillLinkedInCommentEditor(editor, text) {
   return true;
 }
 
+function clearCommentAssistInsertRetry() {
+  if (commentAssistInsertRetryTimer) {
+    window.clearTimeout(commentAssistInsertRetryTimer);
+    commentAssistInsertRetryTimer = null;
+  }
+  commentAssistPendingInsertKey = "";
+  commentAssistPendingInsertText = "";
+  commentAssistInsertRetryDeadline = 0;
+  commentAssistInsertRetryLastOpenAt = 0;
+}
+
+function startCommentAssistInsertRetry(key, text) {
+  const variantKey = cleanText(key);
+  const value = String(text || "").trim();
+  if (!variantKey || !value) return false;
+
+  clearCommentAssistInsertRetry();
+  commentAssistPendingInsertKey = variantKey;
+  commentAssistPendingInsertText = value;
+  commentAssistInsertRetryDeadline = Date.now() + 5200;
+  commentAssistInsertRetryLastOpenAt = 0;
+
+  const tick = () => {
+    if (!commentAssistPendingInsertText) {
+      clearCommentAssistInsertRetry();
+      return;
+    }
+
+    const editor = isLinkedInPostPage(window.location.href)
+      ? findLinkedInCommentEditor()
+      : findTargetFeedCommentEditor({ allowGlobalFallback: false });
+    if (editor) {
+      const ok = fillLinkedInCommentEditor(editor, commentAssistPendingInsertText);
+      const insertedLabel = commentVariantLabel(commentAssistPendingInsertKey);
+      clearCommentAssistInsertRetry();
+      if (ok) {
+        setCommentAssistStatus(`Подставлен вариант: ${insertedLabel}.`, "ok");
+      } else {
+        setCommentAssistStatus("Не удалось вставить текст в поле комментария.", "error");
+      }
+      scheduleCommentAssistRefresh(0);
+      return;
+    }
+
+    if (Date.now() >= commentAssistInsertRetryDeadline) {
+      clearCommentAssistInsertRetry();
+      setCommentAssistStatus("Поле комментария не открылось. Нажмите Comment под постом и «Вставить» ещё раз.", "error");
+      scheduleCommentAssistRefresh(0);
+      return;
+    }
+
+    if (isLinkedInFeedPage(window.location.href) && Date.now() - commentAssistInsertRetryLastOpenAt >= 420) {
+      commentAssistInsertRetryLastOpenAt = Date.now();
+      triggerTargetFeedComposerOpen();
+    }
+
+    setCommentAssistStatus("Открываю поле комментария...", "");
+    scheduleCommentAssistRefresh(0);
+    commentAssistInsertRetryTimer = window.setTimeout(tick, 220);
+  };
+
+  tick();
+  return true;
+}
+
 function applyCommentVariant(key) {
-  const variants = commentAssistState.variants || {};
-  const text = stripCommentVariantLabel(variants[key]);
+  const text = getCommentVariantText(key);
   if (!text) return false;
 
+  commentAssistState.activeVariant = key;
   const editor = isLinkedInPostPage(window.location.href)
     ? findLinkedInCommentEditor()
-    : (commentAssistTargetArticle && commentAssistTargetArticle.isConnected
-        ? (findLinkedInCommentEditor(commentAssistTargetArticle) || findLinkedInCommentEditor())
-        : findLinkedInCommentEditor());
+    : findTargetFeedCommentEditor({ allowGlobalFallback: false });
   if (!editor) {
+    if (isLinkedInFeedPage(window.location.href)) {
+      return startCommentAssistInsertRetry(key, text);
+    }
     setCommentAssistStatus("Поле комментария не найдено. Нажмите Comment и повторите.", "error");
     return false;
   }
 
+  clearCommentAssistInsertRetry();
   const ok = fillLinkedInCommentEditor(editor, text);
   if (!ok) {
     setCommentAssistStatus("Не удалось вставить текст в поле комментария.", "error");
     return false;
   }
 
-  commentAssistState.activeVariant = key;
   setCommentAssistStatus(`Подставлен вариант: ${commentVariantLabel(key)}.`, "ok");
   return true;
 }
 
 async function generateCommentVariants() {
   if (commentAssistState.generating) return;
+  const isPostPage = isLinkedInPostPage(window.location.href);
+  const isFeedModal = !isPostPage && commentAssistFeedModalOpen;
+
+  const initialEditor = isPostPage
+    ? findLinkedInCommentEditor()
+    : findTargetFeedCommentEditor({ allowGlobalFallback: false });
+  if (initialEditor) {
+    ensureCommentAssistStateForEditor(initialEditor);
+  }
 
   const requestId = ++commentAssistRequestId;
   commentAssistState.generating = true;
@@ -3268,16 +3847,15 @@ async function generateCommentVariants() {
     setCommentAssistStatus("Читаю текст поста...");
     scheduleCommentAssistRefresh(0);
 
-    const editor = isLinkedInPostPage(window.location.href)
+    const editor = isPostPage
       ? findLinkedInCommentEditor()
-      : (commentAssistTargetArticle && commentAssistTargetArticle.isConnected
-          ? findLinkedInCommentEditor(commentAssistTargetArticle)
-          : findLinkedInCommentEditor());
-    if (!editor) {
-      throw new Error("Поле комментария не найдено. Нажмите Comment и повторите.");
+      : findTargetFeedCommentEditor({ allowGlobalFallback: false });
+    if (editor) {
+      ensureCommentAssistStateForEditor(editor);
     }
-    ensureCommentAssistStateForEditor(editor);
-    const postText = readCurrentPostTextForAssist(editor);
+    const postText = isFeedModal
+      ? readTargetFeedPostTextForAssist()
+      : readCurrentPostTextForAssist(editor);
     if (requestId !== commentAssistRequestId) return;
 
     setCommentAssistStatus("Нормализую текст поста...");
@@ -3319,9 +3897,10 @@ async function generateCommentVariants() {
     commentAssistState.variants = variants;
     commentAssistState.activeVariant = getDefaultCommentVariantKey(variants);
     if (commentAssistState.activeVariant) {
-      setCommentAssistStatus("Финализирую и подставляю лучший вариант...");
-      scheduleCommentAssistRefresh(0);
-      applyCommentVariant(commentAssistState.activeVariant);
+      if (isFeedModal) {
+        triggerTargetFeedComposerOpen();
+      }
+      setCommentAssistStatus("Варианты готовы. Выберите длину, проверьте текст и нажмите «Вставить».", "ok");
     } else {
       setCommentAssistStatus("Варианты получены, выберите длину комментария.");
     }
@@ -3389,9 +3968,31 @@ function renderCommentAssist(root) {
       ? "Перегенерировать"
       : "Сгенерировать";
   generateBtn.addEventListener("click", () => {
+    generateBtn.blur();
     generateCommentVariants();
+    scheduleCommentAssistRefresh(0);
   });
-  top.appendChild(generateBtn);
+  const topActions = document.createElement("div");
+  topActions.style.display = "inline-flex";
+  topActions.style.alignItems = "center";
+  topActions.style.gap = "8px";
+  topActions.appendChild(generateBtn);
+
+  if (isLinkedInFeedPage(window.location.href) && commentAssistFeedModalOpen) {
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "myvoice-comment-assist__close";
+    closeBtn.setAttribute("aria-label", "Закрыть");
+    closeBtn.title = "Закрыть";
+    closeBtn.textContent = "×";
+    closeBtn.addEventListener("click", () => {
+      closeCommentAssistFeedModal();
+      scheduleCommentAssistRefresh(0);
+    });
+    topActions.appendChild(closeBtn);
+  }
+
+  top.appendChild(topActions);
 
   card.appendChild(top);
 
@@ -3477,25 +4078,71 @@ function renderCommentAssist(root) {
   card.appendChild(authorBlock);
 
   if (commentAssistState.variants) {
+    let activeVariantKey = cleanText(commentAssistState.activeVariant);
+    if (!cleanText(getCommentVariantText(activeVariantKey))) {
+      activeVariantKey = getDefaultCommentVariantKey(commentAssistState.variants);
+      commentAssistState.activeVariant = activeVariantKey;
+    }
+
     const variantsRow = document.createElement("div");
     variantsRow.className = "myvoice-comment-assist__variants";
     for (const key of ["short", "medium", "long"]) {
-      const hasText = Boolean(cleanText(commentAssistState.variants[key]));
+      const hasText = Boolean(cleanText(getCommentVariantText(key)));
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "myvoice-comment-assist__variant";
-      if (commentAssistState.activeVariant === key) {
+      if (activeVariantKey === key) {
         btn.classList.add("active");
       }
       btn.disabled = !hasText;
       btn.textContent = commentVariantLabel(key);
       btn.addEventListener("click", () => {
-        applyCommentVariant(key);
+        btn.blur();
+        commentAssistState.activeVariant = key;
+        setCommentAssistStatus(`Выбран вариант: ${commentVariantLabel(key)}. Нажмите «Вставить».`, "");
         scheduleCommentAssistRefresh(0);
       });
       variantsRow.appendChild(btn);
     }
     card.appendChild(variantsRow);
+
+    const previewBlock = document.createElement("div");
+    previewBlock.className = "myvoice-comment-assist__preview";
+
+    const previewHead = document.createElement("div");
+    previewHead.className = "myvoice-comment-assist__preview-head";
+
+    const previewLabel = document.createElement("p");
+    previewLabel.className = "myvoice-comment-assist__preview-label";
+    previewLabel.textContent = "Текст комментария";
+    previewHead.appendChild(previewLabel);
+
+    const insertBtn = document.createElement("button");
+    insertBtn.type = "button";
+    insertBtn.className = "myvoice-comment-assist__insert";
+    insertBtn.textContent = "Вставить";
+    const activeText = getCommentVariantText(commentAssistState.activeVariant);
+    insertBtn.disabled = !cleanText(activeText) || commentAssistState.generating;
+    insertBtn.addEventListener("click", () => {
+      insertBtn.blur();
+      const key = cleanText(commentAssistState.activeVariant);
+      if (!key) {
+        setCommentAssistStatus("Сначала выберите длину комментария.", "error");
+        scheduleCommentAssistRefresh(0);
+        return;
+      }
+      applyCommentVariant(key);
+      scheduleCommentAssistRefresh(0);
+    });
+    previewHead.appendChild(insertBtn);
+    previewBlock.appendChild(previewHead);
+
+    const previewText = document.createElement("div");
+    previewText.className = "myvoice-comment-assist__preview-text";
+    previewText.textContent = activeText || "Выберите длину: Короткий, Средний или Длинный.";
+    previewBlock.appendChild(previewText);
+
+    card.appendChild(previewBlock);
   }
 
   const status = document.createElement("div");
@@ -3515,10 +4162,10 @@ function refreshCommentAssist() {
   let feedContainer = null;
   let feedCommentBox = null;
   if (isPostPage) {
+    closeCommentAssistFeedModal();
     editor = findLinkedInCommentEditor();
   } else {
-    // Feed: show the block only when a comment editor is visible (after user clicks Comment / focuses composer).
-    // Heal stale targets (LinkedIn React re-renders can replace nodes).
+    // Feed: heal stale targets after LinkedIn React re-render.
     if ((!commentAssistTargetArticle || !commentAssistTargetArticle.isConnected) && cleanText(commentAssistTargetActivityId)) {
       const healed = findLinkedInPostContainerForActivityId(commentAssistTargetActivityId);
       if (healed) {
@@ -3527,7 +4174,9 @@ function refreshCommentAssist() {
     }
     if ((!commentAssistTargetCommentBox || !commentAssistTargetCommentBox.isConnected) && commentAssistTargetArticle && commentAssistTargetArticle.isConnected) {
       const foundBox =
-        commentAssistTargetArticle.querySelector(".comments-comment-box, [class*='comments-comment-box']") || null;
+        findVisibleLinkedInCommentBox(commentAssistTargetArticle) ||
+        commentAssistTargetArticle.querySelector(".comments-comment-box, [class*='comments-comment-box']") ||
+        null;
       if (foundBox instanceof HTMLElement) {
         commentAssistTargetCommentBox = foundBox;
       }
@@ -3543,10 +4192,12 @@ function refreshCommentAssist() {
     }
     if (commentAssistTargetArticle && commentAssistTargetArticle.isConnected) {
       feedContainer = commentAssistTargetArticle;
-      editor = findLinkedInCommentEditor(commentAssistTargetArticle) || null;
+      if (!editor) editor = findLinkedInCommentEditor(commentAssistTargetArticle) || null;
     } else {
       // Avoid jumping to a different post immediately after user clicked Comment.
-      const recentlyTargeted = Date.now() - commentAssistTargetUpdatedAt < 3500;
+      const recentlyTargeted =
+        Date.now() - commentAssistTargetUpdatedAt < 3500 ||
+        Date.now() < commentAssistStickyUntil;
       if (!recentlyTargeted) {
         editor = findLinkedInCommentEditor();
         if (editor) {
@@ -3582,33 +4233,62 @@ function refreshCommentAssist() {
         editor = findLinkedInCommentEditor(feedCommentBox) || null;
       }
     }
-  }
-
-  // On /feed/ we still render a block even if the editor isn't found yet.
-  // We'll mount it near the post's action bar and re-run refresh when the editor appears.
-  let mount = null;
-  // Feed: if we have a concrete comment box, always mount right above it (even if editor not detected yet).
-  if (!isPostPage && feedCommentBox && feedCommentBox.parentElement) {
-    mount = { parent: feedCommentBox.parentElement, before: feedCommentBox };
-    if (!editor) {
-      setCommentAssistStatus("Нажмите в поле комментария, чтобы подставить текст.", "");
-    } else {
-      ensureCommentAssistStateForEditor(editor);
+    const root = document.getElementById(COMMENT_ASSIST_ROOT_ID);
+    const isSticky = Date.now() < commentAssistStickyUntil;
+    if (!commentAssistFeedModalOpen) {
+      closeCommentAssistFeedModal();
+      removeCommentAssistRoot();
+      return;
     }
-  } else if (editor) {
-    ensureCommentAssistStateForEditor(editor);
-    mount = resolveCommentAssistMount(editor);
-  } else if (!isPostPage && feedContainer) {
-    mount = resolveCommentAssistFallbackMountForFeed(feedContainer);
-    setCommentAssistStatus("Нажмите в поле комментария, чтобы подставить текст.", "");
-  } else {
-    removeCommentAssistRoot();
+
+    if (!feedContainer && !feedCommentBox && !editor) {
+      if (root && isSticky) {
+        scheduleCommentAssistRefresh(120);
+        return;
+      }
+      closeCommentAssistFeedModal();
+      removeCommentAssistRoot();
+      return;
+    }
+
+    if (editor) {
+      ensureCommentAssistStateForEditor(editor);
+    } else if (!commentAssistState.generating && !commentAssistState.variants && commentAssistState.statusKind !== "error") {
+      setCommentAssistStatus("Нажмите в поле комментария и выберите вариант комментария.", "");
+    }
+
+    upsertCommentAssistStyles();
+    ensureCommentAssistBackdrop().classList.add("open");
+    let modalRoot = root;
+    if (!modalRoot) {
+      modalRoot = document.createElement("div");
+      modalRoot.id = COMMENT_ASSIST_ROOT_ID;
+    }
+    const hostParent = document.body || document.documentElement;
+    if (modalRoot.parentElement !== hostParent) {
+      hostParent.appendChild(modalRoot);
+    }
+    clearCommentAssistFloatingLayout(modalRoot);
+    modalRoot.classList.add("myvoice-comment-assist--feed-modal");
+
+    const interactionActive = isCommentAssistInteractionActive(modalRoot);
+    if (commentAssistState.generating || !interactionActive || !modalRoot.firstChild) {
+      renderCommentAssist(modalRoot);
+    }
+    if (!commentAssistState.authorsLoaded && !commentAssistState.authorsLoading) {
+      ensureCommentAssistAuthorsLoaded();
+    }
     return;
   }
 
-  if (!mount || !mount.parent) return;
-  const profilePanel = document.getElementById(PROFILE_PANEL_ID);
-  if (profilePanel && profilePanel.contains(mount.parent)) {
+  // Post page mode: inline mount above composer.
+  if (!editor) {
+    removeCommentAssistRoot();
+    return;
+  }
+  ensureCommentAssistStateForEditor(editor);
+  const mount = resolveCommentAssistMount(editor);
+  if (!mount || !mount.parent) {
     removeCommentAssistRoot();
     return;
   }
@@ -3619,21 +4299,17 @@ function refreshCommentAssist() {
     root = document.createElement("div");
     root.id = COMMENT_ASSIST_ROOT_ID;
   }
+  clearCommentAssistFloatingLayout(root);
   const desiredParent = mount.parent;
   const desiredBefore = Object.prototype.hasOwnProperty.call(mount, "before") ? mount.before : null;
   const shouldMove =
     root.parentElement !== desiredParent ||
     (desiredBefore ? root.nextSibling !== desiredBefore : root.nextSibling !== null);
   if (shouldMove) {
-    if (desiredBefore) {
-      desiredParent.insertBefore(root, desiredBefore);
-    } else {
-      desiredParent.appendChild(root);
-    }
+    if (desiredBefore) desiredParent.insertBefore(root, desiredBefore);
+    else desiredParent.appendChild(root);
   }
-  if (isCommentAssistInteractionActive(root)) {
-    return;
-  }
+  if (!commentAssistState.generating && isCommentAssistInteractionActive(root)) return;
   renderCommentAssist(root);
   if (!commentAssistState.authorsLoaded && !commentAssistState.authorsLoading) {
     ensureCommentAssistAuthorsLoaded();
@@ -3672,10 +4348,14 @@ function watchLinkedInNavigation() {
     profilePanelLastUrl = nowKey;
     scheduleProfilePanelRefresh();
     resetCommentAssistState("");
+    closeCommentAssistFeedModal();
+    clearCommentAssistInsertRetry();
+    stopCommentAssistTransientObserver();
     commentAssistTargetArticle = null;
     commentAssistTargetCommentBox = null;
     commentAssistTargetActivityId = "";
     commentAssistTargetUpdatedAt = 0;
+    commentAssistStickyUntil = 0;
     scheduleCommentAssistRefresh();
   };
 

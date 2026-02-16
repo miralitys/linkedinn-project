@@ -10,12 +10,12 @@ from typing import Any, List, Optional, Union
 from urllib.parse import urlparse
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session, session_scope
-from app.models import NewsItem
+from app.models import NewsItem, UserRole
 from app.routers.setup import get_setup_for_scoring
 from agents.registry import run_agent
 
@@ -68,6 +68,12 @@ ALLOWED_FULL_ARTICLE_DOMAINS = (
     "cdllife.com",
     "www.cdllife.com",
 )
+
+
+def _require_admin(request: Request) -> None:
+    role = request.session.get("user_role")
+    if role != UserRole.ADMIN.value:
+        raise HTTPException(status_code=403, detail="Admin access required")
 
 
 def _strip_html(text: str) -> str:
@@ -779,11 +785,13 @@ async def _run_scoring_for_pending_news(item_ids: Optional[list[int]] = None) ->
 
 @router.post("/refresh")
 async def refresh_news(
+    request: Request,
     session: AsyncSession = Depends(get_session),
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
 ):
     """Загрузить новости из RSS, добавить новые в БД и вернуть актуальный список из БД. По новым запускается скоринг."""
+    _require_admin(request)
     try:
         items = await _fetch_news_from_feeds()
         added, added_ids = await _save_fetched_news_to_db(session, items)
@@ -825,9 +833,11 @@ async def run_news_refresh() -> None:
 async def save_news_score(
     item_id: int,
     body: dict,
+    request: Request,
     session: AsyncSession = Depends(get_session),
 ):
     """Сохранить оценку релевантности для новости (после скорринга)."""
+    _require_admin(request)
     r = await session.execute(select(NewsItem).where(NewsItem.id == item_id))
     row = r.scalar_one_or_none()
     if not row:
