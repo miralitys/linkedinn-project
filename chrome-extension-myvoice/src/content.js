@@ -2357,6 +2357,9 @@ function ensureCommentAssistStateForEditor(editor) {
 
 function setCommentAssistTargetFromNode(node) {
   if (!(node instanceof Element)) return false;
+  bumpCommentAssistStickyWindow();
+  startCommentAssistTransientObserver();
+
   const box = node.closest(".comments-comment-box, [class*='comments-comment-box']");
   if (box instanceof HTMLElement) {
     commentAssistTargetCommentBox = box;
